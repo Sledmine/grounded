@@ -4,11 +4,10 @@ clua_version = 2.056
 -- Import blam module
 local blam = require "blam"
 
--- Import HSC Module
-local hsc = require "hsc"
-
 -- Import INI module
 
+-- Import Core project module
+local core = require "grounded.core"
 
 -- Provide global and short syntax for multiple tag classes references
 tagClasses = blam.tagClasses
@@ -16,6 +15,13 @@ tagClasses = blam.tagClasses
 -- Defines local globals
 
 local gameStarted = false
+
+---@class event
+---@field func function Desired function reference to execute
+---@field args table List of arguments to be passed to the function
+
+---@type event[]
+asyncEventsQueue = {}
 
 --- Check if player is near by to an object
 ---@param target blamObject
@@ -42,9 +48,23 @@ local function promptHudMessage(message)
     hud_message(message)
 end
 
-function OnTick()  --You can only have one OnTick and OnMapLoad function per script (as far as I know)
-    -- Dynamic Prompting for fast travel  
+--You can only have one OnTick and OnMapLoad function per script (as far as I know)
+function OnTick()
+    -- Async event dispatcher
+    for eventIndex, event in pairs(asyncEventsQueue) do
+        event.func(table.unpack(event.args))
+        asyncEventsQueue[eventIndex] = nil
+    end
     local player = blam.biped(get_dynamic_player())
+    if (player) then
+        if (player.flashlightKey) then
+            core.saveSlot(1)
+        elseif (player.actionKey) then
+            core.loadSlot(1)
+        end
+    end
+    --[[
+    -- Dynamic Prompting for fast travel  
     for _, objectIndex in pairs(blam.getObjects()) do
         local fast_travel = blam.object(get_object(objectIndex))
         if (fast_travel and fast_travel.type == blam.objectClasses.control) then
@@ -144,7 +164,7 @@ function OnTick()  --You can only have one OnTick and OnMapLoad function per scr
                 end
             end
         end
-    end    
+    end]]
 end
 
 set_callback("map load", "OnMapLoad")
