@@ -3,7 +3,8 @@ clua_version = 2.056
 
 -- Import blam module
 local blam = require "blam"
-
+-- Import HSC module
+local hsc = require "hsc"
 -- Import INI module
 
 -- Import Core project module
@@ -27,11 +28,9 @@ asyncEventsQueue = {}
 ---@param target blamObject
 ---@param sensitivity number
 local function playerIsNearTo(target, sensitivity)
-<<<<<<< Updated upstream
     local player = blam.object(get_dynamic_player())
-=======
     local player = blam.biped(get_dynamic_player())
->>>>>>> Stashed changes
+
         if (target and player) then
             local distance = math.sqrt(
                 (target.x - player.x) ^ 2 +
@@ -44,6 +43,8 @@ local function playerIsNearTo(target, sensitivity)
         end
     return false
 end
+
+local player = blam.biped(get_dynamic_player())
 
 local function promptHudMessage(message)
     hud_message("")
@@ -59,18 +60,6 @@ function OnTick()
         event.func(table.unpack(event.args))
         asyncEventsQueue[eventIndex] = nil
     end
-<<<<<<< Updated upstream
-    local player = blam.biped(get_dynamic_player())
-    if (player) then
-        if (player.flashlightKey) then
-            core.saveSlot(1)
-        elseif (player.actionKey) then
-            core.loadSlot(1)
-        end
-    end
-    --[[
-    -- Dynamic Prompting for fast travel  
-=======
     local savegame = get_global("save")
     local loadgame = get_global("load")
     if (savegame) == 1 then
@@ -103,8 +92,8 @@ function OnTick()
     test_state = 1
    end
 
-    -- Dynamic Prompting for fast travel 
->>>>>>> Stashed changes
+    -- Dynamic Prompting for fast travel
+    
     for _, objectIndex in pairs(blam.getObjects()) do
         local fast_travel = blam.object(get_object(objectIndex))
         if (fast_travel and fast_travel.type == blam.objectClasses.control) then
@@ -204,7 +193,7 @@ function OnTick()
                 end
             end
         end
-    end]]
+    end
 end
 
 set_callback("map load", "OnMapLoad")
