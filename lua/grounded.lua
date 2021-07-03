@@ -81,7 +81,7 @@ local conversations = {
         promptMessage = "talk to \"Sergeant Forbes\"",
         action = function()
             local widgetLoaded = load_ui_widget(
-                                     "ui\\conversation\\general_conversation\\test_template\\forbes\\test_forbes_a")
+                                     "ui\\conversation\\side_evacpod2\\forbes\\forbes_a")
             if (not widgetLoaded) then
                 console_out("An error occurred while loading ui widget!")
             end
