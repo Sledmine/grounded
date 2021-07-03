@@ -1,9 +1,8 @@
 ------------------------------------------------------------------------------
 -- Interface
--- Author: Sledmine
--- Interface handler for UI Widgets
+-- Sledmine
+-- Interface handler for UI Widgets and visual elements
 ------------------------------------------------------------------------------
-
 local interface = {}
 
 -- TODO Add unit testing for this
@@ -84,6 +83,14 @@ function interface.hook(variable, callback, ...)
         execute_script("set " .. variable .. " false")
         callback(...)
     end
+end
+
+--- Print hud messages to HUD as a prompt message
+function interface.promptHud(message)
+    hud_message("")
+    hud_message("")
+    hud_message("")
+    hud_message(message)
 end
 
 return interface

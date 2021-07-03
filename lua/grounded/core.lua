@@ -1,3 +1,8 @@
+------------------------------------------------------------------------------
+-- Core
+-- Sledmine
+-- Core functions for the grounded project
+------------------------------------------------------------------------------
 local core = {}
 
 local glue = require "glue"
@@ -27,6 +32,8 @@ end
 --- Save save file into given slot index
 ---@param saveFileIndex number
 function core.saveSlot(saveFileIndex)
+    -- TODO Remove this requirement and replace it with a trigger from the ui
+    set_global("save", 0)
     execute_script("core_save")
     -- Add this function to the async events queue
     glue.append(asyncEventsQueue, {func = saveFile, args = {saveFileIndex}})
@@ -35,6 +42,8 @@ end
 --- Load a save file from a given slot index
 ---@param saveFileIndex number
 function core.loadSlot(saveFileIndex)
+    -- TODO Remove this requirement and replace it with a trigger from the ui
+    set_global("load", 0)
     -- Remove the core file before loading, preventing loading left over slots
     os.remove(saveCoreFilePath)
     createFoldersStructure()
@@ -43,6 +52,21 @@ function core.loadSlot(saveFileIndex)
         glue.writefile(saveCoreFilePath, saveFile)
         execute_script("core_load")
     end
+end
+
+--- Check if player is near by to an object
+---@param target blamObject
+---@param sensitivity number
+function core.playerIsNearTo(target, sensitivity)
+    local player = blam.object(get_dynamic_player())
+    if (target and player) then
+        local distance = math.sqrt((target.x - player.x) ^ 2 + (target.y - player.y) ^ 2 +
+                                       (target.z - player.z) ^ 2)
+        if (math.abs(distance) < sensitivity) then
+            return true
+        end
+    end
+    return false
 end
 
 return core
