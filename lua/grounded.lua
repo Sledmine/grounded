@@ -1,17 +1,12 @@
 -- Set Chimera API version
 clua_version = 2.056
 
--- Import blam module
-local blam = require "blam"
--- Import HSC module
-local hsc = require "hsc"
--- Import INI module
-
--- Import Core project module
-local core = require "grounded.core"
-
+-- Project modules
+blam = require "blam"
 -- Provide global and short syntax for multiple tag classes references
 tagClasses = blam.tagClasses
+local hsc = require "hsc"
+local core = require "grounded.core"
 
 -- Defines local globals
 local test_state = 0
@@ -53,7 +48,7 @@ local function promptHudMessage(message)
     hud_message(message)
 end
 
---You can only have one OnTick and OnMapLoad function per script (as far as I know)
+-- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
     -- Async event dispatcher
     for eventIndex, event in pairs(asyncEventsQueue) do
