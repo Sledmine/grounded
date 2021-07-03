@@ -132,12 +132,14 @@ function OnTick()
                 local tag = blam.getTag(object.tagId)
                 for _, conversation in pairs(conversations) do
                     if (tag and tag.path:find(conversation.objectName)) then
-                        if (core.playerIsNearTo(object, 1)) then
+                        if (core.playerIsNearTo(object, 0.7)) then
                             interface.promptHud("Press \"E\" to " ..
                                                     conversation.promptMessage)
                             if (playerBiped.actionKey) then
                                 conversation.action()
                             end
+                            elseif (core.playerIsNearTo(object, 0.8)) then
+                                interface.promptHud("")
                         end
                     end
                 end
