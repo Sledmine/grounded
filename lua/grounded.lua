@@ -13,7 +13,7 @@ local core = require "grounded.core"
 tagClasses = blam.tagClasses
 
 -- Defines local globals
-
+local test_state = 0
 local gameStarted = false
 
 ---@class event
@@ -27,7 +27,11 @@ asyncEventsQueue = {}
 ---@param target blamObject
 ---@param sensitivity number
 local function playerIsNearTo(target, sensitivity)
+<<<<<<< Updated upstream
     local player = blam.object(get_dynamic_player())
+=======
+    local player = blam.biped(get_dynamic_player())
+>>>>>>> Stashed changes
         if (target and player) then
             local distance = math.sqrt(
                 (target.x - player.x) ^ 2 +
@@ -55,6 +59,7 @@ function OnTick()
         event.func(table.unpack(event.args))
         asyncEventsQueue[eventIndex] = nil
     end
+<<<<<<< Updated upstream
     local player = blam.biped(get_dynamic_player())
     if (player) then
         if (player.flashlightKey) then
@@ -65,6 +70,41 @@ function OnTick()
     end
     --[[
     -- Dynamic Prompting for fast travel  
+=======
+    local savegame = get_global("save")
+    local loadgame = get_global("load")
+    if (savegame) == 1 then
+        core.saveSlot(1)
+       elseif (loadgame) == 1 then
+         core.loadSlot(1)
+      elseif (savegame) == 2 then
+           core.saveSlot(2) 
+       elseif (loadgame) == 2 then
+          core.loadSlot(2)
+        elseif (savegame) == 3 then
+            core.saveSlot(3) 
+        elseif (loadgame) == 3 then
+           core.loadSlot(3)
+        elseif (savegame) == 4 then
+            core.saveSlot(4) 
+        elseif (loadgame) == 4 then
+           core.loadSlot(4)
+        elseif (savegame) == 5 then
+            core.saveSlot(5) 
+        elseif (loadgame) == 5 then
+           core.loadSlot(5)
+   end
+  -- local player = blam.biped(get_dynamic_player())
+     --   if (player) and (player.flashlightKey) then
+            
+   --end
+   if hsc.isPlayerInsideVolume("side_evacpod2_1") and (test_state == 0) then
+    execute_script("ai_place bsp3_side_evacpod2_cp1")
+    test_state = 1
+   end
+
+    -- Dynamic Prompting for fast travel 
+>>>>>>> Stashed changes
     for _, objectIndex in pairs(blam.getObjects()) do
         local fast_travel = blam.object(get_object(objectIndex))
         if (fast_travel and fast_travel.type == blam.objectClasses.control) then
