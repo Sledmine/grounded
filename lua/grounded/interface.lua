@@ -93,4 +93,9 @@ function interface.promptHud(message)
     hud_message(message)
 end
 
+-- Clear HUD output
+function interface.clearHud()
+    hud_message("")
+end
+
 return interface

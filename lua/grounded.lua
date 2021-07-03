@@ -138,8 +138,8 @@ function OnTick()
                             if (playerBiped.actionKey) then
                                 conversation.action()
                             end
-                            elseif (core.playerIsNearTo(object, 0.8)) then
-                                interface.promptHud("")
+                        elseif (core.playerIsNearTo(object, 0.8)) then
+                            interface.clearHud()
                         end
                     end
                 end
