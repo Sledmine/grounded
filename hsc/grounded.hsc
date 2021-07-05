@@ -243,5 +243,8 @@
 	(ai_attach merchant_1 bsp2_bar/weapons)
 	(ai_attach merchant_2 bsp2_bar/weapons)
 	(sound_impulse_predict sound\dialog\npc_generic\generic 1)
+	(ai_place bsp2_guard)
+	(sleep 10)
+	(vehicle_load_magic hog_guard "w-gunner" (ai_actors bsp2_guard/sqd_scorp))
 )
 
