@@ -3,15 +3,13 @@
 (global short credits 40) ;sets a global called "credits". It's how the player buys stuff.
 (global boolean merchantboi_1 false) ;this sets merch1 as a global
 (global boolean merchantboi_2 false) ;this sets merchantboi_2 as a global
-(global short dogtags 0)
-(global boolean marine_quest false)		;disables the camera_reset script to allow for cutscenes
-(global boolean marine_quest_complete false)
-(global short covie 0)
 (global boolean conversation false)
 (global short have_I_talked 1)
-(global boolean bsp3_struc1_alive false)
-(global short save 0)
-(global short load 0)
+(global short save 0) ;for save slots feature
+(global short load 0) ;for save slots feature
+(global boolean skull_held false) ;test for deleting the skull from player's hand
+(global boolean hover1 false) ;test for journal hovering. Didn't work
+(global short unsc_quests 0) ;this global is used to enable speech checks if the player has completed certain unsc sidequests. More side quests = better checks, and certain sidequests unlock unique dialogue
 
 
 (script static unit player0					;this defines "player0" as a unit. This literally just saves time scripting by referencing (player0) instead of (unit (list_get (players) 0))
@@ -171,12 +169,18 @@
 	(unit_set_maximum_vitality (player0) 150 50)	;boolean1 health boolean2 shields
 )
 
+(script static void hover_active_1
+	(set hover1 true)
+	(print blarg)
+)
+
 (script static void alien_kit
 	(object_create_anew merchant_reset)														;this script forces the player to hold a skull weapon, then empties their inventory
 	(object_teleport merchant_reset weapons_merch)											;and forces a new inventory onto them.
 	(player_add_equipment (player0) unarmed 1)
 	(sleep 2)
 	(player_add_equipment (player0) alien 1)
+	(set skull_held true)
 )
 
 (script static void bust-up 														;gives player bust-up kit
@@ -185,6 +189,7 @@
 		(player_add_equipment (player0) unarmed 1)
 		(sleep 2)
 		(player_add_equipment (player0) bust-up 1)
+		(set skull_held true)
 )
 
 (script static void ranger
@@ -193,44 +198,7 @@
 	(player_add_equipment (player0) unarmed 1)
 	(sleep 2)
 	(player_add_equipment (player0) ranger 1)
-)
-
-(script dormant test_game
-	(object_create_anew_containing test_dead)
-	(show_hud 1)
-	(set marine_quest true)
-	(activate_nav_point_flag default (player0) test_flag1 1)
-	(sleep_until (or (= (volume_test_object test_example1 (player0)) true) (= (volume_test_object test_example2 (player0)) true) (= true (volume_test_object test_example3 (player0)))) 5)
-		(if (= true (volume_test_object test_example1 (player0)))
-			(begin
-			(show_hud_help_text 1)
-			(hud_set_help_text test_example_01)
-			(activate_nav_point_flag default (player0) test_flag2 1)
-			(deactivate_nav_point_flag (player0) test_flag1)
-			)
-			(if (= true (volume_test_object test_example3 (player0))) ;elseif
-				(begin
-					(deactivate_nav_point_flag (player0) test_flag1)
-					(deactivate_nav_point_flag (player0) test_flag2)
-					(show_hud_help_text 1)
-					(hud_set_help_text test_example_02)
-				)
-				(if (= true (volume_test_object test_example2 (player0)))
-					(begin
-					(show_hud_help_text 1)
-					(hud_set_help_text "sole_survivor")
-					)
-				)
-			)
-		)
-)
-
-
-
-
-(script static void test_example
-	(conversation_off)
-	(wake test_game)
+	(set skull_held true)
 )
 
 (script static void crewman_1
