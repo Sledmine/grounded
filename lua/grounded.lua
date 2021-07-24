@@ -86,6 +86,14 @@ local conversations = {
                 console_out("An error occurred while loading ui widget!")
             end
         end
+    },
+    {
+        objectName = "elite",
+        promptMessage = "talk to \"Covenant Elite\"",
+        action = function()
+            console_out("good job")
+            execute_script("sound_impulse_start sound\\dialog\\npc_generic\\generic none 1")
+        end
     }
 }
 
@@ -94,11 +102,6 @@ end
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
-    -- local dialogOption = interface.get("dynamic_menu", 4,
-    --                                   [[ui\conversation\strings\dynamic_strings]])
-    -- if (dialogOption) then
-    --    console_out(dialogOption)
-    -- end
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
     -- Async event dispatcher
@@ -119,8 +122,12 @@ function OnTick()
         execute_script("ai_place bsp3_side_evacpod2_cp1")
         isEncounterTested = true
     end
-    -- If the biped exists then execute stuff
-    -- Basically if the biped dies players do not have a biped object assigned until next spawn
+    -- Respawn script that skips the hardcoded game_revert on player death. Will load the MOST RECENTLY SAVED Core file. 
+    if get_global("reload_now") then
+        execute_script("core_load")
+    end
+
+
     if (playerBiped) then
         --[[
             Iterate over all the objects on the game and execute a conversation/event associated
