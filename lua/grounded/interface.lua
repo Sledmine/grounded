@@ -98,4 +98,24 @@ function interface.clearHud()
     hud_message("")
 end
 
+-- Active Widget
+function interface.getCurrentWidget()
+    currentWidgetIdAddress = 0x6B401C
+    local widgetIdAddress = read_dword(currentWidgetIdAddress)
+    if (widgetIdAddress and widgetIdAddress ~= 0) then
+        local widgetId = read_dword(widgetIdAddress)
+        local tag = blam.getTag(widgetId)
+        if (tag) then
+            local isPlayerOnMenu = read_byte(blam.addressList.gameOnMenus) == 0
+            if (isPlayerOnMenu) then
+                --dprint("Current widget: " .. tag.path)
+            end
+            return tag.id
+        end
+    end
+    return nil
+end
+
+
+
 return interface

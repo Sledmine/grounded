@@ -460,6 +460,13 @@ function blam.getObjects()
     return currentObjectsList
 end
 
+--- Checks biped damage
+function blam.objectDamagedByPlayer()
+if (read_dword(currentObjectsList + 0x43C) ~= 0xFFFFFFFF) then
+    console_out("yeet")
+end
+end
+
 -- Local reference to the original console_out function
 local original_console_out = console_out
 
@@ -1866,5 +1873,9 @@ function blam.globalsTag(tag)
     end
     return nil
 end
+
+-- Schulzy's add-ons
+
+-- Object damage from player
 
 return blam

@@ -69,4 +69,8 @@ function core.playerIsNearTo(target, sensitivity)
     return false
 end
 
+-- Unit Damaged test
+
+
+
 return core
