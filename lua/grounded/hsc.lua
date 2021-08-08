@@ -74,13 +74,14 @@ function hsc.cinematicLetterbox_nohud(boolean)
     execute_script(letterbox_nohud:format(boolean))
 end
 
+--- Cinematic letterbox
+---@param1 boolean
 function hsc.cinematicLetterbox(boolean)
     execute_script("cinematic_show_letterbox " .. boolean)
 end
 
-
-
 --- Screen effects 
+---Convolution
 ---@param1 seems to the total multiplier effect = one x (two(three - four))/five
 ---@param2 sharpness
 ---@param3 initial value
