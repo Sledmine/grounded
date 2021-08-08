@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------------
 -- HSC
 -- Sledmine
+-- Schulzy
 -- Wrapper for HSC functions
 ------------------------------------------------------------------------------
 local hsc = {}
@@ -81,19 +82,19 @@ function hsc.cinematicLetterbox(boolean)
 end
 
 --- Screen effects 
----Convolution
----@param1 seems to the total multiplier effect = one x (two(three - four))/five
----@param2 sharpness
+---Blur/Convolution effect = one x (two(three - four))/five
+---@param1 strength total mulitplier of the convolution effect 
+---@param2 sharpness sharpness
 ---@param3 initial value
 ---@param4 final value
 ---@param5 Time to transition between intial value and final value after screen effect false
-function hsc.screenEffectConvolution(one, two, three, four, five)
-    local screenStuff = [[(begin
+function hsc.screenEffectConvolution(strength, sharpness, initial, final, transition)
+    local screenBlur = [[(begin
     (cinematic_screen_effect_start true)
     (cinematic_screen_effect_set_convolution "%s" "%s" "%s" "%s" "%s")
     (cinematic_screen_effect_start false)
     )]]
-    execute_script(screenStuff:format(one, two, three, four, five))
+    execute_script(screenBlur:format(strength, sharpness, initial, final, transition))
 end
 
 --- Show hud
