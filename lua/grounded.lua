@@ -146,14 +146,7 @@ end
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
-    -- Checking Allegiances 
 
-   
-    --[[if (hsc.AllegiancesGet("human")) then
-        console_out("happy times")
-    else
-        console_out("you did it?")
-    end]]
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
      -- screen effect test

@@ -4,19 +4,24 @@
 -- Schulzy
 -- Wrapper for HSC functions
 ------------------------------------------------------------------------------
+--- How to add functions to hsc.lua 
+--- Use hsc.isPlayerInsideVolume and hsc.aiPlace as examples
+------------------------------------------------------------------------------
 local hsc = {}
 
 --- Get if the local player is inside an specified trigger volume
+--- Your map.hsc file will require boolean global named clua_boolean1 to execute this script.
+--- You can change the global name from clua_boolean1 to any name you want, as long as that global is referenced in the checkVolumeScript function and the get_global function
 ---@param volumeTriggerName string Name of the volume trigger in Sapien
 function hsc.isPlayerInsideVolume(volumeTriggerName)
     local checkVolumeScript = [[(begin 
     (if (volume_test_object "%s" (unit (list_get (players) 0)))
-        (set is_biped_inside_volume true)
-        (set is_biped_inside_volume false)
+        (set clua_boolean1 true)
+        (set clua_boolean1 false)
     )
 )]]
     execute_script(checkVolumeScript:format(volumeTriggerName))
-    if (get_global("is_biped_inside_volume")) then
+    if (get_global("clua_boolean1")) then
         return true
     end
     return false
@@ -45,8 +50,8 @@ end
 -- Get unit health
 ---@param unitName string name for unitName OR static script referencing the player biped.
 function hsc.unitGetHealth(unitName)
-    execute_script("set unit_health (unit_get_health " .. unitName .. ")")
-    return (get_global("unit_health"))
+    execute_script("set clua_short1 (unit_get_health " .. unitName .. ")")
+    return (get_global("clua_short1"))
 end
 
 --- Set AI Allegiances
@@ -75,19 +80,17 @@ function hsc.cinematicLetterbox_nohud(boolean)
     execute_script(letterbox_nohud:format(boolean))
 end
 
---- Cinematic letterbox
----@param1 boolean
-function hsc.cinematicLetterbox(boolean)
-    execute_script("cinematic_show_letterbox " .. boolean)
-end
 
+------------------------------------------------------------------------------
 --- Screen effects 
----Blur/Convolution effect = one x (two(three - four))/five
+------------------------------------------------------------------------------
+--- Blur/Convolution effect - will remain active until 
+--- Screen Effect = one x (two(three - four))/five
 ---@param1 strength total mulitplier of the convolution effect 
 ---@param2 sharpness sharpness
 ---@param3 initial value
 ---@param4 final value
----@param5 Time to transition between intial value and final value after screen effect false
+---@param5 Time to transition between intial value and final value after screen effect start false
 function hsc.screenEffectConvolution(strength, sharpness, initial, final, transition)
     local screenBlur = [[(begin
     (cinematic_screen_effect_start true)
@@ -97,23 +100,43 @@ function hsc.screenEffectConvolution(strength, sharpness, initial, final, transi
     execute_script(screenBlur:format(strength, sharpness, initial, final, transition))
 end
 
+--- Video Effect (from 343Guilty Spark)
+---@param1 Intensity of the noise grain effect
+---@param2 Border scale between 0 and 1
+function hsc.screenEffectVideo(intensity, border)
+    local screenVideo = [[(begin
+    (cinematic_screen_effect_start true)
+    (cinematic_screen_effect_set_video "%s" "%s")
+    )]]
+    execute_script(screenVideo:format(intensity, border))
+end
+
+--- Cinematic letterbox
+---@param1 boolean
+function hsc.cinematicLetterbox(boolean)
+    execute_script("cinematic_show_letterbox " .. boolean)
+end
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 --- Show hud
 ---@param1 boolean
 function hsc.showHud(boolean)
     execute_script("show_hud " .. boolean)
 end
 
--- Gets device position
+--- Gets device position
+--- Your map.hsc file will require boolean global named clua_boolean1 to execute this script.
+--- You can change the global name from clua_boolean1 to any name you want, as long as that global is referenced in the checkVolumeScript function and the get_global function
 ---@param1 device name
 function hsc.deviceGetPosition(deviceName)
     local checkPosition = [[(begin 
     (if (> (device_get_position "%s") 0.1)
-        (set device_open true)
-        (set device_open false)
+        (set clua_boolean1 true)
+        (set clua_boolean1 false)
     )
 )]]
     execute_script(checkPosition:format(deviceName))
-    if (get_global("device_open")) then
+    if (get_global("clua_var1")) then
         return true
     end
     return false
@@ -138,7 +161,7 @@ function hsc.AllegiancesGet(team)
     )
     )]]
     execute_script(checkState:format(team, team))
-    if (not (get_global(team .. "_ally"))) then -- The game will read this as human_ally global. Remember to always add in a space.
+    if (not (get_global(team .. "_ally"))) then -- The game will read this as human_ally global.
         return true
     end
     return false
