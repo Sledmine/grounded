@@ -104,8 +104,7 @@ end
 function hsc.actionTest(type)
     local returnType = {"Accept", "Action", "Back", "grenade_trigger", "jump", "look_relative_all_directions", "look_relative_down", "look_relative_up", "look_relative_right", "look_relative_left", "move_relative_all_directions", "primary_trigger", "zoom"}
     local actionTest = [[(begin
-    (set "clua_boolean1" (player_action_test_%s))
-    (sleep 2)
+    (set clua_boolean1 (player_action_test_%s))
     (player_action_test_reset)
     )]]
     execute_script(actionTest:format(returnType[type]))
