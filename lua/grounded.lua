@@ -24,12 +24,15 @@ local isEncounterTested = 0
 -- Array for fast travel devices
 local device_positions = {
     {
+        type = "position",
         deviceName = "fast_travel1"
     },
     {
+        type = "position",
         deviceName = "fast_travel2"
     },
     {
+        type = "position",
         deviceName = "fast_travel3"
     },
 }
@@ -58,7 +61,7 @@ local conversations = {
             execute_script("crewman_1")
         end
     },
-    {
+    --[[{
         objectName = "marine",
         promptMessage = "Press \"E\"  to talk to Marine",
         action = function()
@@ -66,7 +69,7 @@ local conversations = {
             -- Open ui widget when the player uses the actionkey
             --execute_script("crewman_1")
         end
-    },
+    },]]
     {
         objectName = "marine_weapon_merchant",
         promptMessage = "Press \"E\" to talk to Weapon Merchant",
@@ -119,6 +122,31 @@ local conversations = {
         action = function()
             set_global("act1_landed", 1)
         end
+    },
+    {
+        objectName = "motor",
+        promptMessage = "Press E to scavenge parts",
+        action = function()
+            set_global("act1_landed", 2)
+        end
+    },
+    {
+        objectName = "warthog",
+        promptMessage = function() 
+            if (get_global("act1_landed") == 1) then 
+                return ("Press \"E\" to inspect Warthog")
+            elseif (get_global("act1_landed") == 2) then
+                return ("Press \"E\" to repair Warthog")
+            else
+                return ("")
+            end
+        end,            
+        action = function()
+            if (get_global("act1_landed") == 2) then
+                set_global("act1_landed", 3)
+                hsc.unitEnterable("repair_hog", 1)
+            end
+        end
     }
 }
 
@@ -146,13 +174,13 @@ end
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
-
+    local intro = get_global("act1_landed")
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
      -- screen effect test
      if (playerBiped) then
         if (get_global("started")) then
-            execute_script("fade_in 0 0 0 60")
+            hsc.Fade("in", 0, 0, 0, 60)
             hsc.screenEffectConvolution(5, 2, 3, 0, 5)
             set_timer(2000, "setFalse", "started")
         elseif not (get_global("started")) then
@@ -181,7 +209,7 @@ function OnTick()
     -- Iterate over all devices with a certain Name and detect if they're in the "open" position using hsc lua
     if (playerBiped) then
         for _, device_positions in pairs(device_positions) do
-            if (hsc.deviceGetPosition(device_positions.deviceName)) then
+            if not (hsc.deviceGet(device_positions.type, device_positions.deviceName) == 0) then
                 hsc.deviceSetPosImmediate(device_positions.deviceName, 0)
                 local widgetLoaded = load_ui_widget("ui\\conversation\\fast_travel\\fast_travel_master")
                 if not (widgetLoaded) then
@@ -222,6 +250,15 @@ function OnTick()
             end
         end
         --console_out(hsc.AllegiancesGet("human"))
+    end
+    if (intro == 1) then
+        hsc.activateNav(2, "(player0)", "repair_hog", 1)
+        hsc.activateNav(2, "(player0)", "motor", 1)
+        hsc.unitEnterable("repair_hog", 0)
+        elseif (intro == 2) then
+            hsc.clearNav(2, "(player0)", "motor")
+        elseif (intro == 3) then
+            hsc.clearNav(2, "(player0)", "repair_hog")
     end
 end
 

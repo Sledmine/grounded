@@ -9,6 +9,9 @@
 ------------------------------------------------------------------------------
 local hsc = {}
 
+------------------------------------------------------------------------------
+--- Variables & Conditions
+------------------------------------------------------------------------------
 --- Get if the local player is inside an specified trigger volume
 --- Your map.hsc file will require boolean global named clua_boolean1 to execute this script.
 --- You can change the global name from clua_boolean1 to any name you want, as long as that global is referenced in the checkVolumeScript function and the get_global function
@@ -26,32 +29,34 @@ function hsc.isPlayerInsideVolume(volumeTriggerName)
     end
     return false
 end
-
+------------------------------------------------------------------------------
+--- AI Functions
+------------------------------------------------------------------------------
 --- Attempt to get the counter of an AI encounter
 ---@param encounterName string Name of the encounter in Sapien
 function hsc.getAiEncounterLivingCount(encounterName)
-    local getAiLivingCountScript = [[(begin (set ai_biped_count (ai_living_count "%s")))]]
+    local getAiLivingCountScript = [[(begin (set clua_short1 (ai_living_count "%s")))]]
     execute_script(getAiLivingCountScript:format(encounterName))
-    return get_global("ai_biped_count")
+    return get_global("clua_short1")
 end
 
---- Attempt to spawn an AI encounter
----@param encounterName string Name of the encounter
-function hsc.aiPlace(encounterName)
-    execute_script("ai_place " .. encounterName)
+--- AI Spawning
+---@param1 script type (1 - 5)
+---@param2 encounterName string name of the encounter in Sapien
+--- If using 5/erase_all set the argument to ""
+function hsc.aiSpawn(type, encounterName)
+    local returnType = {"place", "kill", "kill_silent", "erase", "erase_all"}
+    execute_script("ai_" .. returnType[type] .. " " .. encounterName)
 end
 
---- Force encounter to see players by art of magic
----@param encounterName string Name of the encounter
-function hsc.aiMagicallySeePlayers(encounterName)
-    execute_script("ai_magically_see_players " .. encounterName)
-end
-
--- Get unit health
----@param unitName string name for unitName OR static script referencing the player biped.
-function hsc.unitGetHealth(unitName)
-    execute_script("set clua_short1 (unit_get_health " .. unitName .. ")")
-    return (get_global("clua_short1"))
+--- Magic Sight
+---@param1 type of Sight (1 - 3)
+---@param2 encounterName string name of the encounter in Sapien 
+---@param3 Object (encounter name or object name)
+--- If using 1/Players, declare object as ""
+function hsc.aiMagicallySee(type, encounterName, object)
+    local returnType = {"players", "unit", "encounter"}
+    execute_script("ai_magically_see_" .. returnType[type] .. " " .. encounterName .. " " .. object)
 end
 
 --- Set AI Allegiances
@@ -62,12 +67,105 @@ function hsc.AllegianceSet(team1, team2)
     console_out("Allegiance made between " .. team1 .. " and " .. team2)
 end
 
+--- Check AI Allegiances
+function hsc.AllegiancesGet(team)
+    local checkState = [[(begin
+    (if (= (ai_allegiance_broken player "%s") true)
+    (set "%s"_ally false)
+    )
+    )]]
+    execute_script(checkState:format(team, team))
+    if (not (get_global(team .. "_ally"))) then -- The game will read this as human_ally global.
+        return true
+    end
+    return false
+end
+------------------------------------------------------------------------------
+--- Unit Functions
+------------------------------------------------------------------------------
+-- Get unit health
+---@param unitName string name for unitName OR static script referencing the player biped.
+function hsc.unitGetHealth(unitName)
+    execute_script("set clua_short1 (unit_get_health " .. unitName .. ")")
+    return (get_global("clua_short1"))
+end
+
+--- Prevent player from entering unit 
+function hsc.unitEnterable(unit, boolean)
+    execute_script("unit_set_enterable_by_player " .. unit .. " " .. boolean)
+end
+
+------------------------------------------------------------------------------
+--- Player Functions
+------------------------------------------------------------------------------
+
+--- Player action test
+---@param1 Test Types (1 - 13)
+function hsc.actionTest(type)
+    local returnType = {"Accept", "Action", "Back", "grenade_trigger", "jump", "look_relative_all_directions", "look_relative_down", "look_relative_up", "look_relative_right", "look_relative_left", "move_relative_all_directions", "primary_trigger", "zoom"}
+    local actionTest = [[(begin
+    (set "clua_boolean1" (player_action_test_%s))
+    (sleep 2)
+    (player_action_test_reset)
+    )]]
+    execute_script(actionTest:format(returnType[type]))
+    if (get_global("clua_boolean1")) then
+        return true
+    end
+    return false
+end
+
+
+
+------------------------------------------------------------------------------
+--- Sound Function
+------------------------------------------------------------------------------
+
+--- Impulse Functions
+
 --- Sound Impulse Player 
 ---@param1 source of the sound file. Always include double-slashes with lua on windows.
 ---@param2 object you want to play the sound from
 ---@param3 gain between 0 and 1 of how loud the sound is
 function hsc.SoundImpulseStart(source, object, gain)
     execute_script("sound_impulse_start " .. source .. " " .. object .. " " .. gain) -- ".." acts as a + for string entry. So this will read as sound_impulse_start <source> <object> <gain>
+end
+
+--- Sound Impulse stop
+---@param1 Source of sound file
+function hsc.soundImpulseStop(source)
+    execute_script("sound_impulse_stop " .. source)
+end
+
+--- Sound Impulse Time
+---@param1 Source
+function hsc.soundImpulseTime(source)
+    local impulseTime = [[(set clua_short1 (sound_impulse_time "%s")]]
+    execute_script(impulseTime:format(source))
+    return (get_global("clua_short1"))
+end
+
+--- Looping Functions
+
+--- Sound Looping Player
+---@param1 source of the sound file. Always include double-slashes with lua on windows.
+---@param2 object you want to play the sound from
+---@param3 gain between 0 and 1 of how loud the sound is
+function hsc.soundLoopingStart(source, object, gain) 
+    execute_script("sound_looping_start " .. source .. " " .. object .. " " .. gain)
+end
+
+--- Sound Looping stop
+---@param1 Source of sound file
+function hsc.soundLoopingStop(source)
+    execute_script("sound_looping_stop " .. source)
+end
+
+--- Sound Looping Alternate
+---@param1 source
+---@param2 boolean
+function hsc.soundLoopingAlternate(source, boolean)
+    execute_script("sound_looping_set_alternate " .. source .. " " .. boolean)
 end
 
 --- Cinematic letterbox with no hud
@@ -80,9 +178,8 @@ function hsc.cinematicLetterbox_nohud(boolean)
     execute_script(letterbox_nohud:format(boolean))
 end
 
-
 ------------------------------------------------------------------------------
---- Screen effects 
+--- Screen Functions 
 ------------------------------------------------------------------------------
 --- Blur/Convolution effect - will remain active until 
 --- Screen Effect = one x (two(three - four))/five
@@ -116,80 +213,152 @@ end
 function hsc.cinematicLetterbox(boolean)
     execute_script("cinematic_show_letterbox " .. boolean)
 end
+
+--- Applying damage effect tags to player (artificial screen effects)
+---@param1 Tag directory and name of the DAMAGE_EFFECT tag
+---@param2 Unit (usually player)
+function hsc.damageEffect(tag, unit, marker)
+    execute_script("effect_new_on_object_marker " .. tag .. " " .. unit .. " " .. marker)
+end
+
+--- Fade effects
+---@param1 Declare in or out
+---@param2 Red 
+---@param3 Green 
+---@param4 Blue 
+---@param5 Transition Time
+function hsc.Fade(type, r, g, b, ticks)
+    local fadeEffect = [[(fade_%s "%s" "%s" "%s" "%s")]]
+    execute_script(fadeEffect:format(type, r, g, b, ticks))
+end
 ------------------------------------------------------------------------------
+--- HUD Functions
 ------------------------------------------------------------------------------
+
 --- Show hud
 ---@param1 boolean
 function hsc.showHud(boolean)
     execute_script("show_hud " .. boolean)
 end
 
---- Gets device position
+--- HUD Show Component
+---@param1 Component type (1 - 4)
+---@param2 Boolean True/False
+function hsc.hudShowComponent(type, boolean)
+    local returnType = {"shield", "motion_sensor", "health", "crosshair"}
+    execute_script("hud_show_" ..(returnType[type] .. " " .. boolean))
+end
+
+--- HUD Blink Component
+---@param1 Component type ("shield", "motion_sensor", "health")
+---@param2 Boolean True/False
+function hsc.hudBlinkComponent(type, boolean)
+    local returnType = {"shield", "motion_sensor", "health"}
+    execute_script("hud_blink_" .. returnType[type] .. " " .. boolean)
+end
+
+--- HUD Timer 
+---@param1 Type ("time", "warning_time")
+---@param2 Minutes
+---@param3 Seconds 
+function hsc.hudTimer(type, minutes, seconds)
+    local hudTimer = [[(hud_set_timer_"%s" "%s" "%s")]]
+    execute_script(hudTimer:format(type, minutes, seconds))
+end
+
+--- Pause hud Timer
+---@param1 Boolean 
+function hsc.pauseTimer(boolean)
+    execute_script("pause_hud_timer " .. boolean)
+end
+
+--- HUD Get Timer
+--- Kinda useless when using lua but I'm sure someone will find a reason to use this
+function hsc.getTimer()
+    execute_script("set clua_short1 (hud_get_timer_ticks)")
+    return (get_global("clua_short1"))
+end
+
+--- Navpoint functions
+--- Enable navpoint
+---@param1 Type (1 = Flag, 2 = Object)
+---@param2 Unit (usually player)
+---@param3 Source (Flag or object)
+---@param4 Vertical Offset in Halo World Units
+function hsc.activateNav(type, unit, source, verticalOffset)
+    local returnType = {"flag", "object"}
+        execute_script("activate_nav_point_" .. returnType[type] .. " default " .. " " .. unit .. " " .. source .. " " .. verticalOffset)
+end
+
+--- Deactivate Nav Point
+---@param1 Type (1 = flag, 2 = object)
+---@param2 Unit (usually player)
+---@param3 Source (Flag or object)
+function hsc.clearNav(type, unit, source)
+    local returnType = {"flag", "object"}
+    execute_script("deactivate_nav_point_" .. returnType[type] .. " " .. unit .. " " .. source)
+end
+
+------------------------------------------------------------------------------
+--- Camera Functions                                           -I'm not sure how you would use this more efficiently than the standard CE system, but here they are.
+------------------------------------------------------------------------------
+--- Conversation camera set
+--- @param1 Camera Point
+--- @param2 Ticks to travel between points
+--- @param3 Sleep
+function hsc.setCamera(camera_point, real, sleep)
+    local setCamera = [[(begin
+    (camera_set "%s" "%s")
+    (sleep "%s")
+    )]]
+    execute_script(setCamera:format(camera_point, real, sleep))
+end
+
+--- Camera control
+---@param1 boolean
+function hsc.cameraControl(boolean)
+    execute_script("camera_control " .. boolean)
+end
+------------------------------------------------------------------------------
+--- Device Functions
+------------------------------------------------------------------------------
+-- Device functions have been simplified into "properties". Instead of having to write "device_get_power" you can simply write hsc.deviceGet("Power" , "deviceName") or hsc.deviceGet("position", "deviceName")
+-- This simplifies scripting for everyone involved
+
+--- Gets Device Properties
 --- Your map.hsc file will require boolean global named clua_boolean1 to execute this script.
---- You can change the global name from clua_boolean1 to any name you want, as long as that global is referenced in the checkVolumeScript function and the get_global function
----@param1 device name
-function hsc.deviceGetPosition(deviceName)
-    local checkPosition = [[(begin 
-    (if (> (device_get_position "%s") 0.1)
-        (set clua_boolean1 true)
-        (set clua_boolean1 false)
-    )
-)]]
-    execute_script(checkPosition:format(deviceName))
-    if (get_global("clua_var1")) then
-        return true
-    end
-    return false
+--- 
+---@param1 Type ("power" or "position")
+---@param2 Device Name
+function hsc.deviceGet(type, deviceName)
+    local returnType = {"power", "position"}
+    local deviceGet = [[(begin
+        (if (> (device_get_%s "%s") 0)
+        (set clua_short1 1)
+        (set clua_short1 0)
+        )
+        )]]
+    execute_script(deviceGet:format(returnType[type], deviceName))
+    return get_global("clua_short1")
+end
+
+--- Set Device Property
+---@param1 Type ("power", "position")
+---@param2 Device Name
+---@param3 Boolean
+function hsc.deviceSet(type, device, boolean)
+    local returnType = {"power", "position"}
+    local deviceSet = [[(device_set_%s "%s" "%s")]]
+    execute_script(deviceSet:format(returnType[type], device, boolean))
 end
 
 --- Sets device position immediately
 --- @param1 device name
 --- @param2 boolean
-function hsc.deviceSetPosImmediate(device, number)
-    local setPosition = [[(begin
-    (device_set_position_immediate "%s" "%s")
-    (set device_open false)
-    )]]
-    execute_script(setPosition:format(device, number))
+function hsc.deviceSetPosImmediate(device, boolean)
+    local setPosImmediate = [[(device_set_position_immediate "%s" "%s")]]
+    execute_script(setPosImmediate:format(device, boolean))
 end
 
---- Check AI Allegiances
-function hsc.AllegiancesGet(team)
-    local checkState = [[(begin
-    (if (= (ai_allegiance_broken player "%s") true)
-    (set "%s"_ally false)
-    )
-    )]]
-    execute_script(checkState:format(team, team))
-    if (not (get_global(team .. "_ally"))) then -- The game will read this as human_ally global.
-        return true
-    end
-    return false
-end
-
---- Conversation camera set
---- @param1 camera point flag
---- @param2 teleport point (regular flag)
-function hsc.setCameraConversation(camera_point, tp_point)
-    local setCamera = [[(begin
-    (camera_control 1)
-    (camera_set "%s" 0)
-    (object_teleport (unit (list_get (players) 0)) "%s"))
-    )]]
-    execute_script(setCamera:format(camera_point, tp_point))
-end
-
---- Camera reset 
-function hsc.cameraReset(tp_point)
-    local cameraReset = [[(begin
-    (camera_control 0)
-    (object_teleport (unit (list_get (players) 0)) "%s")
-    )]]
-    execute_script(cameraReset:format(tp_point))
-end
-
---- Grounded specific
-function hsc.Opening()
-end
 return hsc
 
