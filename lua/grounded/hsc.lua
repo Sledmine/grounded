@@ -34,16 +34,16 @@ end
 ------------------------------------------------------------------------------
 --- Attempt to get the counter of an AI encounter
 ---@param encounterName string Name of the encounter in Sapien
-function hsc.getAiEncounterLivingCount(encounterName)
-    local getAiLivingCountScript = [[(begin (set clua_short1 (ai_living_count "%s")))]]
+function hsc.aiLivingCount(encounterName)
+    local getAiLivingCountScript = [[(begin (set unit_health (ai_living_count "%s")))]]
     execute_script(getAiLivingCountScript:format(encounterName))
-    return get_global("clua_short1")
+    return get_global("unit_health")
 end
 
 --- AI Spawning
 ---@param1 script type (1 - 5)
 ---@param2 encounterName string name of the encounter in Sapien
---- If using 5/erase_all set the argument to ""
+--- If using 5/erase_all set the encounterName to ""
 function hsc.aiSpawn(type, encounterName)
     local returnType = {"place", "kill", "kill_silent", "erase", "erase_all"}
     execute_script("ai_" .. returnType[type] .. " " .. encounterName)
@@ -79,6 +79,12 @@ function hsc.AllegiancesGet(team)
         return true
     end
     return false
+end
+--- AI Behaviour
+---
+function hsc.aiAction(type, encounterName)
+    local returnType = {"berserk", "follow_target_players", "attack", "defend"}
+    execute_script("ai_" .. returnType[type] .. " " .. encounterName)
 end
 ------------------------------------------------------------------------------
 --- Unit Functions
@@ -167,16 +173,6 @@ function hsc.soundLoopingAlternate(source, boolean)
     execute_script("sound_looping_set_alternate " .. source .. " " .. boolean)
 end
 
---- Cinematic letterbox with no hud
---- @param1 boolean
-function hsc.cinematicLetterbox_nohud(boolean)
-    local letterbox_nohud = [[(begin
-    (cinematic_show_letterbox "%s")
-    (show_hud 0)
-    )]]
-    execute_script(letterbox_nohud:format(boolean))
-end
-
 ------------------------------------------------------------------------------
 --- Screen Functions 
 ------------------------------------------------------------------------------
@@ -211,6 +207,16 @@ end
 ---@param1 boolean
 function hsc.cinematicLetterbox(boolean)
     execute_script("cinematic_show_letterbox " .. boolean)
+end
+
+--- Cinematic letterbox with no hud
+--- @param1 boolean
+function hsc.cinematicLetterbox_noHud(boolean)
+    local letterbox_nohud = [[(begin
+    (cinematic_show_letterbox "%s")
+    (show_hud 0)
+    )]]
+    execute_script(letterbox_nohud:format(boolean))
 end
 
 --- Applying damage effect tags to player (artificial screen effects)
