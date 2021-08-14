@@ -47,14 +47,14 @@ asyncEventsQueue = {}
 -- Proof of concept
 ---@type conversation
 local conversations = {
-    --[[{
+    {
         objectName = "crewman",
         promptMessage = "Press \"E\" to talk to talk to Crewman",
         action = function()
             -- Open ui widget when the player uses the actionkey
             execute_script("crewman_1")
         end
-    },]]
+    },
     {
         objectName = "marine_weapon_merchant",
         promptMessage = "Press \"E\" to talk to Weapon Merchant",
@@ -84,8 +84,6 @@ local conversations = {
         action = function()
             local widgetLoaded = load_ui_widget(
                                      "ui\\conversation\\side_evacpod2\\forbes\\forbes_a")
-            hsc.setCameraConversation("sgt_forbes_conversation", "conv_bsp2")
-            set_global("conversation", true)
             if (widgetLoaded) then
                 hsc.setCameraConversation("sgt_forbes_conversation", "conv_bsp2")
             end
@@ -93,30 +91,30 @@ local conversations = {
                 console_out("An error occurred while loading ui widget!")
             end
         end
-    }
-    --[[{
+    },
+    {
         objectName = "elite",
         promptMessage = "Press \"E\" to talk to \"Covenant Elite\"",
         action = function()
             hsc.SoundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
         end
-    },]]
-    --[[{
+    },
+    {
         objectName = "marine_ltpatterson",
         promptMessage = "Press \"E\" to talk to Lt. Patterson",
         action = function()
             set_global("act1_landed", 1)
         end
-    },]]
-    --[[{
+    },
+    {
         objectName = "motor",
         promptMessage = "Press E to scavenge parts",
         action = function()
             set_global("act1_landed", 2)
             execute_script("object_destroy motor")
         end
-    },]]
-    --[[{
+    },
+    {
         objectName = "warthog",
         promptMessage = "Press \"E\" to inspect warthog",            
         action = function()
@@ -125,7 +123,7 @@ local conversations = {
                 hsc.unitEnterable("repair_hog", 1)
             end
         end
-    }]]
+    }
 }
 
 --- Clear navpoints based on proximity
@@ -139,8 +137,9 @@ local navpoints = {
     }
 }
 
+local engine_saver = 0
+
 function OnMapLoad()
-    local engine_saver = 0
 end
 
 function setFalse(global)
@@ -158,21 +157,19 @@ function OnTick()
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
      -- screen effect test
-     if (playerBiped) then
+    if (playerBiped) then
         if (get_global("started")) then
             hsc.Fade("in", 0, 0, 0, 60)
             hsc.cinematicLetterbox_noHud(1)
             hsc.screenEffectConvolution(5, 2, 3, 0, 5)
             set_timer(2000, "setFalse", "started")
-        elseif not (get_global("started")) then
-            set_timer(3000, "letterbox", "1")
         end
     end
 
-    --[[if (hsc.isPlayerInsideVolume("raider_intro") and (hsc.aiLivingCount("g_enc_raiderIntro") == 0)) then
+    if (hsc.isPlayerInsideVolume("raider_intro") and (hsc.aiLivingCount("g_enc_raiderIntro") == 0)) then
         hsc.aiSpawn(1, "g_enc_raiderIntro")
         hsc.aiMagicallySee(1, "g_enc_raiderIntro", "")
-    end]]
+    end
     -- Async event dispatcher
     for eventIndex, event in pairs(asyncEventsQueue) do
         event.func(table.unpack(event.args))
@@ -206,6 +203,8 @@ function OnTick()
                             if (playerBiped.actionKey) then
                                 conversation.action()
                             end
+                        elseif (core.playerIsNearTo(object, 0.8)) then
+                            interface.promptHud("")
                         end
                     end
                 end
