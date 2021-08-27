@@ -29,15 +29,31 @@ function hsc.isPlayerInsideVolume(volumeTriggerName)
     end
     return false
 end
+--[[
+--- If-then-else
+function hsc.if(string)
+    local ifThen = [[(begin
+    (if ("%s")
+        (set clua_boolean1 true)
+        (set clua_boolean2 false)
+    )
+    )
+    execute_script(ifThen:format(string))
+    if (get_global("clua_boolean1")) then
+        return true
+    end
+    return false
+end]]
+
 ------------------------------------------------------------------------------
 --- AI Functions
 ------------------------------------------------------------------------------
 --- Attempt to get the counter of an AI encounter
 ---@param encounterName string Name of the encounter in Sapien
 function hsc.aiLivingCount(encounterName)
-    local getAiLivingCountScript = [[(begin (set unit_health (ai_living_count "%s")))]]
+    local getAiLivingCountScript = [[(begin (set clua_blabla (ai_living_count "%s")))]]
     execute_script(getAiLivingCountScript:format(encounterName))
-    return get_global("unit_health")
+    return get_global("clua_blabla")
 end
 
 --- AI Spawning
@@ -97,10 +113,56 @@ function hsc.unitGetHealth(unitName)
 end
 
 --- Prevent player from entering unit 
-function hsc.unitEnterable(unit, boolean)
-    execute_script("unit_set_enterable_by_player " .. unit .. " " .. boolean)
+function hsc.unitEnterable(vehicle, boolean)
+    execute_script("unit_set_enterable_by_player " .. vehicle .. " " .. boolean)
 end
 
+-- Unit Enter vehicle
+---@param1 unit to enter the vehicle    
+---@param2 vehicle being targeted
+---@param3 Target seat of vehicle
+function hsc.unitEnterVehicle(unit, vehicle, marker)
+    execute_script("unit_enter_vehicle " .. unit .. " " .. vehicle .. " " .. marker)
+end
+
+--- Unit Exit vehicle
+---@param1 Unit to eject
+function hsc.unitExitVehicle(unit)
+    execute_script("unit_exit_vehicle " .. unit)
+end
+
+------------------------------------------------------------------------------
+--- Object Functions
+------------------------------------------------------------------------------
+--- Objects Attach
+---@param1 Parent object
+---@param2 Parent attachment marker - can be ""
+---@param3 Child object
+---@param4 Child attachment object - can be ""
+function hsc.objectsAttach(parent, pMarker, child, cMarker)
+    execute_script("objects_attach " .. parent .. " ".. pMarker .. " ".. child .. " ".. cMarker)
+end
+
+--- Objects detach
+---@param1 Parent Object
+---@param2 Child Object
+function hsc.objectsDetach(parent, child)
+    execute_script("objects_detach " .. parent .. " " .. child)
+end
+
+--- Object Set Scale
+---@param1 Object
+---@param2 Scale
+---@param3 Number of frames to achieve the transformation
+function hsc.objectScale(object, scale, frames)
+    execute_script("object_set_scale " .. object .. " " .. scale .. " " .. frames)
+end
+
+--- Object Create
+---@param1 object Name
+function hsc.objectCreate(objectName)
+    execute_script("object_create_containing " .. objectName)
+end
 ------------------------------------------------------------------------------
 --- Player Functions
 ------------------------------------------------------------------------------
@@ -363,6 +425,22 @@ end
 function hsc.deviceSetPosImmediate(device, boolean)
     local setPosImmediate = [[(device_set_position_immediate "%s" "%s")]]
     execute_script(setPosImmediate:format(device, boolean))
+end
+
+------------------------------------------------------------------------------
+--- Grounded specific
+------------------------------------------------------------------------------
+
+--- letterbox show and delete 
+function hsc.groundedOpen()
+    local flash = [[(begin
+    (show_hud 0)
+    (cinematic_show_letterbox 1)
+    (sleep 30)
+    (cinematic_show_letterbox 0)
+    (show_hud 1)
+    )]]
+    execute_script(flash)
 end
 
 return hsc

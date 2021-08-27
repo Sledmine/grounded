@@ -25,7 +25,8 @@ local function saveFile(saveFileIndex)
     if (saveFile) then
         -- TODO Check if the file was successfully saved
         glue.writefile(savesPath .. "\\slot_" .. saveFileIndex .. ".bin", saveFile)
-        console_out("Saved slot: " .. saveFileIndex)
+        hud_message("")
+        hud_message("Saved slot: " .. saveFileIndex)
     end
 end
 
