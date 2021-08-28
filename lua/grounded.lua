@@ -14,6 +14,8 @@ objectClasses = blam.objectClasses
 local hsc = require "grounded.hsc"
 local core = require "grounded.core"
 local interface = require "grounded.interface"
+local dialog = require "grounded.dialog"
+local testDialog = require "grounded.dialogs.test"
 
 -- Array for fast travel devices
 local device_positions = {
@@ -141,11 +143,6 @@ function letterbox(boolean)
     hsc.cinematicLetterbox(0)
 end
 
-
-
-
-
-
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
     local scenario = blam.scenario()
@@ -218,6 +215,25 @@ function OnTick()
     -- Iterate over all devices with a certain Name and detect if they're in the "open" position using hsc lua
    
     if (playerBiped) then
+        if playerBiped.flashlightKey then
+            dialog.open(testDialog, true)
+        end
+        local dialogPressedOption = interface.triggers("dynamic_menu", 4)
+        if (dialogPressedOption) then
+            local currentDialog = dialog.getState().currentDialog
+            if (currentDialog and currentDialog.actions) then
+                local action = currentDialog.actions[dialogPressedOption]
+                if (action) then
+                    if (type(action) == "table") then
+                        dialog.open(action)
+                    elseif (type(action) == "function") then
+                        action()
+                    end
+                end
+            else
+                console_out("There is no branch for this option!")
+            end
+        end
         for _, objectIndex in pairs(blam.getObjects()) do
             local object = blam.object(get_object(objectIndex))
             if (object and object.type == objectClasses.control or objectClasses.biped) then
