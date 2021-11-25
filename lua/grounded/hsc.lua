@@ -163,6 +163,9 @@ end
 function hsc.objectCreate(objectName)
     execute_script("object_create_containing " .. objectName)
 end
+
+
+
 ------------------------------------------------------------------------------
 --- Player Functions
 ------------------------------------------------------------------------------
@@ -182,7 +185,10 @@ function hsc.actionTest(type)
     return false
 end
 
-
+--- Object teleportFrom
+function hsc.teleMe(flag)
+    execute_script("object_teleport (unit (list_get (players) 0)) " .. flag)
+end
 
 ------------------------------------------------------------------------------
 --- Sound Function
@@ -194,7 +200,7 @@ end
 ---@param1 source of the sound file. Always include double-slashes with lua on windows.
 ---@param2 object you want to play the sound from
 ---@param3 gain between 0 and 1 of how loud the sound is
-function hsc.SoundImpulseStart(source, object, gain)
+function hsc.soundImpulseStart(source, object, gain)
     execute_script("sound_impulse_start " .. source .. " " .. object .. " " .. gain) -- ".." acts as a + for string entry. So this will read as sound_impulse_start <source> <object> <gain>
 end
 
@@ -223,7 +229,7 @@ function hsc.soundLoopingStart(source, object, gain)
 end
 
 --- Sound Looping stop
----@param1 Source of sound file
+---@field source Source of sound file
 function hsc.soundLoopingStop(source)
     execute_script("sound_looping_stop " .. source)
 end

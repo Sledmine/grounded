@@ -23,12 +23,14 @@ function dialog.open(convTable, resetState)
         }
     end
     local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)
+    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)
     local unicodeStringsTag = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)
-    if (dialogTag and unicodeStringsTag) then
+    if (dialogTag and unicodeStringsTag and characterDialog) then
         dialogState.currentDialog = convTable
         table.insert(dialogState.history, convTable)
         local widget = blam.uiWidgetDefinition(dialogTag.id)
         local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])
+        local npcDialog = blam.unicodeStringList(characterDialog.id)
         local widgetStrings = blam.unicodeStringList(unicodeStringsTag.id)
         -- Copy the current strings from the widget
         local newStrings = widgetStrings.stringList
@@ -44,6 +46,7 @@ function dialog.open(convTable, resetState)
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
         end
+        --npcDialog.stringList = newDialog
     else
         console_out("A problem ocurred at loading the dialog tags!")
     end
