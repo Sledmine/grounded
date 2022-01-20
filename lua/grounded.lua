@@ -16,8 +16,9 @@ local hsc = require "grounded.hsc"
 local core = require "grounded.core"
 local interface = require "grounded.interface"
 local dialog = require "grounded.dialog"
-local forbesConv = require "grounded.dialogs.forbes"
+--local forbesConv = require "grounded.dialogs.forbes"
 local testConv = require "grounded.dialogs.test"
+local ltPatConv = require "grounded.dialogs.ltPatterson"
 -- Array for fast travel devices
 local device_positions = {
     {
@@ -131,11 +132,6 @@ function OnTick()
     local playerBiped = blam.biped(get_dynamic_player())
     local engine_saver = 0
 ------------------------------------------------------------------------------
-------------------------------------------------------------------------------
---- NPC Dialogs 
-------------------------------------------------------------------------------
-local ltPatConv = require "grounded.dialogs.ltPatterson"
-
 ------------------------------------------------------------------------------
 --- Game events
 ------------------------------------------------------------------------------
@@ -320,6 +316,11 @@ local conversations = {
                         end
                     end
                 end
+------------------------------------------------------------------------------
+--- NPC Dialogs 
+------------------------------------------------------------------------------
+--local ltPatConv = require "grounded.dialogs.ltPatterson"
+------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Objective System
 ------------------------------------------------------------------------------
