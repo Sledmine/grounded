@@ -50,6 +50,7 @@ tags
 data
 six-shooter.ini
 project
+dist
 
 # Cloud files
 *.db*
