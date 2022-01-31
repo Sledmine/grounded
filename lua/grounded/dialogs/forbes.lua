@@ -610,7 +610,7 @@ con1Sptn1 = {  -- Starts the branching actions.
 
     --forbes.intro =
 return {
-    objectName = "forbes",
+    objectName = "sgt_forbes",
     npcDialog =  {forbesChat[1]}, --- Your ship crashed right?
     speech = theSoundMan[1],
     options = 
