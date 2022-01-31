@@ -42,11 +42,11 @@ end
 ---@param widget tag
 function interface.close(widget)
     -- Send new event type to force close
-    local uiWidget = blam.uiWidgetDefinition(widget.id)
+    local uiWidget = blam.uiWidgetDefinition(widget)
     if (uiWidget) then
         uiWidget.eventType = 33
     else
-        error("UI Widget " .. tostring(widget.path) .. " was not able to be modified.")
+        error("UI Widget " .. tostring(widget) .. " was not able to be modified.")
     end
 end
 

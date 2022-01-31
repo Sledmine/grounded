@@ -4,7 +4,7 @@ local hsc = require "grounded.hsc"
 patterChat = {
     "Who are you?", --1
     "Navy? I think you should report to my CO. Major Forbes", -- 2
-    "He's stationed aboard the Colony Ship. You can reach it on-foot in good time but there's a warthog outside you can repair if you want.", -- 3
+    "He's stationed aboard the Colony Ship. You can reach it on-foot in good time but there's a \nwarthog outside you can repair if you want.", -- 3
     "If you go down to the garage we have a crate with spares. Check out the warthog first so you know what you need.", -- 4
     "Don't take too long. We're in an active military conflict, so be prepared for combat at any notice.", -- 5
     "Okay smartass. Report to CO Major Forbes.", -- 6
@@ -47,7 +47,7 @@ responseSptn5 = {
 con1Sptn2_2 = {  -- Starts the branching actions.
     {                                           -- Action 1
         objectName = "ltpat",
-        npcDialog = patterChat[3],
+        npcDialog = {patterChat[3]},
         speech = "",
         options = 
         {
@@ -70,7 +70,7 @@ con1Sptn2_2 = {  -- Starts the branching actions.
 con1Sptn4 = {
     {                                           -- Con1_Fork4_LtPat1
         objectName = "ltpat",
-        npcDialog = patterChat[9],
+        npcDialog = {patterChat[9]},
         speech = "",
         options = 
         {
@@ -85,7 +85,7 @@ con1Sptn4 = {
     },
     {                                           -- Con1_Fork4_LtPat1
         objectName = "ltpat",
-        npcDialog = patterChat[6],
+        npcDialog = {patterChat[6]},
         speech = "",
         options = 
         {
@@ -103,7 +103,7 @@ con1Sptn4 = {
 con1Sptn3 = {
     {                                           -- Action 1
         objectName = "ltpat",
-        npcDialog = patterChat[4],
+        npcDialog = {patterChat[4]},
         speech = "",
         options = 
         {
@@ -119,7 +119,7 @@ con1Sptn3 = {
 con1Sptn2 = {  -- Starts the branching actions.
     {                                           -- Action 1
         objectName = "ltpat",
-        npcDialog = patterChat[3],
+        npcDialog = {patterChat[3]},
         speech = "",
         options = 
         {
@@ -142,7 +142,7 @@ con1Sptn2 = {  -- Starts the branching actions.
 con1Sptn5 = {
     {                                           -- Con1_Fork4_LtPat1
         objectName = "ltpat",
-        npcDialog = patterChat[9],
+        npcDialog = {patterChat[9]},
         speech = "",
         options = 
         {
@@ -157,7 +157,7 @@ con1Sptn5 = {
     },
     {                                           -- Con1_Fork4_LtPat1
         objectName = "ltpat",
-        npcDialog = patterChat[6],
+        npcDialog = {patterChat[6]},
         speech = "",
         options = 
         {
@@ -175,7 +175,7 @@ con1Sptn5 = {
 con1Sptn1 = {  -- Starts the branching actions.
     {                                           -- Action 1
         objectName = "ltpat",
-        npcDialog = patterChat[2],
+        npcDialog = {patterChat[2]},
         speech = "",
         options = 
         {
@@ -190,7 +190,7 @@ con1Sptn1 = {  -- Starts the branching actions.
     },
     {                                           -- Action 3
         objectName = "ltpat",
-        npcDialog = patterChat[6],
+        npcDialog = {patterChat[6]},
         speech = "",
         options = 
         {
@@ -205,7 +205,7 @@ con1Sptn1 = {  -- Starts the branching actions.
     },
     {                                           -- Action 2
         objectName = "ltpat",
-        npcDialog = patterChat[8],
+        npcDialog = {patterChat[8]},
         speech = "",
         options = 
         {
@@ -223,8 +223,8 @@ con1Sptn1 = {  -- Starts the branching actions.
     --ltPat.intro =
 return {
     objectName = "ltPat",
-    npcDialog =  "blah blah blah",
-    speech = theSoundMan[1],
+    npcDialog =  {patterChat[1]},
+    speech = "",
     options = 
     {
         responseSptn1[1], --- Triggers Action 1

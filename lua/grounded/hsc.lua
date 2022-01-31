@@ -45,6 +45,13 @@ function hsc.if(string)
     return false
 end]]
 
+--- Structure BSP Index
+--- Returns the BSP index via a global
+function hsc.bspIndex()
+    execute_script("set clua_short2 (structure_bsp_index)")
+    return get_global("clua_short2")
+end
+
 ------------------------------------------------------------------------------
 --- AI Functions
 ------------------------------------------------------------------------------
@@ -81,6 +88,11 @@ end
 function hsc.AllegianceSet(team1, team2)
     execute_script("ai_allegiance " .. team1 .. " " .. team2)
     console_out("Allegiance made between " .. team1 .. " and " .. team2)
+end
+
+--- Remove AI Allegiances
+function hsc.AllegianceRemove(team1, team2)
+    execute_script("ai_allegiance_remove " .. team1 .. " " .. team2)
 end
 
 --- Check AI Allegiances

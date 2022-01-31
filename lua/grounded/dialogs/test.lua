@@ -1,13 +1,20 @@
 local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 
-response = {"response 1", "response 2", "response 3", "response 4", "response 5", "response 6"}
-npcWords = {"grrr 1", "grrr 2", "im a sad bitch boy", "i'm a scared widdle baby"}
+response = { -- Either format for Response and npcWords is fine., but having it ordered in a column is far more readable than that down there.
+    "response 1", -- 1
+    "response 2", -- 2
+    "response 3", -- 3
+    "response 4", -- 4
+    "response 5", -- 5
+    "response 6", -- 6
+    }
+npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's saying a lot of dialogue you need to use the new line\n feature built into lua. Also, make\n sure your unicodestringlist has the right number of characters"}
 
 fork1_action = {
     {
         objectName = "objectName",
-        npcDialog = npcWords[2],
+        npcDialog = {npcWords[2]}, -- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
         speech = "",
         options = 
         {
@@ -22,7 +29,7 @@ fork1_action = {
     },
     {
         objectName = "objectName",
-        npcDialog = npcWords[3],
+        npcDialog = {npcWords[3]},-- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
         speech = "",
         options = 
         {
@@ -40,7 +47,7 @@ fork1_action = {
 
 return {
     objectName = "objectName",
-    npcDialog =  npcWords[1],
+    npcDialog =  {npcWords[1]},-- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
     speech = "",
     options = 
     {
@@ -55,52 +62,3 @@ return {
     }
 }
 
---[[return    
-{
-objectName = "",
-npcDialog = "",
-speech = "",
-options = 
-{},
-actions = 
-{
-    {
-        objectName = "",
-        npcDialog = "",
-        speech = "",
-        options = 
-        {},
-        actions = 
-        {}
-    }
-}
-}]]
-
---[[
-table1 = {
-    property1 = "string",
-    property2 = table1[1],
-    options = {
-            optionTable[1],
-            optionTable[2]
-        }
-    results = {
-        table2,
-        table3
-        }
-}
-
-table2 = {
-    property1 = "string",
-    property2 = table1[2],
-    options = {
-            optionTable[3],
-            optionTable[4]
-        }
-    results = {
-        table1,
-        table3
-        }
-}
-
-]]

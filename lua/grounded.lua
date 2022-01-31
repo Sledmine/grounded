@@ -16,9 +16,7 @@ local hsc = require "grounded.hsc"
 local core = require "grounded.core"
 local interface = require "grounded.interface"
 local dialog = require "grounded.dialog"
---local forbesConv = require "grounded.dialogs.forbes"
-local testConv = require "grounded.dialogs.test"
-local ltPatConv = require "grounded.dialogs.ltPatterson"
+local scenario = blam.scenario()
 -- Array for fast travel devices
 local device_positions = {
     {
@@ -71,7 +69,7 @@ end
 ---
 local navpoints = {
     {
-        objectName = "sgt_forbes",
+        unitName = "sgt_forbes",
         action = function()
             execute_script("deactivate_nav_point_object (player0) forbes")
         end
@@ -92,6 +90,7 @@ end
 
 local aiStuff = true
 
+
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
 ------------------------------------------------------------------------------
@@ -101,7 +100,7 @@ function OnTick()
     --local hogRepair = (scenario.tagNames[27])
     local objectivePrompts = {    
         {
-            objectName = "warthog",-- "repair hog"
+            unitName = "warthog",-- "repair hog"
             promptMessage = modularPromptHog(),            
             action = function()
                 if (get_global("act1_landed") < 2) then
@@ -119,7 +118,7 @@ function OnTick()
             end
         },
         {
-            objectName = "motor",
+            unitName = "motor",
             promptMessage = "Press \"E\" to scavenge parts",
             action = function()
              set_global("act1_landed", 2)
@@ -131,6 +130,21 @@ function OnTick()
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
     local engine_saver = 0
+    local bspIndex = hsc.bspIndex()
+    --local fastTravel = get_global("clua_string1")
+
+    --[[(script static void ft_bar
+	(player_enable_input 0)
+	(fade_out 0 0 0 30)
+	(sleep 30)
+	(if (not (= 6 (structure_bsp_index)))
+		(switch_bsp 6)
+	)
+	(sleep 20)
+	(object_teleport (player0) ft_bar)
+	(player_enable_input 1)
+	(fade_in 0 0 0 30)
+)]]
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Game events
@@ -159,21 +173,20 @@ end
             end
         end
 ------------------------------------------------------------------------------  
---- Dynamic Conversations
+--- Conversations
 ------------------------------------------------------------------------------  
-------------------------------------------------------------------------------
---- LT Patterson
-------------------------------------------------------------------------------
-
+forbesConv = require "grounded.dialogs.forbes.forbes1"
+forbes2Conv = require "grounded.dialogs.forbes.forbes2"
+testConv = require "grounded.dialogs.test"
+ltPatConv = require "grounded.dialogs.ltPatterson"
+journalContent = require "grounded.journal.quests"
 ------------------------------------------------------------------------------  
 --- Testing Function flashlight
 ------------------------------------------------------------------------------      
-        --[[ Testing function
+        --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(ltPatConv, true)
-        else
-            hsc.objectScale("scale_test", 1, 2)
-        end]]
+            dialog.journal(journalContent, true)
+        end
 ------------------------------------------------------------------------------
 
     end
@@ -210,14 +223,14 @@ end
         local widgetCheck = interface.getCurrentWidget()
         --[[if (widgetCheck == "ui\\conversation\\dynamic_conversation\\dynamic_conversation_menu") then
             local audio = currentDialog.speech
-            local biped = currentDialog.objectName
+            local biped = currentDialog.unitName
             hsc.soundImpulseStart(audio, biped, 0.8)
         end]]
         if (dialogPressedOption) then
             local currentDialog = dialog.getState().currentDialog
             if (currentDialog and currentDialog.actions) then
                 --[[local audio = currentDialog.speech
-                local biped = currentDialog.objectName
+                local biped = currentDialog.unitName
                 hsc.soundImpulseStart(audio, biped, 0.8)]]
                 local action = currentDialog.actions[dialogPressedOption]
                 if (action) then
@@ -237,20 +250,12 @@ end
 -- List of biped conversation events
 -- Proof of concept
 ---@class conversation
----@field objectName string
+---@field unitName string
 ---@field promptMessage string
 ---@field action function
 local conversations = {
     {
-        objectName = "crewman",
-        promptMessage = "Press \"E\" to talk to Crewman",
-        action = function()
-            -- Open ui widget when the player uses the actionkey
-            execute_script("crewman_1")
-        end
-    },
-    {
-        objectName = "marine_weapon_merchant",
+        unitName = "marine_weapon_merchant",
         promptMessage = "Press \"E\" to talk to Weapon Merchant",
         action = function()
             local widgetLoaded = load_ui_widget(
@@ -261,8 +266,8 @@ local conversations = {
         end
     },
     {
-        objectName = "marine_armour_merchant",
-        promptMessage = "Press \"E\" to talk to talk to Armour Merchant",
+        unitName = "marine_armour_merchant",
+        promptMessage = "Press \"E\" to talk to Armour Merchant",
         action = function()
             local widgetLoaded = load_ui_widget(
                                      "ui\\conversation\\merchant_conversation\\merchant_armourmods")
@@ -271,22 +276,27 @@ local conversations = {
             end
         end
     },
-    {
-        objectName = "sgt_forbes",
-        promptMessage = "Press \"E\" to talk to talk to Sergeant Forbes",
+    {-- Forbes
+        unitName = "sgt_forbes",
+        promptMessage = "Press \"E\" to talk to Sergeant Forbes",
         action = function()
+            if (get_global("unsc_quests") < 1) then
             dialog.open(forbesConv, true)
+            set_global("unsc_quests", 1)
+            elseif (get_global("unsc_quests") > 0) then
+                dialog.open(forbes2Conv, true)
+            end
         end
     },
-    {
-        objectName = "elite",
-        promptMessage = "Press \"E\" to talk to \"Covenant Elite\"",
+    {-- Elite Captain
+        unitName = "podguard",
+        promptMessage = "Press \"E\" to talk to \"Elite Captain\"",
         action = function()
             hsc.SoundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
         end
     },
     { -- Lt Patterson
-        objectName = "lt_patterson",
+        unitName = "lt_patterson",
         promptMessage = "Press \"E\" to talk to Lt. Patterson",
         action = function()
             if (get_global("act1_landed") < 1) then
@@ -298,6 +308,10 @@ local conversations = {
     }
 }
 ------------------------------------------------------------------------------
+--- Journal 
+------------------------------------------------------------------------------
+    
+------------------------------------------------------------------------------
 --- Interaction System
 ------------------------------------------------------------------------------
         for _, objectIndex in pairs(blam.getObjects()) do
@@ -305,7 +319,7 @@ local conversations = {
             if (object and object.type == objectClasses.control or objectClasses.biped) then
                 local tag = blam.getTag(object.tagId)
                 for _, conversation in pairs(conversations) do
-                    if (tag and tag.path:find(conversation.objectName)) then
+                    if (tag and tag.path:find(conversation.unitName)) then
                         if (core.playerIsNearTo(object, 0.7)) then
                             interface.promptHud(conversation.promptMessage)
                             if (playerBiped.actionKey) then
@@ -316,6 +330,45 @@ local conversations = {
                         end
                     end
                 end
+--- Unit NAME test        
+           --[[ for _, objectIndex in pairs(blam.getObjects()) do
+                local object = blam.object(get_object(objectIndex))
+                if (object and object.type == objectClasses.control or objectClasses.biped) then
+                    local tagName = object.nameIndex
+                    local scenarioName = scenario.objectNames
+                    for _, conversation in pairs(conversations) do
+                        if (tagName and scenarioName[conversation.unitName]) then
+                            if (core.playerIsNearTo(object.nameIndex, 0.7)) then
+                                interface.promptHud(conversation.promptMessage)
+                                if (playerBiped.actionKey) then
+                                    conversation.action()
+                                end
+                            elseif (core.playerIsNearTo(object, 0.8)) then
+                                interface.promptHud("")
+                            end
+                        end
+                    end]]
+
+                    
+        
+--[[
+            for _, objectIndex in pairs(blam.getObjects()) do
+            local object = blam.object(get_object(objectIndex))
+            if (object and object.type == objectClasses.control or objectClasses.biped) then
+                local tag = blam.getTag(object.tagId)
+                for _, conversation in pairs(conversations) do
+                    if (tag and tag.path:find(conversation.unitName)) then
+                        if (core.playerIsNearTo(object, 0.7)) then
+                            interface.promptHud(conversation.promptMessage)
+                            if (playerBiped.actionKey) then
+                                conversation.action()
+                            end
+                        elseif (core.playerIsNearTo(object, 0.8)) then
+                            interface.promptHud("")
+                        end
+                    end
+                end
+]]                
 ------------------------------------------------------------------------------
 --- NPC Dialogs 
 ------------------------------------------------------------------------------
@@ -326,7 +379,7 @@ local conversations = {
 ------------------------------------------------------------------------------
                 --- For Objectives
                 for _, objectivePrompts in pairs(objectivePrompts) do
-                    if (tag and tag.path:find(objectivePrompts.objectName)) then
+                    if (tag and tag.path:find(objectivePrompts.unitName)) then
                         if (core.playerIsNearTo(object, 1.2)) then
                             interface.promptHud(objectivePrompts.promptMessage)
                             if (playerBiped.actionKey) then
@@ -354,7 +407,7 @@ local conversations = {
         end
         --console_out(hsc.AllegiancesGet("human"))
     end
-end
+end     
 
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")

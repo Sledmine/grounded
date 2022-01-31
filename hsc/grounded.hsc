@@ -1,6 +1,9 @@
 (global boolean started true)
 (global boolean clua_boolean1 false)
 (global short clua_short1 0)
+(global short clua_short2 0)
+(global short clua_short3 0)
+(global string clua_string1 blank)
 (global short credits 40) ;sets a global called "credits". It's how the player buys stuff.
 (global boolean merchantboi_1 false) ;this sets merch1 as a global
 (global boolean merchantboi_2 false) ;this sets merchantboi_2 as a global
@@ -104,16 +107,7 @@
 )
 ;here is fast travel
 (script static void ft_capital
-	(player_enable_input 0)
-	(fade_out 0 0 0 30)
-	(sleep 30)
-	(if (not (= 6 (structure_bsp_index)))
-		(switch_bsp 6)
-	)
-	(sleep 10)
-	(object_teleport (player0) ft_capital)
-	(player_enable_input 1)
-	(fade_in 0 0 0 30)
+	(set clua_string1 "ft_capital")
 )
 
 (script static void ft_bar
@@ -123,7 +117,7 @@
 	(if (not (= 6 (structure_bsp_index)))
 		(switch_bsp 6)
 	)
-	(sleep 10)
+	(sleep 20)
 	(object_teleport (player0) ft_bar)
 	(player_enable_input 1)
 	(fade_in 0 0 0 30)
@@ -136,7 +130,7 @@
 	(if (not (= 6 (structure_bsp_index)))
 		(switch_bsp 6)
 	)
-	(sleep 10)
+	(sleep 20)
 	(object_teleport (player0) ft_oni)
 	(player_enable_input 1)
 	(fade_in 0 0 0 30)
@@ -149,7 +143,7 @@
 	(if (not (= 2 (structure_bsp_index)))
 		(switch_bsp 2)
 	)	
-	(sleep 10)
+	(sleep 20)
 	(object_teleport (player0) ft_struc1)
 	(object_teleport ft_hog ft_struc1_hog)
 	(player_enable_input 1)
@@ -263,6 +257,10 @@
 	(ai_attach barman bsp2_bar)
 	(ai_attach merchant_1 bsp2_bar/weapons)
 	(ai_attach merchant_2 bsp2_bar/weapons)
+	(ai_attach surv1 enc_pod1/sqd_marine)
+	(ai_attach surv2 enc_pod1/sqd_marine)
+	(ai_attach surv3 enc_pod1/sqd_crewman)
+	(ai_attach surv4 enc_pod1/sqd_crewman)
 	(ai_place bsp2_guard)
 	(ai_allegiance "player" "sentinel")
 	(ai_allegiance "player" "human")
