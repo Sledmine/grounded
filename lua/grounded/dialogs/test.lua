@@ -14,7 +14,7 @@ npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's sayin
 fork1_action = {
     {
         objectName = "objectName",
-        npcDialog = {npcWords[2]}, -- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
+        npcDialog = {"You can even just write the dialog like this"}, -- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
         speech = "",
         options = 
         {

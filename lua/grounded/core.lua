@@ -35,6 +35,7 @@ end
 function core.saveSlot(saveFileIndex)
     -- TODO Remove this requirement and replace it with a trigger from the ui
     set_global("save", 0)
+    execute_script("game_save_totally_unsafe")
     execute_script("core_save")
     -- Add this function to the async events queue
     glue.append(asyncEventsQueue, {func = saveFile, args = {saveFileIndex}})

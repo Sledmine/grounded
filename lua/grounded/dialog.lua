@@ -66,34 +66,34 @@ function dialog.journal(convTable, resetState)
             history = {}
         }
     end
-    local dialogTag = blam.getTag([[ui\journal\master_journal]], tagClasses.uiWidgetDefinition)
+    local journalTag = blam.getTag([[ui\journal\master_journal]], tagClasses.uiWidgetDefinition)
     local questDialogStrings = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)
     local questNameStrings = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)
-    if (dialogTag and questDialogStrings and questNameStrings) then
+    if (journalTag and questDialogStrings and questNameStrings) then
         dialogState.currentDialog = convTable
         table.insert(dialogState.history, convTable)
-        local widget = blam.uiWidgetDefinition(dialogTag.id)
+        local widget = blam.uiWidgetDefinition(journalTag.id)
+        local questNames = blam.uiWidgetDefinition(widget.childWidgetsList[1])
         local questDialogWidget = blam.uiWidgetDefinition(widget.childWidgetsList[2])
-        local questNameWidgets = blam.uiWidgetDefinition(widget.childWidgetsList[1])
-        local npcDialogs = blam.unicodeStringList(characterDialog.id)
-        local widgetStrings = blam.unicodeStringList(unicodeStringsTag.id)
+        local dialogStrings = blam.unicodeStringList(questDialogStrings.id)
+        local questStrings = blam.unicodeStringList(questNameStrings.id)
         -- Copy the current strings from the widget
-        local newStrings = widgetStrings.stringList
-        for optionIndex, optionText in ipairs(convTable.options) do
-            newStrings[optionIndex] = optionText
+        local newQuest = questStrings.stringList
+        for questIndex, questText in ipairs(convTable.questNames) do
+            newQuest[questIndex] = questText
         end
-        options.childWidgetsCount = #convTable.options
-        local newNPCStrings = npcDialogs.stringList
-        for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do
-            newNPCStrings[npcDialogsIndex] = npcDialogsText
+        questNames.childWidgetsCount = #convTable.questNames
+        local newJournalStrings = dialogStrings.stringList
+        for journalIndex, journalText in ipairs(convTable.questDialog) do
+            newJournalStrings[journalIndex] = journalText
         end
         --npcDialogs.childWidgetsCount = #convTable.npcDialog
         --console_out(#convTable.options)
         --console_out(options.name)
         -- Update the old strings with our new updated copy
-        widgetStrings.stringList = newStrings
-        npcDialogs.stringList = newNPCStrings
-        local success = load_ui_widget(dialogTag.path)  
+        questStrings.stringList = newQuest
+        dialogStrings.stringList = newJournalStrings
+        local success = load_ui_widget(journalTag.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
         end

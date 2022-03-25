@@ -229,7 +229,7 @@ con1Sptn8 = {  -- Starts the branching actions.
 
     --forbes.intro =
 return {
-    objectName = "forbes",
+    objectName = "sgt_forbes",
     npcDialog = {forbesChat[19]}, --- Ah, you're back.
     speech = "",
     options = 
