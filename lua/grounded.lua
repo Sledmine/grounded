@@ -314,22 +314,29 @@ local conversations = {
 ------------------------------------------------------------------------------
 --- Interaction System
 ------------------------------------------------------------------------------
+        local scenario = blam.scenario(0)
         for _, objectIndex in pairs(blam.getObjects()) do
             local object = blam.object(get_object(objectIndex))
-            if (object and object.type == objectClasses.control or objectClasses.biped) then
-                local tag = blam.getTag(object.tagId)
-                for _, conversation in pairs(conversations) do
-                    if (tag and tag.path:find(conversation.unitName)) then
-                        if (core.playerIsNearTo(object, 0.7)) then
-                            interface.promptHud(conversation.promptMessage)
-                            if (playerBiped.actionKey) then
-                                conversation.action()
+            if (object and object.type == objectClasses.control or object.type == objectClasses.biped) then
+                if (not blam.isNull(object.nameIndex)) then
+                    local objectName = scenario.objectNames[object.nameIndex + 1]
+                    console_out(objectName)
+                    for _, conversation in pairs(conversations) do
+                        --if (tag and tag.path:find(conversation.unitName)) then
+                        if (objectName == conversation.unitName) then
+                            if (core.playerIsNearTo(object, 0.7)) then
+                                interface.promptHud(conversation.promptMessage)
+                                if (playerBiped.actionKey) then
+                                    conversation.action()
+                                end
+                            elseif (core.playerIsNearTo(object, 0.8)) then
+                                interface.promptHud("")
                             end
-                        elseif (core.playerIsNearTo(object, 0.8)) then
-                            interface.promptHud("")
                         end
                     end
                 end
+                
+                
 --- Unit NAME test        
            --[[ for _, objectIndex in pairs(blam.getObjects()) do
                 local object = blam.object(get_object(objectIndex))
