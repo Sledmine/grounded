@@ -6,6 +6,9 @@ local dialogState = {
     currentDialog = nil,
     history = {}
 }
+------------------------------------------------------------------------------
+--- DIALOG OPEN 
+------------------------------------------------------------------------------
 
 ---@class conversationTable
 ---@field objectName string Name of the scenario object that triggers the conversation
@@ -22,30 +25,42 @@ function dialog.open(convTable, resetState)
             history = {}
         }
     end
-    local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)
-    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)
-    local unicodeStringsTag = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)
-    if (dialogTag and unicodeStringsTag and characterDialog) then
-        dialogState.currentDialog = convTable
-        table.insert(dialogState.history, convTable)
-        local widget = blam.uiWidgetDefinition(dialogTag.id)
-        local npcWidget = blam.uiWidgetDefinition(widget.childWidgetsList[1])
-        local npcDialogs = blam.unicodeStringList(characterDialog.id)
-        local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])
-        local widgetStrings = blam.unicodeStringList(unicodeStringsTag.id)
-        -- Copy the current strings from the widget
-        local newStrings = widgetStrings.stringList
-        for optionIndex, optionText in ipairs(convTable.options) do
-            newStrings[optionIndex] = optionText
-        end
+------------------------------------------------------------------------------
+--- References
+------------------------------------------------------------------------------
+    local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)            -- Creates a reference to the global menu for Dynamic Conversations
+    local unicodeStringsTag = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)       -- Creates a reference to strings used for Character Dialog
+    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)             -- Creates a reference to strings used for NPCs
+------------------------------------------------------------------------------
+--- Read the current tags
+------------------------------------------------------------------------------
+    if (dialogTag and unicodeStringsTag and characterDialog) then                                                                               -- If all of the above tags are referenced, then
+        dialogState.currentDialog = convTable                                                                                                   -- Record the dialogState
+        table.insert(dialogState.history, convTable)                                                
+------------------------------------------------------------------------------
+        local widget = blam.uiWidgetDefinition(dialogTag.id)                                                                                    -- Define dialogTag.id as "widget"
+------------------------------------------------------------------------------
+        local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])                                                                     -- Call the "options" child widget, being in the second slot of the dialogTag 
+        local widgetStrings = blam.unicodeStringList(unicodeStringsTag.id)                                                                      -- Define unicodeStringsTag.id as widgetStrings
+------------------------------------------------------------------------------
+        local npcDialogs = blam.unicodeStringList(characterDialog.id)                                                                           -- Define chracterDialog.id as npcDialogs
+------------------------------------------------------------------------------
+        -- For PLAYER DIALOG
+        local newStrings = widgetStrings.stringList                                                                                             -- Defines newStrings as the .stringlist table from WidgetStrings
         options.childWidgetsCount = #convTable.options
-        local newNPCStrings = npcDialogs.stringList
-        for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do
+        for optionIndex, optionText in ipairs(convTable.options) do                                                                           -- For every child widget in "options" read the unicode strings
+            newStrings[optionIndex] = optionText                                                                                              -- Iterate into each unique string list entry
+        end
+        -- For NPC DIALOG
+        local newNPCStrings = npcDialogs.stringList                                                                                             -- Define new local "newNPCStrings" as npcDialogs.stringlist
+        for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do                                                                   -- Read the text of
             newNPCStrings[npcDialogsIndex] = npcDialogsText
         end
-        --npcDialogs.childWidgetsCount = #convTable.npcDialog
         --console_out(#convTable.options)
         --console_out(options.name)
+------------------------------------------------------------------------------
+--- Write new strings
+------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
         widgetStrings.stringList = newStrings
         npcDialogs.stringList = newNPCStrings
@@ -57,50 +72,9 @@ function dialog.open(convTable, resetState)
         console_out("A problem ocurred at loading the dialog tags!")
     end
 end
-
-function dialog.journal(convTable, resetState)
-    if (resetState) then
-        -- TODO Use a deep copy function to reset this using a default local state table
-        dialogState = {
-            currentDialog = nil,
-            history = {}
-        }
-    end
-    local journalTag = blam.getTag([[ui\journal\master_journal]], tagClasses.uiWidgetDefinition)
-    local questDialogStrings = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)
-    local questNameStrings = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)
-    if (journalTag and questDialogStrings and questNameStrings) then
-        dialogState.currentDialog = convTable
-        table.insert(dialogState.history, convTable)
-        local widget = blam.uiWidgetDefinition(journalTag.id)
-        local questNames = blam.uiWidgetDefinition(widget.childWidgetsList[1])
-        local questDialogWidget = blam.uiWidgetDefinition(widget.childWidgetsList[2])
-        local dialogStrings = blam.unicodeStringList(questDialogStrings.id)
-        local questStrings = blam.unicodeStringList(questNameStrings.id)
-        -- Copy the current strings from the widget
-        local newQuest = questStrings.stringList
-        for questIndex, questText in ipairs(convTable.questNames) do
-            newQuest[questIndex] = questText
-        end
-        questNames.childWidgetsCount = #convTable.questNames
-        local newJournalStrings = dialogStrings.stringList
-        for journalIndex, journalText in ipairs(convTable.questDialog) do
-            newJournalStrings[journalIndex] = journalText
-        end
-        --npcDialogs.childWidgetsCount = #convTable.npcDialog
-        --console_out(#convTable.options)
-        --console_out(options.name)
-        -- Update the old strings with our new updated copy
-        questStrings.stringList = newQuest
-        dialogStrings.stringList = newJournalStrings
-        local success = load_ui_widget(journalTag.path)  
-        if (not success) then
-            console_out("A problem occurred at loading the dialog widget!")
-        end
-    else
-        console_out("A problem ocurred at loading the dialog tags!")
-    end
-end
+------------------------------------------------------------------------------
+--- End of function
+------------------------------------------------------------------------------
 
 function dialog.transfer()
     if (#dialogState.history > 1) then

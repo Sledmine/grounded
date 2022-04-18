@@ -17,6 +17,7 @@ local core = require "grounded.core"
 local interface = require "grounded.interface"
 local dialog = require "grounded.dialog"
 local scenario = blam.scenario()
+local harmony = require "mods.harmony"
 -- Array for fast travel devices
 local device_positions = {
     {
@@ -32,7 +33,35 @@ local device_positions = {
         deviceName = "fast_travel3"
     },
 }
+------------------------------------------------------------------------------
+--- Main Menu Definitions
+------------------------------------------------------------------------------
+local menuOpened = 1
+------------------------------------------------------------------------------
+--local menuWidgetList = blam.getTag([[ui\grounded\game_list]], tagClasses.uiWidgetDefinition)                          -- Define the game_list.uiWidgetDefinition tag as "menuWidgetList"
+--local menuWidget = blam.uiWidgetDefinition(menuWidgetList.id)                                                         -- Pull the game id for the menuWidgetList definition
+------------------------------------------------------------------------------  
+--local continueWidget = (blam.getTag(menuWidget.childWidgetsList[1])).id                                               -- Define the "Continue" widget from menuWidgetList
+local newGameWidget = (blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)).id                                                -- Define the "New Game" widget from menuWidgetList
+------------------------------------------------------------------------------
+function on_menu_accept(button_widget_id)
+    if(button_widget_id == campaign_accept_button_widget_id) then
+        -- Cancel event
+        return false
+    else
+        return true
+    end
+end
+------------------------------------------------------------------------------
+function on_menu_mouse_button_press(menu_button_widget_id, pressed_mouse_button)
+    if(pressed_mouse_button == "left button") then
+        -- Cancel event
+        return false
+    end
 
+    return true
+end
+------------------------------------------------------------------------------
 ---@class event
 ---@field func function Desired function reference to execute
 ---@field args table List of arguments to be passed to the function
@@ -129,7 +158,6 @@ function OnTick()
     local intro = get_global("act1_landed")
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
-    local engine_saver = 0
     local bspIndex = hsc.bspIndex()
     --local fastTravel = get_global("clua_string1")
 
@@ -149,27 +177,28 @@ function OnTick()
 ------------------------------------------------------------------------------
 --- Game events
 ------------------------------------------------------------------------------
-if (intro == 0) then
-    hsc.unitEnterable("repair_hog", 0)
-elseif (intro == 1 and engine_saver == 0) then
-    hsc.activateNav(2, "(player0)", "repair_hog", 1)
-    hsc.activateNav(2, "(player0)", "motor", 1)
-    engine_saver = 1
-elseif (intro == 2) then
-    hsc.clearNav(2, "(player0)", "motor")
-elseif (intro == 3) then
-    hsc.clearNav(2, "(player0)", "repair_hog")
-    hsc.aiSpawn(1, "raiderintro")
-    set_global("act1_landed", 4)
-end
-     -- screen effect test
-    if (playerBiped) then
-        if (get_global("started")) then
-            hsc.Fade("in", 0, 0, 0, 60)
-            hsc.groundedOpen()
-            set_timer(2000, "setFalse", "started")
-            if (aiStuff) then
-                aiStuff = false
+    if (intro == 0) then
+        hsc.unitEnterable("repair_hog", 0)
+    elseif (intro == 1 and engine_saver == 0) then
+        hsc.activateNav(2, "(player0)", "repair_hog", 1)
+        hsc.activateNav(2, "(player0)", "motor", 1)
+        engine_saver = 1
+    elseif (intro == 2) then
+        hsc.clearNav(2, "(player0)", "motor")
+    elseif (intro == 3) then
+        hsc.clearNav(2, "(player0)", "repair_hog")
+        hsc.aiSpawn(1, "raiderintro")
+        set_global("act1_landed", 4)
+    end
+        -- screen effect test
+        if (playerBiped) then
+            if (get_global("started")) then
+                hsc.Fade("in", 0, 0, 0, 60)
+                hsc.groundedOpen()
+                set_timer(2000, "setFalse", "started")
+                if (aiStuff) then
+                    aiStuff = false
+                end
             end
         end
 ------------------------------------------------------------------------------  
@@ -185,11 +214,10 @@ journalContent = require "grounded.journal.quests"
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.journal(journalContent, true)
+            dialog.open(ltPatConv, true)
+            --load_ui_widget("ui\\grounded\\main_menu")
         end
 ------------------------------------------------------------------------------
-
-    end
 ------------------------------------------------------------------------------
 --- Async & Game Save System
 ------------------------------------------------------------------------------
@@ -220,7 +248,7 @@ journalContent = require "grounded.journal.quests"
             dialog.open(ltPatConv, true)
         end]]
         local dialogPressedOption = interface.triggers("dynamic_menu", 4)
-        local widgetCheck = interface.getCurrentWidget()
+        --local widgetCheck = interface.getCurrentWidget()
         --[[if (widgetCheck == "ui\\conversation\\dynamic_conversation\\dynamic_conversation_menu") then
             local audio = currentDialog.speech
             local biped = currentDialog.unitName
@@ -296,7 +324,7 @@ local conversations = {
         end
     },
     { -- Lt Patterson
-        unitName = "lt_patterson",
+        unitName = "ltpat",
         promptMessage = "Press \"E\" to talk to Lt. Patterson",
         action = function()
             if (get_global("act1_landed") < 1) then
@@ -320,7 +348,7 @@ local conversations = {
             if (object and object.type == objectClasses.control or object.type == objectClasses.biped) then
                 if (not blam.isNull(object.nameIndex)) then
                     local objectName = scenario.objectNames[object.nameIndex + 1]
-                    console_out(objectName)
+                    --console_out(objectName)
                     for _, conversation in pairs(conversations) do
                         --if (tag and tag.path:find(conversation.unitName)) then
                         if (objectName == conversation.unitName) then
@@ -334,52 +362,7 @@ local conversations = {
                             end
                         end
                     end
-                end
-                
-                
---- Unit NAME test        
-           --[[ for _, objectIndex in pairs(blam.getObjects()) do
-                local object = blam.object(get_object(objectIndex))
-                if (object and object.type == objectClasses.control or objectClasses.biped) then
-                    local tagName = object.nameIndex
-                    local scenarioName = scenario.objectNames
-                    for _, conversation in pairs(conversations) do
-                        if (tagName and scenarioName[conversation.unitName]) then
-                            if (core.playerIsNearTo(object.nameIndex, 0.7)) then
-                                interface.promptHud(conversation.promptMessage)
-                                if (playerBiped.actionKey) then
-                                    conversation.action()
-                                end
-                            elseif (core.playerIsNearTo(object, 0.8)) then
-                                interface.promptHud("")
-                            end
-                        end
-                    end]]
-
-                    
-        
---[[
-            for _, objectIndex in pairs(blam.getObjects()) do
-            local object = blam.object(get_object(objectIndex))
-            if (object and object.type == objectClasses.control or objectClasses.biped) then
-                local tag = blam.getTag(object.tagId)
-                for _, conversation in pairs(conversations) do
-                    if (tag and tag.path:find(conversation.unitName)) then
-                        if (core.playerIsNearTo(object, 0.7)) then
-                            interface.promptHud(conversation.promptMessage)
-                            if (playerBiped.actionKey) then
-                                conversation.action()
-                            end
-                        elseif (core.playerIsNearTo(object, 0.8)) then
-                            interface.promptHud("")
-                        end
-                    end
-                end
-]]                
-------------------------------------------------------------------------------
---- NPC Dialogs 
-------------------------------------------------------------------------------
---local ltPatConv = require "grounded.dialogs.ltPatterson"
+                end  
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Objective System
@@ -414,7 +397,28 @@ local conversations = {
         end
         --console_out(hsc.AllegiancesGet("human"))
     end
+------------------------------------------------------------------------------
+--- Main Menu Events
+------------------------------------------------------------------------------
+    if (playerBiped) then
+        if not (get_global("openingmenu")) then
+            if (menuOpened == 1) then
+                campaignWidgetLoaded = load_ui_widget("ui\\grounded\\main_menu")
+                menuOpened = 0
+            end
+        end
+        --[[if (campaignWidgetLoaded) then
+            if (on_menu_accept(newGameWidget)) then
+                console_out(newGameWidget)    
+                --hsc.script("newgame")     
+            end
+        end]]
+    end
+
+------------------------------------------------------------------------------
 end     
 
+--harmony.set_callback("menu mouse button press", "on_menu_mouse_button_press")
+harmony.set_callback("menu accept", "on_menu_accept")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")

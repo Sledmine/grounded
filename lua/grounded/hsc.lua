@@ -376,12 +376,20 @@ function hsc.activateNav(type, unit, source, verticalOffset)
 end
 
 --- Deactivate Nav Point
----@param1 Type (1 = flag, 2 = object)
----@param2 Unit (usually player)
----@param3 Source (Flag or object)
+---@param Type (1 = flag, 2 = object)
+---@param Unit (usually player)
+---@param Source (Flag or object)
 function hsc.clearNav(type, unit, source)
     local returnType = {"flag", "object"}
     execute_script("deactivate_nav_point_" .. returnType[type] .. " " .. unit .. " " .. source)
+end
+------------------------------------------------------------------------------
+--- Static Script Functions
+------------------------------------------------------------------------------
+--- Activate Static Script
+---@param script Name
+function hsc.script(name)
+    execute_script("begin (" .. name ..")")
 end
 
 ------------------------------------------------------------------------------
