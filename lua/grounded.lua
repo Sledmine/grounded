@@ -43,6 +43,9 @@ local menuOpened = 1
 ------------------------------------------------------------------------------  
 --local continueWidget = (blam.getTag(menuWidget.childWidgetsList[1])).id                                               -- Define the "Continue" widget from menuWidgetList
 local newGameWidget = (blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)).id                                                -- Define the "New Game" widget from menuWidgetList
+
+
+
 ------------------------------------------------------------------------------
 function on_menu_accept(button_widget_id)
     if(button_widget_id == campaign_accept_button_widget_id) then
@@ -61,6 +64,7 @@ function on_menu_mouse_button_press(menu_button_widget_id, pressed_mouse_button)
 
     return true
 end
+local newGameStart = on_menu_accept(newGameWidget)
 ------------------------------------------------------------------------------
 ---@class event
 ---@field func function Desired function reference to execute
@@ -105,12 +109,11 @@ local navpoints = {
     }
 }
 
-function OnMapLoad()
-end
-
 function setFalse(global)
     set_global(global, false)
 end
+
+local bspBenjamin = 0 -- This is global for switching bsps. Purely to minimise on transition time and shitfuckery. I just figured bspBenjamin would be memorable.
 
 function letterbox(boolean)
     hsc.showHud(boolean)
@@ -127,6 +130,7 @@ function OnTick()
 ------------------------------------------------------------------------------
     local scenario = blam.scenario()
     --local hogRepair = (scenario.tagNames[27])
+    --console_out(newGameWidget)
     local objectivePrompts = {    
         {
             unitName = "warthog",-- "repair hog"
@@ -159,27 +163,21 @@ function OnTick()
     -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
     local bspIndex = hsc.bspIndex()
-    --local fastTravel = get_global("clua_string1")
-
-    --[[(script static void ft_bar
-	(player_enable_input 0)
-	(fade_out 0 0 0 30)
-	(sleep 30)
-	(if (not (= 6 (structure_bsp_index)))
-		(switch_bsp 6)
-	)
-	(sleep 20)
-	(object_teleport (player0) ft_bar)
-	(player_enable_input 1)
-	(fade_in 0 0 0 30)
-)]]
+    if (hsc.isPlayerInsideVolume("door_open")) then
+        --console_out("lmao")                                   -- So the story behind this joke is I forgot to put "" around door_open and wondered why it didn't work lmao
+        hsc.deviceSet(2, "door1", 1)
+    end
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Game events
 ------------------------------------------------------------------------------
+----------------------- Player Landing on Planet -----------------------------
+------------------------------------------------------------------------------
     if (intro == 0) then
         hsc.unitEnterable("repair_hog", 0)
+        ------------------------------------------------------------------------------  -- Player Has Landed
     elseif (intro == 1 and engine_saver == 0) then
+        ------------------------------------------------------------------------------  -- Player has interacted with Patterson
         hsc.activateNav(2, "(player0)", "repair_hog", 1)
         hsc.activateNav(2, "(player0)", "motor", 1)
         engine_saver = 1
@@ -197,6 +195,7 @@ function OnTick()
                 hsc.groundedOpen()
                 set_timer(2000, "setFalse", "started")
                 if (aiStuff) then
+                    execute_script("switch_bsp 1")
                     aiStuff = false
                 end
             end
@@ -283,7 +282,7 @@ journalContent = require "grounded.journal.quests"
 ---@field action function
 local conversations = {
     {
-        unitName = "marine_weapon_merchant",
+        unitName = "merchant_1",
         promptMessage = "Press \"E\" to talk to Weapon Merchant",
         action = function()
             local widgetLoaded = load_ui_widget(
@@ -294,7 +293,7 @@ local conversations = {
         end
     },
     {
-        unitName = "marine_armour_merchant",
+        unitName = "merchant_2",
         promptMessage = "Press \"E\" to talk to Armour Merchant",
         action = function()
             local widgetLoaded = load_ui_widget(
@@ -404,21 +403,106 @@ local conversations = {
         if not (get_global("openingmenu")) then
             if (menuOpened == 1) then
                 campaignWidgetLoaded = load_ui_widget("ui\\grounded\\main_menu")
+                
                 menuOpened = 0
             end
         end
-        --[[if (campaignWidgetLoaded) then
-            if (on_menu_accept(newGameWidget)) then
-                console_out(newGameWidget)    
-                --hsc.script("newgame")     
-            end
-        end]]
+        if not newGameStart then
+            console_out(newGameWidget)    
+            --hsc.script("newgame")     
+        end
     end
+------------------------------------------------------------------------------
+--- BSP Switching
+------------------------------------------------------------------------------
+local bspArray = {
+    "tower_byellee",                                            -- 1
+    "valley_woodtown",                                          -- 2
+    "valley_naturalcaves",                                      -- 3
+    "naturalcaves_valley",                                      -- 4 
+    "securitydeposit",                                          -- 5
+    "byellee_naturalcaves",                                     -- 6
+    "artificalcaves_byellee",                                   -- 7
+    "byellee_bsp4",                                             -- 8
+    "byellee_substructure",                                     -- 9
+    "structure_bsp4",                                           -- 10
+}
 
+    if (playerBiped) then
+        if (hsc.isPlayerInsideVolume(bspArray[1])) or (hsc.isPlayerInsideVolume(bspArray[7])) then -- For transitioning between Byellee Structure and Byellee Colony 
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 0) then
+                    execute_script("switch_bsp 5")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 5) then
+                    execute_script("switch_bsp 0")
+                    bspBenjamin = 1
+                end
+            end
+        elseif hsc.isPlayerInsideVolume(bspArray[2]) then -- Any switch between the Snow Valley and Woodtown
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 2) then
+                    execute_script("switch_bsp 6")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 6) then
+                    execute_script("switch_bsp 2")
+                    bspBenjamin = 1
+                end
+            end
+        elseif (hsc.isPlayerInsideVolume(bspArray[3])) or (hsc.isPlayerInsideVolume(bspArray[4])) or (hsc.isPlayerInsideVolume(bspArray[5])) then -- For any transition from the lightbridge caves to the Snow Valley
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 2) then
+                    execute_script("switch_bsp 4")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 4) then
+                    execute_script("switch_bsp 2")
+                    bspBenjamin = 1
+                end
+            end
+        elseif (hsc.isPlayerInsideVolume(bspArray[9]))then -- For underneath the structure near the Byellee Colony
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 2) then
+                    execute_script("switch_bsp 5")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 5) then
+                    execute_script("switch_bsp 2")
+                    bspBenjamin = 1
+                end
+            end
+        elseif hsc.isPlayerInsideVolume(bspArray[6]) then -- For transitioning between Byellee Colony and the lightbridge caves
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 2) then
+                    execute_script("switch_bsp 5")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 5) then
+                    execute_script("switch_bsp 2")
+                    bspBenjamin = 1
+                end
+            end
+        elseif (hsc.isPlayerInsideVolume(bspArray[8])) or (hsc.isPlayerInsideVolume(bspArray[10])) then -- For Transition between the base and bsp4
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 0) or (hsc.bspIndex() == 5) then
+                    execute_script("switch_bsp 3")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 3) and (hsc.isPlayerInsideVolume(bspArray[10])) then
+                    execute_script("switch_bsp 0")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 3) and (hsc.isPlayerInsideVolume(bspArray[8])) then
+                    execute_script("switch_bsp 5")
+                    bspBenjamin = 1
+                end
+            end
+        elseif hsc.isPlayerInsideVolume("scen_escape") then --DEBUG
+            if (bspBenjamin == 0) then
+                execute_script("begin (ft_escapepod)")
+                bspBenjamin = 1
+            end
+        else
+            bspBenjamin = 0   
+        end
+    end
 ------------------------------------------------------------------------------
 end     
 
---harmony.set_callback("menu mouse button press", "on_menu_mouse_button_press")
-harmony.set_callback("menu accept", "on_menu_accept")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")

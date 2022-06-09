@@ -63,7 +63,7 @@ function dialog.open(convTable, resetState)
 ------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
         widgetStrings.stringList = newStrings
-        npcDialogs.stringList = newNPCStrings
+       -- npcDialogs.stringList = newNPCStrings
         local success = load_ui_widget(dialogTag.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
@@ -75,15 +75,6 @@ end
 ------------------------------------------------------------------------------
 --- End of function
 ------------------------------------------------------------------------------
-
-function dialog.transfer()
-    if (#dialogState.history > 1) then
-        local dialogTransfer = glue.deepcopy(dialogState.history[#dialogState.history - 0])
-        dialog.open(dialogTransfer)
-    else
-        console_out("did you really think it would be that easy?")
-    end
-end
 
 function dialog.back()
     if (#dialogState.history > 1) then
