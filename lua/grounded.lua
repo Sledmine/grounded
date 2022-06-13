@@ -168,38 +168,7 @@ function OnTick()
         hsc.deviceSet(2, "door1", 1)
     end
 ------------------------------------------------------------------------------
-------------------------------------------------------------------------------
---- Game events
-------------------------------------------------------------------------------
------------------------ Player Landing on Planet -----------------------------
-------------------------------------------------------------------------------
-    if (intro == 0) then
-        hsc.unitEnterable("repair_hog", 0)
-        ------------------------------------------------------------------------------  -- Player Has Landed
-    elseif (intro == 1 and engine_saver == 0) then
-        ------------------------------------------------------------------------------  -- Player has interacted with Patterson
-        hsc.activateNav(2, "(player0)", "repair_hog", 1)
-        hsc.activateNav(2, "(player0)", "motor", 1)
-        engine_saver = 1
-    elseif (intro == 2) then
-        hsc.clearNav(2, "(player0)", "motor")
-    elseif (intro == 3) then
-        hsc.clearNav(2, "(player0)", "repair_hog")
-        hsc.aiSpawn(1, "raiderintro")
-        set_global("act1_landed", 4)
-    end
-        -- screen effect test
-        if (playerBiped) then
-            if (get_global("started")) then
-                hsc.Fade("in", 0, 0, 0, 60)
-                hsc.groundedOpen()
-                set_timer(2000, "setFalse", "started")
-                if (aiStuff) then
-                    execute_script("switch_bsp 1")
-                    aiStuff = false
-                end
-            end
-        end
+
 ------------------------------------------------------------------------------  
 --- Conversations
 ------------------------------------------------------------------------------  
@@ -274,13 +243,13 @@ journalContent = require "grounded.journal.quests"
 ------------------------------------------------------------------------------
 --- Dynamic Conversation Prompt Array
 ------------------------------------------------------------------------------
--- List of biped conversation events
--- Proof of concept
+-- List of biped conversation Events
+-- This works using the scenario object name instead of the name.<tag_class>. You need to manually name the object for this script to work.
 ---@class conversation
----@field unitName string
+---@field unitName string                                                                                   
 ---@field promptMessage string
 ---@field action function
-local conversations = {
+local conversations = {                                                                                             
     {
         unitName = "merchant_1",
         promptMessage = "Press \"E\" to talk to Weapon Merchant",
@@ -413,19 +382,46 @@ local conversations = {
         end
     end
 ------------------------------------------------------------------------------
+--- Lift Stuff
+------------------------------------------------------------------------------
+    if not ((hsc.deviceGet(2, "lift1_high")) == 0) then                                             -- The purpose of these functions is to ensure the lift operates as intended AND
+        hsc.deviceSet(2, "lift1", 0)                                                                -- is always where the player needs it. The first four "if" statements deal with
+        hsc.deviceSet(2, "lift1_high", 0)                                                           -- this function and the last four compare where the lift is when the player is nearby.
+    elseif not ((hsc.deviceGet(2, "lift2_high")) == 0) then                                         -- If the player is near the shaft but the lift is at the wrong position, the script
+        hsc.deviceSet(2, "lift2", 0)                                                                -- auto-recalls the lift.
+        hsc.deviceSet(2, "lift2_high", 0)
+    elseif not ((hsc.deviceGet(2, "lift1_low")) == 0) then
+        hsc.deviceSet(2, "lift1", 0.463)
+        hsc.deviceSet(2, "lift1_low", 0)
+    elseif not ((hsc.deviceGet(2, "lift2_low")) == 0) then
+        hsc.deviceSet(2, "lift2", 0.463)
+        hsc.deviceSet(2, "lift2_low", 0)
+    elseif (hsc.isPlayerInsideVolume("low1")) and ((hsc.deviceGet(2, "lift1")) == 0.463) then       -- Test if player is near the lower shaft and if the platform is at maximum height. Recalls if true.
+        hsc.deviceSet(2, "lift1", 0)
+    elseif (hsc.isPlayerInsideVolume("low2")) and ((hsc.deviceGet(2, "lift2")) == 0.463) then
+        hsc.deviceSet(2, "lift2", 0)
+    elseif (hsc.isPlayerInsideVolume("high1")) and ((hsc.deviceGet(2, "lift1")) == 0) then
+        hsc.deviceSet(2, "lift1", 0.463)
+    elseif (hsc.isPlayerInsideVolume("high2")) and ((hsc.deviceGet(2, "lift2")) == 0) then
+        hsc.deviceSet(2, "lift1", 0.463)
+    end
+
+------------------------------------------------------------------------------
 --- BSP Switching
 ------------------------------------------------------------------------------
 local bspArray = {
-    "tower_byellee",                                            -- 1
-    "valley_woodtown",                                          -- 2
-    "valley_naturalcaves",                                      -- 3
+    "tower_byellee",                                            -- 1                            The purpose of this is to use lua to control BSP switching instead of the automated system in-game.
+    "valley_woodtown",                                          -- 2                            Why? It looks smoother and I have to use less triggers to get the same results. Trigger volumes are
+    "valley_naturalcaves",                                      -- 3                            cut in half using this method.
     "naturalcaves_valley",                                      -- 4 
-    "securitydeposit",                                          -- 5
-    "byellee_naturalcaves",                                     -- 6
-    "artificalcaves_byellee",                                   -- 7
-    "byellee_bsp4",                                             -- 8
-    "byellee_substructure",                                     -- 9
-    "structure_bsp4",                                           -- 10
+    "securitydeposit",                                          -- 5                            This script works by:
+    "byellee_naturalcaves",                                     -- 6                                - testing if the player is in any volume that transitions between two BSPs
+    "artificalcaves_byellee",                                   -- 7                                - testing if the has recently been a BSP change (you need this or it constantly flips between bsps) with bspBenjamin
+    "byellee_bsp4",                                             -- 8                                - testing the current bsp with hsc.bspIndex() returning a short                            
+    "byellee_substructure",                                     -- 9                                - switching bsps to the next BSP using lua functions and setting bspBenjamin = 1
+    "structure_bsp4",                                           -- 10                               - Now that bspBenjamin = 1, nothing else will happen until the player leaves the volume. bspBenjamin is reset to 0
+    "naturalcaves_caverns",                                     -- 11
+    "caverns_naturalcaves",                                     -- 12
 }
 
     if (playerBiped) then
@@ -492,6 +488,16 @@ local bspArray = {
                     bspBenjamin = 1
                 end
             end
+        elseif (hsc.isPlayerInsideVolume(bspArray[11])) or (hsc.isPlayerInsideVolume(bspArray[12])) then -- For transitioning between Lightbridge Caves and substructure
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 7) then
+                    execute_script("switch_bsp 4")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 4) then
+                    execute_script("switch_bsp 7")
+                    bspBenjamin = 1
+                end
+            end
         elseif hsc.isPlayerInsideVolume("scen_escape") then --DEBUG
             if (bspBenjamin == 0) then
                 execute_script("begin (ft_escapepod)")
@@ -501,6 +507,38 @@ local bspArray = {
             bspBenjamin = 0   
         end
     end
+------------------------------------------------------------------------------
+--- Game events
+------------------------------------------------------------------------------
+----------------------- Player Landing on Planet -----------------------------
+------------------------------------------------------------------------------
+    if (intro == 0) then
+        hsc.unitEnterable("repair_hog", 0)
+        ------------------------------------------------------------------------------  -- Player Has Landed
+    elseif (intro == 1 and engine_saver == 0) then
+        ------------------------------------------------------------------------------  -- Player has interacted with Patterson
+        hsc.activateNav(2, "(player0)", "repair_hog", 1)
+        hsc.activateNav(2, "(player0)", "motor", 1)
+        engine_saver = 1
+    elseif (intro == 2) then
+        hsc.clearNav(2, "(player0)", "motor")
+    elseif (intro == 3) then
+        hsc.clearNav(2, "(player0)", "repair_hog")
+        hsc.aiSpawn(1, "raiderintro")
+        set_global("act1_landed", 4)
+    end
+        -- screen effect test
+        if (playerBiped) then
+            if (get_global("started")) then
+                hsc.Fade("in", 0, 0, 0, 60)
+                hsc.groundedOpen()
+                set_timer(2000, "setFalse", "started")
+                if (aiStuff) then
+                    execute_script("switch_bsp 1")
+                    aiStuff = false
+                end
+            end
+        end
 ------------------------------------------------------------------------------
 end     
 
