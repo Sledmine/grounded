@@ -1,9 +1,9 @@
 ------------------------------------------------------------------------------
 -- Blam! library for Chimera/SAPP Lua scripting
 -- Sledmine, JerryBrick
--- Improves memory handle and provides standard functions for scripting
+-- Easier memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.4.0"}
+local blam = {_VERSION = "1.5.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -43,13 +43,14 @@ end
 -- Engine address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498, -- from Giraffe
+    cameraType = 0x00647498, -- from giraffe
     gamePaused = 0x004ACA79,
     gameOnMenus = 0x00622058,
     joystickInput = 0x64D998, -- from aLTis
     firstPerson = 0x40000EB8, -- from aLTis
     objectTable = 0x400506B4,
-    deviceGroupsTable = 0x00816110
+    deviceGroupsTable = 0x00816110,
+    widgetsInstance = 0x6B401C
 }
 
 -- Server side addresses adjustment
@@ -168,8 +169,8 @@ local cameraTypes = {
     deadCamera = 5 -- 23776
 }
 
--- Netgame flags type 
-local netgameFlagTypes = {
+-- Netgame flags type
+local netgameFlagClasses = {
     ctfFlag = 0,
     ctfVehicle = 1,
     ballSpawn = 2,
@@ -182,7 +183,7 @@ local netgameFlagTypes = {
 }
 
 -- Netgame equipment types
-local netgameEquipmentTypes = {
+local gameTypeClasses = {
     none = 0,
     ctf = 1,
     slayer = 2,
@@ -198,6 +199,21 @@ local netgameEquipmentTypes = {
     allGames = 12,
     allExceptCtf = 13,
     allExceptRaceCtf = 14
+}
+
+local multiplayerTeamClasses = {red = 0, blue = 1}
+
+local unitTeamClasses = {
+    defaultByUnit = 0,
+    player = 1,
+    human = 2,
+    covenant = 3,
+    flood = 4,
+    sentinel = 5,
+    unused6 = 6,
+    unused7 = 7,
+    unused8 = 8,
+    unused9 = 9
 }
 
 -- Standard console colors
@@ -251,29 +267,31 @@ local dPadValues = {
     up = 765
 }
 
-------------------------------------------------------------------------------
--- SAPP API bindings
-------------------------------------------------------------------------------
--- All the functions at the top of the module are for EmmyLua autocompletion purposes!
--- They do not have a real implementation and are not supossed to be imported
+-- EmmyLua autocompletion for some functions!
+-- Functions below do not have a real implementation and are not supossed to be imported
 if (variableThatObviouslyDoesNotExist) then
-
-    --- Attempt to spawn an object given tag id and coordinates or tag type and class plus coordinates
-    ---@param tagId number Optional tag id of the object to spawn
+    ---Attempt to spawn an object given tag class and path plus coordinates
+    ---@overload fun(tagId: number, x: number, y: number, z: number):number
     ---@param tagType string Type of the tag to spawn
     ---@param tagPath string Path of object to spawn
     ---@param x number
     ---@param y number
     ---@param z number
+    ---@return number | nil objectId
     function spawn_object(tagType, tagPath, x, y, z)
     end
 
-    --- Get object address from a specific player given playerIndex
-    ---@param playerIndex number
-    ---@return number Player object memory address
+    ---Get object address from a specific player given playerIndex
+    ---@param playerIndex? number
+    ---@return number objectAddress
     function get_dynamic_player(playerIndex)
     end
+
 end
+
+------------------------------------------------------------------------------
+-- SAPP API bindings
+------------------------------------------------------------------------------
 if (api_version) then
     -- Provide global server type variable on SAPP
     server_type = "sapp"
@@ -293,10 +311,10 @@ if (api_version) then
         return array
     end
 
-    --- Function wrapper for file writing from Chimera to SAPP
+    ---Write content to a text file given file path
     ---@param path string Path to the file to write
     ---@param content string Content to write into the file
-    ---@return boolean | nil, string True if successful otherwise nil, error
+    ---@return boolean | nil, string result True if successful otherwise nil, error
     function write_file(path, content)
         local file, error = io.open(path, "w")
         if (not file) then
@@ -312,9 +330,9 @@ if (api_version) then
         end
     end
 
-    --- Function wrapper for file reading from Chimera to SAPP
+    ---Read the contents from a file given file path
     ---@param path string Path to the file to read
-    ---@return string | nil, string Content of the file otherwise nil, error
+    ---@return string | nil, string content string if successful otherwise nil, error
     function read_file(path)
         local file, error = io.open(path, "r")
         if (not file) then
@@ -328,35 +346,41 @@ if (api_version) then
         return content
     end
 
-    -- TODO PENDING FUNCTION!!
-    function directory_exists(dir)
+    ---Verify if a directory exists given directory path
+    ---@param path string
+    ---@return boolean
+    function directory_exists(path)
+        error("Directory verifications are not supported on SAPP.. yet!")
         return true
     end
 
-    --- Function wrapper for directory listing from Chimera to SAPP
-    ---@param dir string
-    function list_directory(dir)
+    ---List the contents from a directory given directory path
+    ---@param path string
+    ---@return integer | table
+    function list_directory(path)
         -- TODO This needs a way to separate folders from files
-        if (dir) then
-            local command = "dir " .. dir .. " /B"
+        if (path) then
+            local command = "dir " .. path .. " /B"
             local pipe = io.popen(command, "r")
-            local output = pipe:read("*a")
-            if (output) then
-                local items = split(output, "\n")
-                for index, item in pairs(items) do
-                    if (item and item == "") then
-                        items[index] = nil
+            if pipe then
+                local output = pipe:read("*a")
+                if (output) then
+                    local items = split(output, "\n")
+                    for index, item in pairs(items) do
+                        if (item and item == "") then
+                            items[index] = nil
+                        end
                     end
+                    return items
                 end
-                return items
             end
         end
         return nil
     end
 
-    --- Return the memory address of a tag given tagId or tagClass and tagPath
+    ---Return the memory address of a tag given tagId or tagClass and tagPath
     ---@param tagIdOrTagType string | number
-    ---@param tagPath string
+    ---@param tagPath? string
     ---@return number
     function get_tag(tagIdOrTagType, tagPath)
         if (not tagPath) then
@@ -366,13 +390,13 @@ if (api_version) then
         end
     end
 
-    --- Execute a game command or script block
+    ---Execute a game command or script block
     ---@param command string
     function execute_script(command)
         return execute_command(command)
     end
 
-    --- Return the address of the object memory given object id
+    ---Return the address of the object memory given object id
     ---@param objectId number
     ---@return number
     function get_object(objectId)
@@ -391,40 +415,42 @@ if (api_version) then
         destroy_object(objectId)
     end
 
-    --- Print text into console
+    ---Print text into console
     ---@param message string
-    ---@param red number
-    ---@param green number
-    ---@param blue number
+    ---@param red? number
+    ---@param green? number
+    ---@param blue? number
     function console_out(message, red, green, blue)
-        -- TODO Add color printing to this function
+        -- TODO Add color printing to this function on SAPP
         cprint(message)
     end
 
-    --- Get if the game console is opened \
-    --- Always returns true on SAPP.
+    ---Get if the game console is opened, always returns true on SAPP
     ---@return boolean
     function console_is_open()
         return true
     end
 
-    --- Get the value of a Halo scripting global\
-    ---An error will occur if the global is not found.
+    ---Get the value of a Halo scripting global.\
+    ---An error will be triggered if the global is not found
     ---@param name string Name of the global variable to get from hsc
     ---@return boolean | number
     function get_global(name)
-        error("SAPP can't retrieve global variables as Chimera does.. yet!")
+        error("SAPP can not retrieve global variables as Chimera does.. yet!")
     end
 
-    --- Print messages to the player HUD\
-    ---Server messages will be printed if executed from SAPP.
+    ---Print message to player HUD.\
+    ---Messages will be printed to console if SAPP uses this function
     ---@param message string
     function hud_message(message)
-        for playerIndex = 1, 16 do
-            if (player_present(playerIndex)) then
-                rprint(playerIndex, message)
-            end
-        end
+        cprint(message)
+    end
+
+    ---Set the callback for an event game from the game events available on Chimera
+    ---@param event '"command"' | '"frame"' | '"preframe"' | '"map_load"' | '"precamera"' | '"rcon message"' | '"tick"' | '"pretick"' | '"unload"'
+    ---@param callback string global function name to call when the event is triggered
+    function set_callback(event, callback)
+        error("Chimera events can not be used on SAPP, use register_callback instead.")
     end
 
     print("Compatibility with Chimera Lua API has been loaded!")
@@ -652,10 +678,9 @@ local function writeString(address, propertyData, propertyValue)
     return write_string(address, propertyValue)
 end
 
--- //TODO Refactor this to support full unicode char size
 --- Return the string of a unicode string given address
 ---@param address number
----@param rawRead boolean
+---@param rawRead? boolean
 ---@return string
 function blam.readUnicodeString(address, rawRead)
     local stringAddress
@@ -666,6 +691,7 @@ function blam.readUnicodeString(address, rawRead)
     end
     local length = stringAddress / 2
     local output = ""
+    -- TODO Refactor this to support full unicode char size
     for i = 1, length do
         local char = read_string(stringAddress + (i - 1) * 0x2)
         if (char == "") then
@@ -676,11 +702,10 @@ function blam.readUnicodeString(address, rawRead)
     return output
 end
 
--- //TODO Refactor this to support writing ASCII and Unicode strings
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
----@param forced boolean
+---@param forced? boolean
 function blam.writeUnicodeString(address, newString, forced)
     local stringAddress
     if (forced) then
@@ -688,11 +713,19 @@ function blam.writeUnicodeString(address, newString, forced)
     else
         stringAddress = read_dword(address)
     end
+    -- Allow cancelling writing when the new string is a boolean false value
+    if newString == false then
+        return
+    end
+    -- TODO Refactor this to support writing ASCII and Unicode strings
     for i = 1, #newString do
         write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
         if (i == #newString) then
             write_byte(stringAddress + #newString * 0x2, 0x0)
         end
+    end
+    if #newString == 0 then
+        write_string(stringAddress, "")
     end
 end
 
@@ -714,7 +747,7 @@ end
 
 local function readList(address, propertyData)
     local operation = typesOperations[propertyData.elementsType]
-    local elementCount = read_byte(address - 0x4)
+    local elementCount = read_word(address - 0x4)
     local addressList = read_dword(address) + 0xC
     if (propertyData.noOffset) then
         addressList = read_dword(address)
@@ -789,6 +822,17 @@ local function writeTable(address, propertyData, propertyValue)
     end
 end
 
+local function readTagReference(address)
+    -- local tagClass = read_dword(address)
+    -- local tagPathPointer = read_dword(address = 0x4)
+    local tagId = read_dword(address + 0xC)
+    return tagId
+end
+
+local function writeTagReference(address, propertyData, propertyValue)
+    write_dword(address + 0xC, propertyValue)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -804,7 +848,8 @@ typesOperations = {
     pustring = {read = readPointerUnicodeString, write = writePointerUnicodeString},
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
-    table = {read = readTable, write = writeTable}
+    table = {read = readTable, write = writeTable},
+    tagref = {read = readTagReference, write = writeTagReference}
 }
 
 -- Magic luablam metatable
@@ -1115,9 +1160,6 @@ local tagDataHeaderStructure = {
 local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
     index = {type = "word", offset = 0xC},
-    -- //TODO This needs some review
-    -- id = {type = "word", offset = 0xE},
-    -- fullId = {type = "dword", offset = 0xC},
     id = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
@@ -1250,6 +1292,19 @@ local bitmapStructure = {
     }
 }
 
+---@class uiWidgetDefinitionChild
+---@field widgetTag number Child uiWidgetDefinition reference
+---@field name number Child widget name
+---@field customControllerIndex number Custom controller index for this child widget
+---@field verticalOffset number Offset in Y axis of this child, relative to the parent
+---@field horizontalOffset number Offset in X axis of this child, relative to the parent
+
+---@class uiWidgetDefinitionEventHandler
+---@field eventType number Type of the event
+---@field gameFunction number Game function of this event
+---@field widgetTag number uiWidgetDefinition tag id of the event
+---@field script string Name of the script function assigned to this event
+
 ---@class uiWidgetDefinition
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
@@ -1259,12 +1314,16 @@ local bitmapStructure = {
 ---@field height number Bottom bound of the widget
 ---@field width number Right bound of the widget
 ---@field backgroundBitmap number Tag ID of the background bitmap
----@field eventType number
----@field tagReference number
+---@field eventHandlers uiWidgetDefinitionEventHandler[] tag ID list of the child widgets
+---@field unicodeStringListTag number Tag ID of the unicodeStringList from this widget
+---@field fontTag number Tag ID of the font from this widget
+---@field justification number Text justification of the text from this widget
+---@field stringListIndex number Text index from the unicodeStringList tag from this widget
+---@field textHorizontalOffset number Text offset in X axis from this widget
+---@field textVerticalOffset number Text offset in Y axis from this widget
 ---@field childWidgetsCount number Number of child widgets
----@field childWidgetsList table tag ID list of the child widgets
+---@field childWidgets uiWidgetDefinitionChild[] List of the child widgets
 
--- UI Widget Definition structure
 local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
     controllerIndex = {type = "word", offset = 0x2},
@@ -1274,10 +1333,48 @@ local uiWidgetDefinitionStructure = {
     height = {type = "short", offset = 0x28},
     width = {type = "short", offset = 0x2A},
     backgroundBitmap = {type = "word", offset = 0x44},
+    eventHandlers = {
+        type = "table",
+        offset = 0x54,
+        jump = 0x48,
+        rows = {
+            -- TODO Add real flags support, or a subtyping of table instead
+            -- flags = {type = "number", offset = 0x0},
+            eventType = {type = "word", offset = 0x4},
+            gameFunction = {type = "word", offset = 0x6},
+            widgetTag = {type = "tagref", offset = 0x8},
+            soundEffectTag = {type = "tagref", offset = 0x18},
+            script = {type = "string", offset = 0x28}
+        }
+    },
+    unicodeStringListTag = {type = "tagref", offset = 0xEC},
+    fontTag = {type = "tagref", offset = 0xFC},
+    -- TODO Add color support for hex and rgb values
+    -- textColor = {type = "realargbcolor", offset = 0x10C},
+    justification = {type = "word", offset = 0x11C},
+    stringListIndex = {type = "short", offset = 0x12E},
+    textHorizontalOffset = {type = "short", offset = 0x130},
+    textVerticalOffset = {type = "short", offset = 0x132},
+    -- Deprecated
     eventType = {type = "byte", offset = 0x03F0},
+    -- Deprecated
     tagReference = {type = "word", offset = 0x400},
     childWidgetsCount = {type = "dword", offset = 0x03E0},
-    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50}
+    -- Deprecated
+    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50},
+    childWidgets = {
+        type = "table",
+        offset = 0x03E4,
+        jump = 0x50,
+        rows = {
+            widgetTag = {type = "tagref", offset = 0x0},
+            name = {type = "string", offset = 0x10},
+            -- flags = {type = "integer", offset = 0x30},
+            customControllerIndex = {type = "short", offset = 0x34},
+            verticalOffset = {type = "short", offset = 0x36},
+            horizontalOffset = {type = "short", offset = 0x38}
+        }
+    }
 }
 
 ---@class uiWidgetCollection
@@ -1367,6 +1464,14 @@ local weaponHudInterfaceStructure = {
 ---@field type number
 ---@field teamIndex number
 
+---@class cutsceneFlag
+---@field name string
+---@field x number
+---@field y number
+---@field z number
+---@field vX number
+---@field vY number
+
 ---@class scenario
 ---@field sceneryPaletteCount number Number of sceneries in the scenery palette
 ---@field sceneryPaletteList table Tag ID list of scenerys in the scenery palette
@@ -1380,6 +1485,8 @@ local weaponHudInterfaceStructure = {
 ---@field netgameFlagsList table List of netgame equipments
 ---@field objectNamesCount number Count of the object names in the scenario
 ---@field objectNames string[] List of all the object names in the scenario
+---@field cutsceneFlagsCount number Count of all the cutscene flags in the scenario
+---@field cutsceneFlags cutsceneFlag[] List of all the cutscene flags in the scenario
 
 -- Scenario structure
 local scenarioStructure = {
@@ -1457,6 +1564,20 @@ local scenarioStructure = {
         elementsType = "string",
         jump = 36,
         noOffset = true
+    },
+    cutsceneFlagsCount = {type = "dword", offset = 0x4E4},
+    cutsceneFlags = {
+        type = "table",
+        offset = 0x4E8,
+        jump = 92,
+        rows = {
+            name = {type = "string", offset = 0x4},
+            x = {type = "float", offset = 0x24},
+            y = {type = "float", offset = 0x28},
+            z = {type = "float", offset = 0x2C},
+            vX = {type = "float", offset = 0x30},
+            vY = {type = "float", offset = 0x34}
+        }
     }
 }
 
@@ -1637,10 +1758,14 @@ local projectileStructure = extendStructure(objectStructure, {
 ---@field team number Team color of this player, 0 when red, 1 when on blue team
 ---@field objectId number Return the objectId associated to this player
 ---@field color number Color of the player, only works on "Free for All" gametypes
----@field index number Local index of this player (0-15
+---@field index number Local index of this player 0-15
 ---@field speed number Current speed of this player
 ---@field ping number Ping amount from server of this player in milliseconds
 ---@field kills number Kills quantity done by this player
+---@field assists number Assists count of this player
+---@field betraysAndSuicides number Betrays plus suicides count of this player
+---@field deaths number Deaths count of this player
+---@field suicides number Suicides count of this player
 
 local playerStructure = {
     id = {type = "word", offset = 0x0},
@@ -1652,7 +1777,11 @@ local playerStructure = {
     index = {type = "byte", offset = 0x67},
     speed = {type = "float", offset = 0x6C},
     ping = {type = "dword", offset = 0xDC},
-    kills = {type = "word", offset = 0x9C}
+    kills = {type = "word", offset = 0x9C},
+    assists = {type = "word", offset = 0XA4},
+    betraysAndSuicides = {type = "word", offset = 0xAC},
+    deaths = {type = "word", offset = 0xAE},
+    suicides = {type = "word", offset = 0XB0}
 }
 
 ---@class firstPersonInterface
@@ -1690,7 +1819,7 @@ local firstPersonStructure = {weaponObjectId = {type = "dword", offset = 0x10}}
 ---@field disableCollision number Disable collision of this biped tag
 local bipedTagStructure = {disableCollision = {type = "bit", offset = 0x2F4, bitLevel = 5}}
 
----@class  deviceMachine : blamObject
+---@class deviceMachine : blamObject
 ---@field powerGroupIndex number Power index from the device groups table
 ---@field power number Position amount of this device machine
 ---@field powerChange number Power change of this device machine
@@ -1749,9 +1878,11 @@ blam.objectClasses = objectClasses
 blam.joystickInputs = joystickInputs
 blam.dPadValues = dPadValues
 blam.cameraTypes = cameraTypes
-blam.netgameFlagTypes = netgameFlagTypes
-blam.netgameEquipmentTypes = netgameEquipmentTypes
 blam.consoleColors = consoleColors
+blam.netgameFlagClasses = netgameFlagClasses
+blam.gameTypeClasses = gameTypeClasses
+blam.multiplayerTeamClasses = multiplayerTeamClasses
+blam.unitTeamClasses = unitTeamClasses
 
 ---@class tagDataHeader
 ---@field array any
@@ -1769,7 +1900,7 @@ blam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStruct
 blam.dumpObject = dumpObject
 blam.consoleOutput = consoleOutput
 
---- Get if a value equals a null value for game
+--- Get if a value equals a null value in game terms
 ---@return boolean
 function blam.isNull(value)
     if (value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF or value == nil) then
@@ -1778,23 +1909,31 @@ function blam.isNull(value)
     return false
 end
 
+---Return if game instance is host
+---@return boolean
 function blam.isGameHost()
     return server_type == "local"
 end
 
+---Return if game instance is single player
+---@return boolean
 function blam.isGameSinglePlayer()
     return server_type == "none"
 end
 
+---Return if the game instance is running on a dedicated server or connected as a "network client"
+---@return boolean
 function blam.isGameDedicated()
     return server_type == "dedicated"
 end
 
+---Return if the game instance is a SAPP server
+---@return boolean
 function blam.isGameSAPP()
-    return server_type == "sapp"
+    return server_type == "sapp" or api_version
 end
 
---- Get the current game camera type
+---Get the current game camera type
 ---@return number
 function blam.getCameraType()
     local camera = read_word(addressList.cameraType)
@@ -1815,12 +1954,12 @@ function blam.getCameraType()
     return nil
 end
 
---- Get input from the joystick in the game
--- Based on aLTis controller method
--- TODO Check if it is better to return an entire table with all input values 
+--- Get input from joystick assigned in the game
 ---@param joystickOffset number Offset input from the joystick data, use blam.joystickInputs
 ---@return boolean | number Value of the joystick input
 function blam.getJoystickInput(joystickOffset)
+    -- Based on aLTis controller method
+    -- TODO Check if it is better to return an entire table with all input values 
     joystickOffset = joystickOffset or 0
     -- Nothing is pressed by default
     local inputValue = false
@@ -1866,7 +2005,7 @@ end
 
 --- Return a tag object given tagPath and tagClass or just tagId
 ---@param tagIdOrTagPath string | number
----@param tagClass string
+---@param tagClass? string
 ---@return tag
 function blam.getTag(tagIdOrTagPath, tagClass, ...)
     local tagId
@@ -2092,8 +2231,8 @@ end
 -- Alias
 blam.gbxmodel = blam.model
 
---- Create a Globals tag object from a tag path or id
----@param tag string | number
+--- Create a Globals tag object from a tag path or id, default globals path by default
+---@param tag? string | number
 ---@return globalsTag
 function blam.globalsTag(tag)
     local tag = tag or "globals\\globals"
@@ -2105,7 +2244,7 @@ function blam.globalsTag(tag)
 end
 
 --- Create a First person object from a given address, game known address by default
----@param address number
+---@param address? number
 ---@return firstPerson
 function blam.firstPerson(address)
     return createObject(address or addressList.firstPerson, firstPersonStructure)
@@ -2172,13 +2311,89 @@ function blam.getDeviceGroup(index)
     -- Get object address
     if (index) then
         -- Get objects table
-        local table = createObject(read_dword(addressList.deviceGroupsTable), deviceGroupsTableStructure)
+        local table = createObject(read_dword(addressList.deviceGroupsTable),
+                                   deviceGroupsTableStructure)
         -- Calculate object ID (this may be invalid, be careful)
-        local itemOffset = table.elementSize * index 
+        local itemOffset = table.elementSize * index
         local item = read_float(table.firstElementAddress + itemOffset + 0x4)
         return item
     end
     return nil
+end
+
+---@class blamRequest
+---@field requestString string
+---@field timeout number
+---@field callback function<boolean, string>
+---@field sentAt number
+
+---@type table<number, blamRequest>
+local requestQueue = {}
+local requestId = -1
+local requestPathMaxLength = 60
+---Send a server request to current server trough rcon
+---@param method '"GET"' | '"SEND"'
+---@param url string Path or name of the resource we want to get
+---@param timeout number Time this request will wait for a response, 120ms by default
+---@param callback function<boolean, string> Callback function to call when this response returns
+---@param retry boolean Retry this request if timeout reaches it's limit
+---@param params table<string, any> Optional parameters to send in the request, careful, this will create two requests, one for the resource and another one for the parameters
+---@return boolean success
+function blam.request(method, url, timeout, callback, retry, params)
+    if (server_type ~= "dedicated") then
+        console_out("Warning, requests only work while connected to a dedicated server.")
+    end
+    if (params) then
+        console_out("Warning, request params are not supported yet.")
+    end
+    if (url and url:len() <= requestPathMaxLength) then
+        if (method == "GET") then
+            requestId = requestId + 1
+            local rconRequest = ("rcon blam ?%s?%s"):format(requestId, url)
+            requestQueue[requestId] = {
+                requestString = rconRequest,
+                timeout = timeout or 120,
+                callback = callback
+            }
+            console_out(rconRequest)
+            -- execute_script(request)
+            return true
+        end
+    end
+    error("Error, url can not contain more than " .. requestPathMaxLength .. " chars.")
+    return false
+end
+
+--- Find the path, index and id of a tag given partial tag path and tag type
+---@param partialTagPath string
+---@param searchTagType string
+---@return tag tag
+function blam.findTag(partialTagPath, searchTagType)
+    for tagIndex = 0, blam.tagDataHeader.count - 1 do
+        local tag = blam.getTag(tagIndex)
+        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
+            return tag
+        end
+    end
+    return nil
+end
+
+--- Find the path, index and id of a list of tags given partial tag path and tag type
+---@param partialTagPath string
+---@param searchTagType string
+---@return tag[] tag
+function blam.findTagsList(partialTagPath, searchTagType)
+    local tagsList
+    for tagIndex = 0, blam.tagDataHeader.count - 1 do
+        local tag = blam.getTag(tagIndex)
+        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
+            if (not tagsList) then
+                tagsList = {}
+            end
+            tagsList[#tagsList + 1] = tag
+        end
+    end
+    return tagsList
 end
 
 return blam
