@@ -1,9 +1,8 @@
-(global boolean started true)
+(global boolean started false)
 (global boolean clua_boolean1 false)
 (global short clua_short1 0)
 (global short clua_short2 0)
-(global short clua_short3 0)
-(global string clua_string1 blank)
+(global short clua_short3 0) ; Designed for the opening menu
 (global short credits 40) ;sets a global called "credits". It's how the player buys stuff.
 (global boolean merchantboi_1 false) ;this sets merch1 as a global
 (global boolean merchantboi_2 false) ;this sets merchantboi_2 as a global
@@ -15,25 +14,59 @@
 (global short unsc_quests 0) ;this global is used to enable speech checks if the player has completed certain unsc sidequests. More side quests = better checks, and certain sidequests unlock unique dialogue
 (global short encounter_spawned_bsp3 0)
 (global boolean reload_now false)
-(global boolean device_open false)
+(global boolean openingmenu false)
 (global short act1_landed 0)
 (global boolean human_ally true)
 (global boolean sentinel_ally true)
 (global short unit_health 0)
-(global boolean cameraFunc false)
+(global short switchrest 0)
 (global short speedyboi 0)
 (global short patterson 0)
+(global short bsp3_struc1_test 0)
+(global short time_of_day 0) ; 0 = Day, 6 = Sunset/sunrise, 7 = Night
+
+(script static void newgame
+	(set clua_short3 1)
+)
+
+(script continuous starting_loop
+	(if (= openingmenu false)
+		(begin
+			(camera_set game_menu1 400)
+			(sleep 200)
+			(camera_set game_menu2 400)
+			(sleep 200)
+			(camera_set game_menu3 400)
+			(sleep 200)
+			(camera_set game_menu4 400)
+			(sleep 200)
+			(camera_set game_menu5 400)
+			(sleep 200)
+			(camera_set game_menu6 400)
+			(sleep 200)
+			(camera_set game_menu7 400)
+			(sleep 200)
+			(camera_set game_menu8 400)
+			(sleep 200)
+			(camera_set game_menu9 400)
+			(sleep 200)
+			(camera_set game_menu10 400)
+			(sleep 200)
+			(camera_set game_menu11 400)
+			(sleep 200)
+			(camera_set game_menu 400)
+			(sleep 300)
+		)
+		(sleep_until (= openingmenu false))
+	)
+)
+
+(script static void continuegame
+	(set reload_now true)
+)
 
 (script static unit player0					;this defines "player0" as a unit. This literally just saves time scripting by referencing (player0) instead of (unit (list_get (players) 0))
     (unit (list_get (players) 0))
-)
-
-(script static void cameraFunction
-	(set cameraFunc true)
-)
-
-(script static void cameraControl
-	(camera_control 0)
 )
 
 (script continuous revive_system
@@ -100,15 +133,46 @@
 	)
 )
 
-
-;this section is a conversation
-(script static void conversation_off
-	(set conversation false)
+(script continuous daynightcycle
+	(if (= switchrest 1)
+		(begin
+			(sleep 60)
+			(set switchrest 0)
+		)
+	)
+	
 )
+
 ;here is fast travel
 (script static void ft_capital
-	(set clua_string1 "ft_capital")
+	(player_enable_input 0)
+	(fade_out 0 0 0 30)
+	(sleep 30)
+	(if (not (= 6 (structure_bsp_index)))
+		(switch_bsp 6)
+	)
+	(sleep 10)
+	(object_teleport (player0) ft_capital)
+	(player_enable_input 1)
+	(fade_in 0 0 0 30)
 )
+
+(script static void ft_escapepod
+	(player_enable_input 0)
+	(object_destroy_containing "cine")
+	(fade_out 0 0 0 30)
+	(sleep 30)
+	(if (not (= 0 (structure_bsp_index)))
+		(switch_bsp 0)
+	)
+	(sleep 10)
+	(object_teleport (player0) bsp1_spawn)
+	(player_enable_input 1)
+	(fade_in 0 0 0 30)
+	(object_set_scale bsp1door 2 0)
+	(object_set_scale bsp2door 2 0)
+)
+
 
 (script static void ft_bar
 	(player_enable_input 0)
@@ -117,7 +181,7 @@
 	(if (not (= 6 (structure_bsp_index)))
 		(switch_bsp 6)
 	)
-	(sleep 20)
+	(sleep 10)
 	(object_teleport (player0) ft_bar)
 	(player_enable_input 1)
 	(fade_in 0 0 0 30)
@@ -130,7 +194,7 @@
 	(if (not (= 6 (structure_bsp_index)))
 		(switch_bsp 6)
 	)
-	(sleep 20)
+	(sleep 10)
 	(object_teleport (player0) ft_oni)
 	(player_enable_input 1)
 	(fade_in 0 0 0 30)
@@ -143,7 +207,7 @@
 	(if (not (= 2 (structure_bsp_index)))
 		(switch_bsp 2)
 	)	
-	(sleep 20)
+	(sleep 10)
 	(object_teleport (player0) ft_struc1)
 	(object_teleport ft_hog ft_struc1_hog)
 	(player_enable_input 1)
@@ -190,61 +254,67 @@
 (script continuous ambient_ai_bsp
 	(if (and (= (structure_bsp_index) 2) (= encounter_spawned_bsp3 0))
 		(begin
-		(begin_random
-			(begin ;LEDGE Jackal & Core Elite
-				(if (= (ai_living_count g_enc_bsp3struc2) 0)
-				(begin
-				(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-				(ai_place g_enc_bsp3struc2/sqd_elite_core)
-				(set encounter_spawned_bsp3 1)
+			(begin_random
+				(begin ;LEDGE Jackal & Core Elite
+					(if (= (ai_living_count g_enc_bsp3struc2) 0)
+					(begin
+					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
+					(ai_place g_enc_bsp3struc2/sqd_elite_core)
+					(set encounter_spawned_bsp3 1)
+					)
+					(sleep 10)
+					)
 				)
-				(sleep 10)
+				(begin ;Hunters only
+					(if (= (ai_living_count g_enc_bsp3struc2) 0)
+					(begin
+					(ai_place g_enc_bsp3struc2/sqd_hunter)
+					(set encounter_spawned_bsp3 1)
+					)
+					(sleep 10)
+					)
+				)
+				(begin ;all core units
+					(if (= (ai_living_count g_enc_bsp3struc2) 0)
+					(begin
+					(ai_place g_enc_bsp3struc2/sqd_jackal_core)
+					(ai_place g_enc_bsp3struc2/sqd_elite_core)
+					(ai_place g_enc_bsp3struc2/sqd_grunt_core)
+					(set encounter_spawned_bsp3 1)
+					)
+					(sleep 10)
+					)
+				)
+				(begin ;hunters and jackal ridge
+					(if (= (ai_living_count g_enc_bsp3struc2) 0)
+					(begin
+					(ai_place g_enc_bsp3struc2/sqd_hunter)
+					(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
+					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
+					(set encounter_spawned_bsp3 1)
+					)
+					(sleep 10)
+					)
+				)
+				(begin ;jackal ledge, grunt ledge, elite ridge, jackal ridge
+					(if (= (ai_living_count g_enc_bsp3struc2) 0)
+					(begin
+					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
+					(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
+					(ai_place g_enc_bsp3struc2/sqd_elite_ridge)
+					(ai_place g_enc_bsp3struc2/sqd_grunt_ledge)
+					(set encounter_spawned_bsp3 1)
+					)
+					(sleep 10)
+					)
 				)
 			)
-			(begin ;Hunters only
-				(if (= (ai_living_count g_enc_bsp3struc2) 0)
-				(begin
-				(ai_place g_enc_bsp3struc2/sqd_hunter)
-				(set encounter_spawned_bsp3 1)
-				)
-				(sleep 10)
+			(if (= bsp3_struc1_test 0)
+				(begin 
+					(ai_place bsp3_struc1)
+					(set bsp3_struc1_test 1)
 				)
 			)
-			(begin ;all core units
-				(if (= (ai_living_count g_enc_bsp3struc2) 0)
-				(begin
-				(ai_place g_enc_bsp3struc2/sqd_jackal_core)
-				(ai_place g_enc_bsp3struc2/sqd_elite_core)
-				(ai_place g_enc_bsp3struc2/sqd_grunt_core)
-				(set encounter_spawned_bsp3 1)
-				)
-				(sleep 10)
-				)
-			)
-			(begin ;hunters and jackal ridge
-				(if (= (ai_living_count g_enc_bsp3struc2) 0)
-				(begin
-				(ai_place g_enc_bsp3struc2/sqd_hunter)
-				(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
-				(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-				(set encounter_spawned_bsp3 1)
-				)
-				(sleep 10)
-				)
-			)
-			(begin ;jackal ledge, grunt ledge, elite ridge, jackal ridge
-				(if (= (ai_living_count g_enc_bsp3struc2) 0)
-				(begin
-				(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-				(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
-				(ai_place g_enc_bsp3struc2/sqd_elite_ridge)
-				(ai_place g_enc_bsp3struc2/sqd_grunt_ledge)
-				(set encounter_spawned_bsp3 1)
-				)
-				(sleep 10)
-				)
-			)
-		)
 		)
 	)
 	(if (not (= (structure_bsp_index) 2))
@@ -252,8 +322,17 @@
 	)
 )
 
-(SCRIPT startup ambience
+(script startup ambience
+	(fade_in 0 0 0 150)
+	(sound_looping_start "sound\music\grounded\menu\menu" none 1)
 	(set cheat_deathless_player 1)
+	(camera_control 1)
+	(camera_set game_menu 0)
+	(sleep_until (= clua_short3 1) 5)
+	(camera_control 0)
+	(set started true)
+	(set openingmenu true)
+	(sound_looping_stop "sound\music\grounded\menu\menu")
 	(ai_attach barman bsp2_bar)
 	(ai_attach merchant_1 bsp2_bar/weapons)
 	(ai_attach merchant_2 bsp2_bar/weapons)
@@ -261,12 +340,17 @@
 	(ai_attach surv2 enc_pod1/sqd_marine)
 	(ai_attach surv3 enc_pod1/sqd_crewman)
 	(ai_attach surv4 enc_pod1/sqd_crewman)
+	(object_create_anew_containing "openworld")
+	(object_destroy_containing "cine")
 	(ai_place bsp2_guard)
 	(ai_allegiance "player" "sentinel")
 	(ai_allegiance "player" "human")
 	(sleep 10)
 	(ai_place g_enc_bsp2bar)
 	(ai_place g_enc_bsp1raiderCave)
+	(ai_place bsp3_pod1guard)
+	(ai_attach raider_michael g_enc_bsp1raiderCave/sqd_human2)
+	;(ai_attach elite_guard1 bsp3_pod1guard/sqd_captain)
 	(act1_landing)
 	;================= Predict Sounds =======================
 	(sound_impulse_predict sound\dialog\npc_generic\generic true)
