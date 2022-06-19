@@ -1,3 +1,18 @@
+--[[
+
+    This package uses code from the Insurrection Project.
+    Credit to Sledmine, Jerry and other Shadowmods team members to the Insurrection Project.
+
+]]
+
+local harmony = require "mods.harmony"                  -- Defining dependencies 
+local openWidget = harmony.menu.open_widget             -- These lines exist to simplify executing Harmony Functions
+local reloadWidget = harmony.menu.reload_widget         
+local findWidgets = harmony.menu.find_widgets
+local core = require "grounded.core"
+local getWidgetString = core.getStringFromWidget
+local setWidgetString = core.setStringToWidget
+
 local dialog = {}
 local glue = require "glue"
 
@@ -58,8 +73,8 @@ function dialog.open(convTable, resetState)
 --- Write new strings
 ------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
-        widgetStrings.stringList = newStrings
-        npcDialogs.stringList = newNPCStrings
+        setWidgetString(newStrings, widgetStrings.stringList)
+        setWidgetString(newNPCStrings, npcDialogs.stringList)
         local success = load_ui_widget(dialogTag.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")

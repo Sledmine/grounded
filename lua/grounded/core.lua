@@ -71,7 +71,25 @@ function core.playerIsNearTo(target, sensitivity)
     return false
 end
 
--- Unit Damaged test
+function core.getStringFromWidget(widgetId)
+    local widget = blam.uiWidgetDefinition(widgetId)
+    local virtualValue = VirtualInputValue[widget.name]
+    if virtualValue then
+        return virtualValue
+    end
+    local unicodeStrings = blam.unicodeStringList(widget.unicodeStringListTag)
+    return unicodeStrings.stringList[widget.stringListIndex + 1]
+end
+
+function core.setStringToWidget(str, widgetId)
+    local widget = blam.uiWidgetDefinition(widgetId)
+    local virtualValue = VirtualInputValue[widget.name]
+    if virtualValue then
+        VirtualInputValue[widget.name] = str
+    end
+    blam.unicodeStringList(widget.unicodeStringListTag).stringList = {str}
+end
+
 
 
 
