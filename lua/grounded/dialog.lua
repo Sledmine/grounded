@@ -47,14 +47,14 @@ function dialog.open(convTable, resetState)
         dialogState.currentDialog = convTable                                                                     -- Record the dialogState
         table.insert(dialogState.history, convTable)                                                
         local widget = blam.uiWidgetDefinition(dialogTag.id)                                                      -- Define dialogTag.id as "widget"
-        local option = blam.uiWidgetDefinition(widget.childWidgetsList[2])                                       -- Call the "options" child widget, being in the second slot of the dialogTag 
+        local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])                                       -- Call the "options" child widget, being in the second slot of the dialogTag 
         local widgetStrings = blam.unicodeStringList(playerDialog.id)                                             -- Define playerDialog.id as widgetStrings
         local npcDialogs = blam.unicodeStringList(characterDialog.id)                                             -- Define chracterDialog.id as npcDialogs
         -- For PLAYER DIALOG
         local newStrings = widgetStrings.stringList                                                               -- Defines newStrings as the .stringlist table from WidgetStrings
-        option.childWidgetsCount = #convTable.options                                                            -- Dynamically generates the number of options
-        for optionIndex, optionText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
-            newStrings[optionIndex] = optionText                                                                -- Iterate into each unique string list entry
+        options.childWidgetsCount = #convTable.options                                                            -- Dynamically generates the number of options
+        for optionsIndex, optionsText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
+            newStrings[optionsIndex] = optionsText                                                                -- Iterate into each unique string list entry
         end
         
         -- For NPC DIALOG
