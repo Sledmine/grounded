@@ -467,11 +467,11 @@ local bspArray = {
             end
         elseif hsc.isPlayerInsideVolume(bspArray[6]) then -- For transitioning between Byellee Colony and the lightbridge caves
             if (bspBenjamin == 0) then
-                if (hsc.bspIndex() == 2) then
+                if (hsc.bspIndex() == 4) then
                     execute_script("switch_bsp 5")
                     bspBenjamin = 1
                 elseif (hsc.bspIndex() == 5) then
-                    execute_script("switch_bsp 2")
+                    execute_script("switch_bsp 4")
                     bspBenjamin = 1
                 end
             end
