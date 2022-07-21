@@ -1,5 +1,5 @@
-local dialog = require "grounded.dialog"
-local hsc = require "grounded.hsc"
+--local dialog = require "grounded.dialog"
+--local hsc = require "grounded.hsc"
 
 --[[
 
@@ -103,25 +103,26 @@ function screen(screenInstance)
     return instance
 end
 
-function conversationTest(thisConv)
-    return
-    {objectName = screen(thisConv).objectName,
-    npcDialog =  {screen(thisConv).npcText},-- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
-    speech = screen(thisConv).speech,
+function conversationScreen(thisConv)
+    local scream = screen(thisConv)
+    return {
+    objectName = "",
+    npcDialog =  {scream.npcText},-- Due to the way the script is built the npcDialog needs to be set up as an array to be able to update the Stringlist
+    speech = scream.speech,
     options = 
     {
-        screen(thisConv).playerResponses[1],
-        screen(thisConv).playerResponses[2],
-        screen(thisConv).playerResponses[3],
-        screen(thisConv).playerResponses[4],
+        scream.playerResponses[1],
+        scream.playerResponses[2],
+        scream.playerResponses[3],
+        scream.playerResponses[4],
     },
     -- Used to store functions
     actions = 
     {
-        screen(thisConv).playerActions[1],
-        screen(thisConv).playerActions[2],
-        screen(thisConv).playerActions[3],
-        screen(thisConv).playerActions[4],
+        scream.playerActions[1],
+        scream.playerActions[2],
+        scream.playerActions[3],
+        scream.playerActions[4],
     }
 }
 end

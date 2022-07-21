@@ -11,7 +11,6 @@ patterChat = {
     "Are you UNSC?", -- 7
     "Well you speak english. Are you navy?", -- 8
     "You should report my CO, Major Forbes." -- 9
-    
 }
 
 theSoundMan = {
@@ -221,6 +220,8 @@ con1Sptn1 = {  -- Starts the branching actions.
 }
 
     --ltPat.intro =
+
+    
 return {
     objectName = "ltPat",
     npcDialog =  {patterChat[1]},
