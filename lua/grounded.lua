@@ -9,6 +9,7 @@ clua_version = 2.056
 --[[]]
 -- Project modules
 blam = require "blam"
+debug = require "debug"
 -- Provide global and short syntax for multiple tag classes references
 tagClasses = blam.tagClasses
 objectClasses = blam.objectClasses
@@ -43,9 +44,6 @@ local menuOpened = 1
 ------------------------------------------------------------------------------  
 --local continueWidget = (blam.getTag(menuWidget.childWidgetsList[1])).id                                               -- Define the "Continue" widget from menuWidgetList
 local newGameWidget = (blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)).id                                                -- Define the "New Game" widget from menuWidgetList
-
-
-
 ------------------------------------------------------------------------------
 function on_menu_accept(button_widget_id)
     if(button_widget_id == campaign_accept_button_widget_id) then
@@ -129,6 +127,7 @@ function OnTick()
 --- On Tick Globals 
 ------------------------------------------------------------------------------
     local scenario = blam.scenario()
+    local convShort = get_global("conv_short1")
     --local hogRepair = (scenario.tagNames[27])
     --console_out(newGameWidget)
     local objectivePrompts = {    
@@ -172,18 +171,18 @@ function OnTick()
 ------------------------------------------------------------------------------  
 --- Conversations
 ------------------------------------------------------------------------------  
-forbesConv = require "grounded.dialogs.forbes.forbes1"
-forbes2Conv = require "grounded.dialogs.forbes.forbes2"
-testConv = require "grounded.dialogs.test"
-ltPatConv = require "grounded.dialogs.ltPatterson"
-journalContent = require "grounded.journal.quests"
+local forbesConv = require "grounded.dialogs.forbes.forbes1"
+local test = require "grounded.dialogs.test_noComments"
+local pat = require "grounded.dialogs.ltPatterson"
+--local journalContent = require "grounded.journal.quests"
 ------------------------------------------------------------------------------  
 --- Testing Function flashlight
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(ltPatConv, true)
+            dialog.open(fakeConversationScreen(convShort), true)
             --load_ui_widget("ui\\grounded\\main_menu")
+            dspeed = 4
         end
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -212,22 +211,10 @@ journalContent = require "grounded.journal.quests"
 --- Dynamic Conversation System   
 ------------------------------------------------------------------------------
     if (playerBiped) then
-        --[[if playerBiped.flashlightKey then
-            dialog.open(ltPatConv, true)
-        end]]
         local dialogPressedOption = interface.triggers("dynamic_menu", 4)
-        --local widgetCheck = interface.getCurrentWidget()
-        --[[if (widgetCheck == "ui\\conversation\\dynamic_conversation\\dynamic_conversation_menu") then
-            local audio = currentDialog.speech
-            local biped = currentDialog.unitName
-            hsc.soundImpulseStart(audio, biped, 0.8)
-        end]]
         if (dialogPressedOption) then
             local currentDialog = dialog.getState().currentDialog
             if (currentDialog and currentDialog.actions) then
-                --[[local audio = currentDialog.speech
-                local biped = currentDialog.unitName
-                hsc.soundImpulseStart(audio, biped, 0.8)]]
                 local action = currentDialog.actions[dialogPressedOption]
                 if (action) then
                     if (type(action) == "table") then
@@ -296,7 +283,7 @@ local conversations = {
         promptMessage = "Press \"E\" to talk to Lt. Patterson",
         action = function()
             if (get_global("act1_landed") < 1) then
-                dialog.open(ltPatConv, true)
+                dialog.open(patScreen(convShort), true)
             else
                 hsc.soundImpulseStart()
             end
@@ -379,7 +366,7 @@ local conversations = {
         if not newGameStart then
             console_out(newGameWidget)    
             --hsc.script("newgame")     
-        end
+        end 
     end
 ------------------------------------------------------------------------------
 --- Lift Stuff
@@ -423,7 +410,6 @@ local bspArray = {
     "naturalcaves_caverns",                                     -- 11
     "caverns_naturalcaves",                                     -- 12
 }
-
     if (playerBiped) then
         if (hsc.isPlayerInsideVolume(bspArray[1])) or (hsc.isPlayerInsideVolume(bspArray[7])) then -- For transitioning between Byellee Structure and Byellee Colony 
             if (bspBenjamin == 0) then

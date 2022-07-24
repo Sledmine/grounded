@@ -4,10 +4,6 @@
     Credit to Sledmine, Jerry and other Shadowmods team members to the Insurrection Project.
 
 ]]
-
-
-local core = require "grounded.core"
-
 local dialog = {}
 local glue = require "glue"
 
@@ -39,7 +35,7 @@ function dialog.open(convTable, resetState)
 ------------------------------------------------------------------------------
     local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)            -- Creates a reference to the global menu for Dynamic Conversations
     local playerDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)       -- Creates a reference to strings used for Character Dialog
-    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\harry_potter]], tagClasses.unicodeStringList)             -- Creates a reference to strings used for NPCs
+    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)             -- Creates a reference to strings used for NPCs
 ------------------------------------------------------------------------------
 --- Read the current tags
 ------------------------------------------------------------------------------
@@ -48,34 +44,35 @@ function dialog.open(convTable, resetState)
         table.insert(dialogState.history, convTable)                                                
         local widget = blam.uiWidgetDefinition(dialogTag.id)                                                      -- Define dialogTag.id as "widget"
         local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])                                       -- Call the "options" child widget, being in the second slot of the dialogTag 
-        local widgetStrings = blam.unicodeStringList(playerDialog.id)                                             -- Define playerDialog.id as widgetStrings
+        local playerResponses = blam.unicodeStringList(playerDialog.id)                                             -- Define playerDialog.id as widgetStrings
         local npcDialogs = blam.unicodeStringList(characterDialog.id)                                             -- Define chracterDialog.id as npcDialogs
         -- For PLAYER DIALOG
-        local newStrings = widgetStrings.stringList                                                               -- Defines newStrings as the .stringlist table from WidgetStrings
-        options.childWidgetsCount = #convTable.options                                                            -- Dynamically generates the number of options
-        for optionsIndex, optionsText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
-            newStrings[optionsIndex] = optionsText                                                                -- Iterate into each unique string list entry
+        local newStrings = {playerResponses.stringList}                                                               -- Defines newStrings as the .stringlist table from WidgetStrings
+        options.childWidgetsCount = (#convTable.options)                                                            -- Dynamically generates the number of options
+        for optionIndex, optionText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
+            newStrings[optionIndex] = optionText                                                                -- Iterate into each unique string list entry
         end
         
         -- For NPC DIALOG
-        local newNPCStrings = npcDialogs.stringList                                                               -- Define new local "newNPCStrings" as npcDialogs.stringlist
+       local newNPCStrings = {npcDialogs.stringList}                                                            -- Define new local "newNPCStrings" as npcDialogs.stringlist
         for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do                                     -- Read the text of
             newNPCStrings[npcDialogsIndex] = npcDialogsText
         end
-        console_out(#convTable.options)
+        --console_out(#convTable.options)
         --console_out(option.name)
 ------------------------------------------------------------------------------
 --- Write new strings
 ------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
-        widgetStrings.stringList = newStrings
-        --npcDialogs.stringList = newNPCStrings
+        
+        playerResponses.stringList = newStrings
+        npcDialogs.stringList = newNPCStrings
         local success = load_ui_widget(dialogTag.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
         end
     else
-        console_out("A problem ocurred at loading the dialog tags!")
+        console_out("A problem occurred at loading the dialog tags!")
     end
 end
 ------------------------------------------------------------------------------
