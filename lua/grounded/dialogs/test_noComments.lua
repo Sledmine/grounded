@@ -1,7 +1,8 @@
 local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 local harmony = require "mods.harmony"
-function openAgainPlease()
+
+function testConvReload()
     dialog.open(fakeConversationScreen(get_global("conv_short1")), true)
     stop_timer(periodic)
 end
@@ -22,22 +23,22 @@ function fakeConversationScreen(screenInstance)
         function ()                         
             set_global("conv_short1", 2)   
             harmony.menu.close_widget()
-            periodic = set_timer(2, "openAgainPlease", "")
+            periodic = set_timer(2, "testConvReload", "")
         end,
         function () 
             set_global("conv_short1", 3)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "openAgainPlease", "") 
+            periodic = set_timer(2, "testConvReload", "") 
         end,
         function ()
             set_global("conv_short1", 4)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "openAgainPlease", "") 
+            periodic = set_timer(2, "testConvReload", "") 
         end,
         function ()
             set_global("conv_short1", 5)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "openAgainPlease", "") 
+            periodic = set_timer(2, "testConvReload", "") 
         end,
         function ()
             set_global("conv_short1", 1)
