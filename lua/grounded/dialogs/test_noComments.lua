@@ -1,11 +1,14 @@
---local dialog = require "grounded.dialog"
---local hsc = require "grounded.hsc"
-
-local objectName = ""       
+local dialog = require "grounded.dialog"
+local hsc = require "grounded.hsc"
+local harmony = require "mods.harmony"
+function openAgainPlease()
+    dialog.open(fakeConversationScreen(get_global("conv_short1")), true)
+    stop_timer(periodic)
+end
 ------------------------------------------------------------------------------
 --- Table Definitions
 ------------------------------------------------------------------------------
-function fakeConversationScreen(thisConv)
+function fakeConversationScreen(screenInstance)
     local response = {                        
         "response 1", -- 1             
         "response 2", -- 2            
@@ -14,45 +17,56 @@ function fakeConversationScreen(thisConv)
         "response 5", -- 5
         "response 6", -- 6
         }
-    local npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."}  -- I really just made this long as hell just to mess with you.
+    local npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."}
     local actionsArray = {                        
         function ()                         
-            set_global("conv_short1", 2)    
+            set_global("conv_short1", 2)   
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "openAgainPlease", "")
         end,
         function () 
             set_global("conv_short1", 3)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "openAgainPlease", "") 
         end,
         function ()
             set_global("conv_short1", 4)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "openAgainPlease", "") 
         end,
         function ()
             set_global("conv_short1", 5)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "openAgainPlease", "") 
         end,
         function ()
-            set_global("conv_short1", 6)
+            set_global("conv_short1", 1)
+            harmony.menu.close_widget()
         end,
     }
     local scream = {}
-    if thisConv == 1 then
+    if screenInstance == 1 then
         scream.npcText = npcWords[1]
         scream.playerResponses = {response[1], response[2],}
         scream.playerActions = {actionsArray[1], actionsArray[2]} 
-    elseif thisConv == 2 then
+    elseif screenInstance == 2 then
         scream.npcText = npcWords[2]
         scream.playerResponses = {response[2], response[1],} 
         scream.playerActions = {actionsArray[2], actionsArray[3]} 
-    elseif thisConv == 3 then
+    elseif screenInstance == 3 then
         scream.npcText = "I'm writing this as a manual string"
-        scream.playerResponses = {"You can also manually write dialogue", "And change the format to a column"} 
+        scream.playerResponses = {
+            "You can also manually write dialogue", 
+            "And change the format to a column"} 
         scream.playerActions = {actionsArray[3], actionsArray[2]}
-    elseif thisConv == 4 then
+    elseif screenInstance == 4 then
         scream.npcText = "npcWords[4]"
         scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[4], actionsArray[5]} 
-    elseif thisConv == 5 then
+        scream.playerActions = {actionsArray[4], actionsArray[5], actionsArray[3]} 
+    elseif screenInstance == 5 then
         scream.npcText = npcWords[4]
         scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[1], actionsArray[2]} 
+        scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[5]} 
     end
     return {
     objectName = "",

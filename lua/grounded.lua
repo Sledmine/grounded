@@ -180,7 +180,7 @@ local pat = require "grounded.dialogs.ltPatterson"
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(fakeConversationScreen(convShort), true)
+            dialog.open(patScreen(convShort), true)
             --load_ui_widget("ui\\grounded\\main_menu")
             dspeed = 4
         end
