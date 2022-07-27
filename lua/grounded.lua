@@ -174,13 +174,14 @@ function OnTick()
 local forbesConv = require "grounded.dialogs.forbes.forbes1"
 local test = require "grounded.dialogs.test_noComments"
 local pat = require "grounded.dialogs.ltPatterson"
+local wright = require "grounded.dialogs.wright.wrightConv1"
 --local journalContent = require "grounded.journal.quests"
 ------------------------------------------------------------------------------  
 --- Testing Function flashlight
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(patScreen(convShort), true)
+            dialog.open(wrightConvScreen(convShort), true)
             --load_ui_widget("ui\\grounded\\main_menu")
             dspeed = 4
         end

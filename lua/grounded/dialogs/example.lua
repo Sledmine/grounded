@@ -25,7 +25,11 @@ function exampleConvScreen(screenInstance)
         "response 6", -- 6
         }
 
-    local npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."} -- NPC 
+    local npcWords = {                                  -- NPC
+        "npc line 1", 
+        "npc line 2", 
+        "npc line 4", 
+        "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."}  
     ------------------------------------------------------------------------------
     --- Actions Array 
     ------------------------------------------------------------------------------
