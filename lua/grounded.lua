@@ -261,7 +261,7 @@ local conversations = {
         end
     },
     {-- Forbes
-        unitName = "sgt_forbes",
+        unitName = "forbes",
         promptMessage = "Press \"E\" to talk to Sergeant Forbes",
         action = function()
             if (get_global("unsc_quests") < 1) then
@@ -289,7 +289,14 @@ local conversations = {
                 hsc.soundImpulseStart()
             end
         end
-    }
+    },
+    { -- Secretary General Wright
+        unitName = "wright",
+        promptMessage = "Press \"E\" to talk to Judith Wright",
+        action = function()
+                dialog.open(wrightConvScreen(convShort), true)
+            end
+    },
 }
 ------------------------------------------------------------------------------
 --- Journal 
