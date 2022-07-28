@@ -30,50 +30,43 @@ theSoundMan = {
     "sound\\dialog\\lt_pattersno\\con1_line1",
 }
 
-responseSptn10 = {
-    "Our engineers told me.",
-}
+    responseSptn10 = {
+        "Our engineers told me.",
+    }
 
-responseSptn9 = {
-    "I drove past some hostile soldiers and elites on my way here.",
-    "Alright. I can handle that. Then, we work together to find my crew.",
-    "What size of resistance should I expect?",
-    "Where can I get some weapons?",
-}
+    responseSptn9 = {
+        "I drove past some hostile soldiers and elites on my way here.",
+        "Alright. I can handle that. Then, we work together to find my crew.",
+        "What size of resistance should I expect?",
+        "Where can I get some weapons?",
+    }
 
-responseSptn8 = {
-    "Will you help me find my crew?",
-    "What do you need from me?",
-    "What, you can't manage your own security regime?",
-    "Goodbye",
-}
+    responseSptn7 = {
+        "Will you help me find my crew?",
+        "What do you need from me?",
+        "I'm not helping you until I find my crew.",
+        "What, you can't manage your own security regime?",
+    }
 
-responseSptn7 = {
-    "Will you help me find my crew?",
-    "What do you need from me?",
-    "I'm not helping you until I find my crew.",
-    "What, you can't manage your own security regime?",
-}
+    responseSptn6 = {
+        "Why do you know about Spartans, but not Lt Patterson?",
+        "Just some ODSTs and myself. Must not've had the budget.",
+        "With all due respect, can we pin this? I need to find my crew.",
+    }
 
-responseSptn6 = {
-    "Why do you know about Spartans, but not Lt Patterson?",
-    "Just some ODSTs and myself. Must not've had the budget.",
-    "With all due respect, can we pin this? I need to find my crew.",
-}
-
-responseSptn5 = {
-    "Myself and a couple ODSTs. I need to link-up with my crew.",
-}
+    responseSptn5 = {
+        "Myself and a couple ODSTs. I need to link-up with my crew.",
+    }
 
 responseSptn4 = {
     "A few ODSTs and myself.",
-    "The Biri is a science vessel. Shields and a good drive, no military arms."
+    "The Biri is a science vessel. Shields and a good drive, no military arms.",
 }
 
 responseSptn3 = {
     "Fine, yes, my ship is the one that crashed.",
     "Lt Patterson didn't know about Spartans, but you do? Why?",
-    "I'm leaving to find my crew"
+    "I'm leaving to find my crew",
 }
 
 responseSptn2 = {
