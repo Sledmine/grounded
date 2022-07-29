@@ -7,6 +7,7 @@ local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 local harmony = require "mods.harmony"
 
+
 function exampleConvReload()   -- IMPORTANT - give this function a new name for every conversation. In VSCode, highlight the name and press CTRL+F2 to rename all. If you don't, the conversations will interfere with each other and load conversations from other modules
     dialog.open(fakeConversationScreen(get_global("conv_short1")), true)            -- Reopens the conversation based on the global defined. You can change this.
     stop_timer(periodic)                                                                        -- stop timer defined in actions array as "periodic"
@@ -29,7 +30,9 @@ function exampleConvScreen(screenInstance)
         "npc line 1", 
         "npc line 2", 
         "npc line 4", 
-        "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."}  
+        "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua.",
+        "you can also"
+    }  
     ------------------------------------------------------------------------------
     --- Actions Array 
     ------------------------------------------------------------------------------

@@ -21,11 +21,15 @@ function fakeConversationScreen(screenInstance)
     local npcWords = {"npc line 1", "npc line 2", "npc line 4", "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua."}
     local actionsArray = {                        
         function ()                         
-            set_global("conv_short1", 2)   
+            set_global("conv_short1", 1)   
             harmony.menu.close_widget()
-            periodic = set_timer(2, "testConvReload", "")
         end,
         function () 
+            set_global("conv_short1", 2)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "testConvReload", "") 
+        end,
+        function ()
             set_global("conv_short1", 3)
             harmony.menu.close_widget()
             periodic = set_timer(2, "testConvReload", "") 
@@ -38,18 +42,13 @@ function fakeConversationScreen(screenInstance)
         function ()
             set_global("conv_short1", 5)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "testConvReload", "") 
-        end,
-        function ()
-            set_global("conv_short1", 1)
-            harmony.menu.close_widget()
         end,
     }
     local scream = {}
     if screenInstance == 1 then
         scream.npcText = npcWords[1]
         scream.playerResponses = {response[1], response[2],}
-        scream.playerActions = {actionsArray[1], actionsArray[2]} 
+        scream.playerActions = {actionsArray[2], actionsArray[3]} 
     elseif screenInstance == 2 then
         scream.npcText = npcWords[2]
         scream.playerResponses = {response[2], response[1],} 
@@ -63,11 +62,11 @@ function fakeConversationScreen(screenInstance)
     elseif screenInstance == 4 then
         scream.npcText = "npcWords[4]"
         scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[4], actionsArray[5], actionsArray[3]} 
+        scream.playerActions = {actionsArray[4], actionsArray[1], actionsArray[3]} 
     elseif screenInstance == 5 then
         scream.npcText = npcWords[4]
         scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[5]} 
+        scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[1]} 
     end
     return {
     objectName = "",
