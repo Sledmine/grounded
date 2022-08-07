@@ -38,31 +38,14 @@ local device_positions = {
 --- Main Menu Definitions
 ------------------------------------------------------------------------------
 local menuOpened = 1
+newGameWidget = blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)
 ------------------------------------------------------------------------------
---local menuWidgetList = blam.getTag([[ui\grounded\game_list]], tagClasses.uiWidgetDefinition)                          -- Define the game_list.uiWidgetDefinition tag as "menuWidgetList"
---local menuWidget = blam.uiWidgetDefinition(menuWidgetList.id)                                                         -- Pull the game id for the menuWidgetList definition
-------------------------------------------------------------------------------  
---local continueWidget = (blam.getTag(menuWidget.childWidgetsList[1])).id                                               -- Define the "Continue" widget from menuWidgetList
-local newGameWidget = (blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)).id                                                -- Define the "New Game" widget from menuWidgetList
-------------------------------------------------------------------------------
-function on_menu_accept(button_widget_id)
-    if(button_widget_id == campaign_accept_button_widget_id) then
-        -- Cancel event
-        return false
-    else
-        return true
-    end
-end
-------------------------------------------------------------------------------
-function on_menu_mouse_button_press(menu_button_widget_id, pressed_mouse_button)
-    if(pressed_mouse_button == "left button") then
-        -- Cancel event
-        return false
-    end
+--[[function onMenuAccept(button_widget_id)
+    local widgetFunction = harmony.menu.get_widget_values(button_widget_id).tag_id
+    local allow = 1
+    return allow
+end]]
 
-    return true
-end
-local newGameStart = on_menu_accept(newGameWidget)
 ------------------------------------------------------------------------------
 ---@class event
 ---@field func function Desired function reference to execute
@@ -119,7 +102,8 @@ function letterbox(boolean)
 end
 
 local aiStuff = true
-
+local perktime = 1
+local perkApplied = 0
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
@@ -128,6 +112,29 @@ function OnTick()
 ------------------------------------------------------------------------------
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
+    local engineersSaved = 0
+    if (perktime == 1) and (perkApplied < 2) then
+        local medic = get_global("medic_perk")
+        local engineer = get_global("engineer_perk")
+        local tactical = get_global("tactical_perk")
+        local builtStupid = get_global("not_very_grounded")
+        if (medic) then
+            execute_script("cheat_jetpack 1")
+            perkApplied = perkApplied + 1
+        end
+        if (engineer) then
+            execute_script("cheat_superjump 1")
+            perkApplied = perkApplied + 1
+        end
+        if (tactical) then
+            execute_script("game_speed 3")
+            perkApplied = perkApplied + 1
+        end
+        if (builtStupid) then
+            execute_script("cheat_all_weapons")
+            perkApplied = perkApplied + 1
+        end
+    end
     --local hogRepair = (scenario.tagNames[27])
     --console_out(newGameWidget)
     local objectivePrompts = {    
@@ -159,7 +166,6 @@ function OnTick()
         }
     }
     local intro = get_global("act1_landed")
-    -- Player biped object this should be updated on every tick as it does not consumes resources
     local playerBiped = blam.biped(get_dynamic_player())
     local bspIndex = hsc.bspIndex()
     if (hsc.isPlayerInsideVolume("door_open")) then
@@ -171,20 +177,29 @@ function OnTick()
 ------------------------------------------------------------------------------  
 --- Conversations
 ------------------------------------------------------------------------------  
-local forbesConv = require "grounded.dialogs.forbes.forbes1"
+local forbesConv = require "grounded.dialogs.forbes.forbesConv1"
 local test = require "grounded.dialogs.test_noComments"
 local pat = require "grounded.dialogs.ltPatterson"
 local wright = require "grounded.dialogs.wright.wrightConv1"
---local journalContent = require "grounded.journal.quests"
+local perks = require "grounded.journal.perksTemplate"
 ------------------------------------------------------------------------------  
 --- Testing Function flashlight
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(wrightConvScreen(convShort), true)
+            --dialog.open(forbesConvScreen1(get_global("conv_short1")))
             --load_ui_widget("ui\\grounded\\main_menu")
-            dspeed = 4
+            --local decision1 = blam.getTag([[ui\journal\options\decision_2]], tagClasses.uiWidgetDefinition)
+            --console_out(decision1.id)
+            dialog.journal(perkScreenEvents(get_global("conv_short1")), true)
+            
         end
+        --[[if (playerBiped) then
+            
+            if not (onMenuAccept(decision1.id)) then
+                console_out("false_event")  
+            end
+        end]]
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Async & Game Save System
@@ -229,7 +244,7 @@ local wright = require "grounded.dialogs.wright.wrightConv1"
             end
         end
 ------------------------------------------------------------------------------
---- Dynamic Conversation Prompt Array
+--- Dynamic Prompt Array
 ------------------------------------------------------------------------------
 -- List of biped conversation Events
 -- This works using the scenario object name instead of the name.<tag_class>. You need to manually name the object for this script to work.
@@ -265,10 +280,7 @@ local conversations = {
         promptMessage = "Press \"E\" to talk to Sergeant Forbes",
         action = function()
             if (get_global("unsc_quests") < 1) then
-            dialog.open(forbesConv, true)
-            set_global("unsc_quests", 1)
-            elseif (get_global("unsc_quests") > 0) then
-                dialog.open(forbes2Conv, true)
+            dialog.open(forbesConvScreen1(get_global("conv_short1")), true)
             end
         end
     },
@@ -294,9 +306,22 @@ local conversations = {
         unitName = "wright",
         promptMessage = "Press \"E\" to talk to Judith Wright",
         action = function()
-                dialog.open(wrightConvScreen(convShort), true)
+                dialog.open(wrightConvScreen(wrightVariableCalculator()), true)
             end
     },
+    { -- Engineer Sam
+        unitName = "eng_sam",
+        promptMessage = "Press\"E\" to talk to Engineer Hayden",
+        action = function()
+            set_global("engineers_saved", 1)
+            engineersSaved = 1
+        end
+    },
+    --[[{ -- repair Hog system
+        unitName = "motor"
+        promptMessage = "Press\"E\" to collect parts"
+        actions = execute_script("object_destroy motor")
+    }]]
 }
 ------------------------------------------------------------------------------
 --- Journal 
@@ -367,40 +392,40 @@ local conversations = {
         if not (get_global("openingmenu")) then
             if (menuOpened == 1) then
                 campaignWidgetLoaded = load_ui_widget("ui\\grounded\\main_menu")
-                
                 menuOpened = 0
             end
         end
-        if not newGameStart then
-            console_out(newGameWidget)    
-            --hsc.script("newgame")     
-        end 
+        --[[if (get_global("clua_short2") == 1) then
+            set_global("clua_short2", 0) 
+            local perkScreen = load_ui_widget("ui\\journal\\master_journal")
+        end]]
     end
 ------------------------------------------------------------------------------
 --- Lift Stuff
 ------------------------------------------------------------------------------
-    if not ((hsc.deviceGet(2, "lift1_high")) == 0) then                                             -- The purpose of these functions is to ensure the lift operates as intended AND
-        hsc.deviceSet(2, "lift1", 0)                                                                -- is always where the player needs it. The first four "if" statements deal with
-        hsc.deviceSet(2, "lift1_high", 0)                                                           -- this function and the last four compare where the lift is when the player is nearby.
-    elseif not ((hsc.deviceGet(2, "lift2_high")) == 0) then                                         -- If the player is near the shaft but the lift is at the wrong position, the script
-        hsc.deviceSet(2, "lift2", 0)                                                                -- auto-recalls the lift.
-        hsc.deviceSet(2, "lift2_high", 0)
-    elseif not ((hsc.deviceGet(2, "lift1_low")) == 0) then
-        hsc.deviceSet(2, "lift1", 0.463)
-        hsc.deviceSet(2, "lift1_low", 0)
-    elseif not ((hsc.deviceGet(2, "lift2_low")) == 0) then
-        hsc.deviceSet(2, "lift2", 0.463)
-        hsc.deviceSet(2, "lift2_low", 0)
-    elseif (hsc.isPlayerInsideVolume("low1")) and ((hsc.deviceGet(2, "lift1")) == 0.463) then       -- Test if player is near the lower shaft and if the platform is at maximum height. Recalls if true.
-        hsc.deviceSet(2, "lift1", 0)
-    elseif (hsc.isPlayerInsideVolume("low2")) and ((hsc.deviceGet(2, "lift2")) == 0.463) then
-        hsc.deviceSet(2, "lift2", 0)
-    elseif (hsc.isPlayerInsideVolume("high1")) and ((hsc.deviceGet(2, "lift1")) == 0) then
-        hsc.deviceSet(2, "lift1", 0.463)
-    elseif (hsc.isPlayerInsideVolume("high2")) and ((hsc.deviceGet(2, "lift2")) == 0) then
-        hsc.deviceSet(2, "lift1", 0.463)
+    if playerBiped then
+        if not ((hsc.deviceGet(2, "lift1_high")) == 0) then                                             -- The purpose of these functions is to ensure the lift operates as intended AND
+            hsc.deviceSet(2, "lift1", 0)                                                                -- is always where the player needs it. The first four "if" statements deal with
+            hsc.deviceSet(2, "lift1_high", 0)                                                           -- this function and the last four compare where the lift is when the player is nearby.
+        elseif not ((hsc.deviceGet(2, "lift2_high")) == 0) then                                         -- If the player is near the shaft but the lift is at the wrong position, the script
+            hsc.deviceSet(2, "lift2", 0)                                                                -- auto-recalls the lift.
+            hsc.deviceSet(2, "lift2_high", 0)
+        elseif not ((hsc.deviceGet(2, "lift1_low")) == 0) then
+            hsc.deviceSet(2, "lift1", 0.463)
+            hsc.deviceSet(2, "lift1_low", 0)
+        elseif not ((hsc.deviceGet(2, "lift2_low")) == 0) then
+            hsc.deviceSet(2, "lift2", 0.463)
+            hsc.deviceSet(2, "lift2_low", 0)
+        elseif (hsc.isPlayerInsideVolume("low1")) and ((hsc.deviceGet(2, "lift1")) == 0.463) then       -- Test if player is near the lower shaft and if the platform is at maximum height. Recalls if true.
+            hsc.deviceSet(2, "lift1", 0)
+        elseif (hsc.isPlayerInsideVolume("low2")) and ((hsc.deviceGet(2, "lift2")) == 0.463) then
+            hsc.deviceSet(2, "lift2", 0)
+        elseif (hsc.isPlayerInsideVolume("high1")) and ((hsc.deviceGet(2, "lift1")) == 0) then
+            hsc.deviceSet(2, "lift1", 0.463)
+        elseif (hsc.isPlayerInsideVolume("high2")) and ((hsc.deviceGet(2, "lift2")) == 0) then
+            hsc.deviceSet(2, "lift1", 0.463)
+        end
     end
-
 ------------------------------------------------------------------------------
 --- BSP Switching
 ------------------------------------------------------------------------------
@@ -495,6 +520,7 @@ local bspArray = {
         elseif hsc.isPlayerInsideVolume("scen_escape") then --DEBUG
             if (bspBenjamin == 0) then
                 execute_script("begin (ft_escapepod)")
+                execute_script("object_destroy_containing \"cine\"")
                 bspBenjamin = 1
             end
         else
@@ -504,7 +530,22 @@ local bspArray = {
 ------------------------------------------------------------------------------
 --- Game events
 ------------------------------------------------------------------------------
------------------------ Player Landing on Planet -----------------------------
+----------------------- Pre-landing sequence        --------------------------
+------------------------------------------------------------------------------
+    if playerBiped then
+        if (hsc.deviceGet(2, "engineering1") == 1) then
+            execute_script("object_teleport (player0) engineering")
+            hsc.deviceSet(2, "engineering1", 0)
+        elseif (hsc.deviceGet(2, "engineering2") == 1) then
+            execute_script("object_teleport (player0) escaperoom")
+            hsc.deviceSet(2, "engineering2", 0)
+        end
+        if engineersSaved == 4 then
+            set_global("engineers_saved", 4)
+        end
+    end
+
+----------------------- Player Landing on Planet    --------------------------
 ------------------------------------------------------------------------------
     if (intro == 0) then
         hsc.unitEnterable("repair_hog", 0)
@@ -538,3 +579,5 @@ end
 
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
+--harmony.set_callback("widget accept", "onMenuAccept")
+--harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")

@@ -47,7 +47,7 @@ function dialog.open(convTable, resetState)
         local playerResponses = blam.unicodeStringList(playerDialog.id)                                             -- Define playerDialog.id as widgetStrings
         local npcDialogs = blam.unicodeStringList(characterDialog.id)                                             -- Define chracterDialog.id as npcDialogs
         -- For PLAYER DIALOG
-        local newStrings = {playerResponses.stringList}                                                               -- Defines newStrings as the .stringlist table from WidgetStrings
+        local newStrings = {playerResponses.stringList}                                                               -- Defines newStrings as the .stringlist table from WidgetStrings. 
         options.childWidgetsCount = (#convTable.options)                                                            -- Dynamically generates the number of options
         for optionIndex, optionText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
             newStrings[optionIndex] = optionText                                                                -- Iterate into each unique string list entry
@@ -58,16 +58,79 @@ function dialog.open(convTable, resetState)
         for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do                                     -- Read the text of
             newNPCStrings[npcDialogsIndex] = npcDialogsText
         end
-        --console_out(#convTable.options)
-        --console_out(option.name)
+        --console_out(#convTable.options)           DEBUG
+        --console_out(option.name)                  DEBUG
 ------------------------------------------------------------------------------
 --- Write new strings
 ------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
-        
         playerResponses.stringList = newStrings
         npcDialogs.stringList = newNPCStrings
         local success = load_ui_widget(dialogTag.path)  
+        if (not success) then
+            console_out("A problem occurred at loading the dialog widget!")
+        end
+    else
+        console_out("A problem occurred at loading the dialog tags!")
+    end
+end
+------------------------------------------------------------------------------
+--- End of function
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+--- Journal OPEN                        This is functionally identical to dialog.open
+------------------------------------------------------------------------------
+---@class journalFunction
+---@field questTitle string
+---@field questBody string[]
+---@field actions table<number, journalInstance | function>
+
+---@param journalInstance journalInstance
+function dialog.journal(journalInstance, resetState)
+    if (resetState) then
+        dialogState = {
+            currentDialog = nil,
+            history = {}
+        }
+    end
+------------------------------------------------------------------------------
+--- References
+------------------------------------------------------------------------------
+    local masterJournal = blam.getTag([[ui\journal\master_journal]], tagClasses.uiWidgetDefinition)            
+    local questTitle = blam.getTag([[ui\journal\options\dynamic_quest_strings]], tagClasses.unicodeStringList) 
+    local questBody = blam.getTag([[ui\journal\options\body_strings]], tagClasses.unicodeStringList) 
+------------------------------------------------------------------------------
+--- Read the current tags
+------------------------------------------------------------------------------
+    if (masterJournal and questTitle and questBody) then
+        dialogState.currentDialog = journalInstance 
+        table.insert(dialogState.history, journalInstance)                                                
+        local widget = blam.uiWidgetDefinition(masterJournal.id)
+        local titles = blam.uiWidgetDefinition(widget.childWidgetsList[1])
+        local activeQuest = blam.unicodeStringList(questTitle.id)
+        local questStrings = blam.unicodeStringList(questBody.id)
+        -- For PLAYER DIALOG
+        local newTitles = activeQuest.stringList                                                              
+        titles.childWidgetsCount = (#journalInstance.questTitle)                                                   
+        for titleIndex, titleText in ipairs(journalInstance.questTitle) do
+            newTitles[titleIndex] = titleText
+        end
+        
+        -- For NPC DIALOG
+       local newBody = questStrings.stringList                                                
+        for questStringsIndex, questStringsText in ipairs(journalInstance.questBody) do                                    
+            newBody[questStringsIndex] = questStringsText
+        end
+        --console_out(#journalInstance.options)           DEBUG
+        --console_out(option.name)                  DEBUG
+------------------------------------------------------------------------------
+--- Write new strings
+------------------------------------------------------------------------------
+        -- Update the old strings with our new updated copy
+        activeQuest.stringList = newTitles
+        questStrings.stringList = newBody
+        local success = load_ui_widget(masterJournal.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
         end

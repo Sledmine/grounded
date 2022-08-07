@@ -63,6 +63,7 @@ function patScreen(screenInstance)
         end,
         function ()                         -- 5
             set_global("conv_short1", 1)
+            set_global("patterson", 1)
             harmony.menu.close_widget()
         end,
         function ()                         -- 6
@@ -111,7 +112,7 @@ function patScreen(screenInstance)
     elseif screenInstance == 6 then
         scream.npcText = patNpcArray[6]
         scream.playerResponses = {patResponseArray[4], patResponseArray[5],}
-        scream.playerActions = {patActionsArray[1], patActionsArray[5]}
+        scream.playerActions = {patActionsArray[7], patActionsArray[5]}
         ------------------------------------------------------------------------------
     elseif screenInstance == 7 then
         scream.npcText = patNpcArray[3]

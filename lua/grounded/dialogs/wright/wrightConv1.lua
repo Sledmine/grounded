@@ -2,6 +2,16 @@ local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 local harmony = require "mods.harmony"
 
+function wrightVariableCalculator()
+    local variable = get_global("conv_short1")
+    if (get_global("speedyboi") == "4") then
+        set_global("conv_short1", 10)
+    else 
+        set_global("conv_short1", 1)
+    end
+    return variable
+end
+
 function wrightConv1Reload()
     dialog.open(wrightConvScreen(get_global("conv_short1")), true)
     stop_timer(periodic)
