@@ -39,7 +39,6 @@ function perkScreenEvents(screenInstance)
             periodic = set_timer(2, "perkReloader", "") 
             perksSelect = perksSelect + 1
             engineerPerk = 1
-            set_global("engineer_perk", true)
         end,
         function ()
             set_global("conv_short1", 3)
@@ -47,7 +46,6 @@ function perkScreenEvents(screenInstance)
             periodic = set_timer(2, "perkReloader", "") 
             perksSelect = perksSelect + 1
             builtDifferent = 1
-            set_global("tactical_perk", true)
         end,
         function ()
             set_global("conv_short1", 4)
@@ -55,7 +53,6 @@ function perkScreenEvents(screenInstance)
             periodic = set_timer(2, "perkReloader", "") 
             perksSelect = perksSelect + 1
             builtStupid = 1
-            set_global("not_very_grounded", true)
         end,
         function ()
             set_global("conv_short1", 1)
@@ -63,7 +60,6 @@ function perkScreenEvents(screenInstance)
             periodic = set_timer(2, "perkReloader", "") 
             perksSelect = perksSelect + 1
             medicPerk = 1
-            set_global("medic_perk", true)
         end,
     }
     local journalOut = {}

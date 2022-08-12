@@ -102,8 +102,6 @@ function letterbox(boolean)
 end
 
 local aiStuff = true
-local perktime = 1
-local perkApplied = 0
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
@@ -113,28 +111,6 @@ function OnTick()
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
     local engineersSaved = 0
-    if (perktime == 1) and (perkApplied < 2) then
-        local medic = get_global("medic_perk")
-        local engineer = get_global("engineer_perk")
-        local tactical = get_global("tactical_perk")
-        local builtStupid = get_global("not_very_grounded")
-        if (medic) then
-            execute_script("cheat_jetpack 1")
-            perkApplied = perkApplied + 1
-        end
-        if (engineer) then
-            execute_script("cheat_superjump 1")
-            perkApplied = perkApplied + 1
-        end
-        if (tactical) then
-            execute_script("game_speed 3")
-            perkApplied = perkApplied + 1
-        end
-        if (builtStupid) then
-            execute_script("cheat_all_weapons")
-            perkApplied = perkApplied + 1
-        end
-    end
     --local hogRepair = (scenario.tagNames[27])
     --console_out(newGameWidget)
     local objectivePrompts = {    
