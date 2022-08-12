@@ -6,6 +6,7 @@
 ]]
 local dialog = {}
 local glue = require "glue"
+local harmony = require "mods.harmony"
 
 -- TODO Add a class for this
 local dialogState = {
@@ -58,14 +59,18 @@ function dialog.open(convTable, resetState)
         for npcDialogsIndex, npcDialogsText in ipairs(convTable.npcDialog) do                                     -- Read the text of
             newNPCStrings[npcDialogsIndex] = npcDialogsText
         end
-        --console_out(#convTable.options)           DEBUG
-        --console_out(option.name)                  DEBUG
+        --console_out(#convTable.options)           --DEBUG
+        --console_out(option.name)                  --DEBUG
 ------------------------------------------------------------------------------
 --- Write new strings
 ------------------------------------------------------------------------------
         -- Update the old strings with our new updated copy
         playerResponses.stringList = newStrings
         npcDialogs.stringList = newNPCStrings
+------------------------------------------------------------------------------
+--- Modify Table Design 
+------------------------------------------------------------------------------
+        local tableSize = (#convTable.options)
         local success = load_ui_widget(dialogTag.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")

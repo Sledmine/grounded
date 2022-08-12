@@ -19,6 +19,7 @@ local interface = require "grounded.interface"
 local dialog = require "grounded.dialog"
 local scenario = blam.scenario()
 local harmony = require "mods.harmony"
+--local cursor = harmony.menu.set_cursor_scale(0.65)
 -- Array for fast travel devices
 local device_positions = {
     {
@@ -34,17 +35,20 @@ local device_positions = {
         deviceName = "fast_travel3"
     },
 }
+
 ------------------------------------------------------------------------------
 --- Main Menu Definitions
 ------------------------------------------------------------------------------
 local menuOpened = 1
-newGameWidget = blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)
+mapLoaded = 0
+newGame = blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)
+continue = blam.getTag("ui\\grounded\\continue", tagClasses.uiWidgetDefinition)
+decision1 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_1]], tagClasses.uiWidgetDefinition)
+decision2 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_2]], tagClasses.uiWidgetDefinition)
+decision3 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_3]], tagClasses.uiWidgetDefinition)
+decision4 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_4]], tagClasses.uiWidgetDefinition)
+--local newGameWidgetID = harmony.menu.get_widget_values(newGameWidget.id).tag_id
 ------------------------------------------------------------------------------
---[[function onMenuAccept(button_widget_id)
-    local widgetFunction = harmony.menu.get_widget_values(button_widget_id).tag_id
-    local allow = 1
-    return allow
-end]]
 
 ------------------------------------------------------------------------------
 ---@class event
@@ -163,19 +167,12 @@ local perks = require "grounded.journal.perksTemplate"
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            --dialog.open(forbesConvScreen1(get_global("conv_short1")))
+            dialog.open(wrightConvScreen(get_global("conv_short1")))
             --load_ui_widget("ui\\grounded\\main_menu")
             --local decision1 = blam.getTag([[ui\journal\options\decision_2]], tagClasses.uiWidgetDefinition)
             --console_out(decision1.id)
-            dialog.journal(perkScreenEvents(get_global("conv_short1")), true)
-            
         end
-        --[[if (playerBiped) then
             
-            if not (onMenuAccept(decision1.id)) then
-                console_out("false_event")  
-            end
-        end]]
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Async & Game Save System
@@ -199,26 +196,6 @@ local perks = require "grounded.journal.perksTemplate"
         execute_script("core_load")
     end      
 
-------------------------------------------------------------------------------
---- Dynamic Conversation System   
-------------------------------------------------------------------------------
-    if (playerBiped) then
-        local dialogPressedOption = interface.triggers("dynamic_menu", 4)
-        if (dialogPressedOption) then
-            local currentDialog = dialog.getState().currentDialog
-            if (currentDialog and currentDialog.actions) then
-                local action = currentDialog.actions[dialogPressedOption]
-                if (action) then
-                    if (type(action) == "table") then
-                        dialog.open(action)
-                    elseif (type(action) == "function") then
-                        action()
-                    end
-                end
-            else
-                console_out("There is no branch for this option!")
-            end
-        end
 ------------------------------------------------------------------------------
 --- Dynamic Prompt Array
 ------------------------------------------------------------------------------
@@ -360,7 +337,7 @@ local conversations = {
             end
         end
         --console_out(hsc.AllegiancesGet("human"))
-    end
+
 ------------------------------------------------------------------------------
 --- Main Menu Events
 ------------------------------------------------------------------------------
@@ -371,11 +348,8 @@ local conversations = {
                 menuOpened = 0
             end
         end
-        --[[if (get_global("clua_short2") == 1) then
-            set_global("clua_short2", 0) 
-            local perkScreen = load_ui_widget("ui\\journal\\master_journal")
-        end]]
     end
+
 ------------------------------------------------------------------------------
 --- Lift Stuff
 ------------------------------------------------------------------------------
@@ -541,7 +515,6 @@ local bspArray = {
         -- screen effect test
         if (playerBiped) then
             if (get_global("started")) then
-                hsc.Fade("in", 0, 0, 0, 60)
                 hsc.groundedOpen()
                 set_timer(2000, "setFalse", "started")
                 if (aiStuff) then
@@ -550,10 +523,83 @@ local bspArray = {
                 end
             end
         end
+        ------------------------------------------------------------------------------
+--- Map Loading Definitions
 ------------------------------------------------------------------------------
-end     
+    if (playerBiped) then
+        if mapLoaded == 0 then
+            --- WIDGET TAGS
+            mapLoaded = 1
+        end
+    end
+------------------------------------------------------------------------------
+end
 
+function optionSelect(iterator)
+    blam.getTag("ui\\conversation\\dynamic_conversation\\options\\decision_" .. iterator, tagClasses.uiWidgetDefinition)
+    local currentDialog = dialog.getState().currentDialog
+    if (currentDialog and currentDialog.actions) then
+        local action = currentDialog.actions[iterator]
+        if (action) then
+            if (type(action) == "table") then
+                dialog.open(action)
+            elseif (type(action) == "function") then
+                action()
+            end
+        end
+    end
+end
+
+function on_widget_accept(widget_handle)
+    local widgetTagId = harmony.menu.get_widget_values(widget_handle).tag_id
+    if (widgetTagId == newGame.id) then
+        -- Cancel event
+        set_global("clua_short3", 1)
+        harmony.menu.close_widget()
+    end
+    if (widgetTagId == continue.id) then
+        set_global("reload_now", true)
+        harmony.menu.close_widget()
+    end
+    --console_out(newGame.id)
+    if (widgetTagId == decision1.id) then
+        optionSelect(1)
+    elseif (widgetTagId == decision2.id) then
+        optionSelect(2)
+    elseif (widgetTagId == decision3.id) then
+        optionSelect(3)
+    elseif (widgetTagId == decision4.id) then
+        optionSelect(4)
+    end
+    return true             -- must keep "return true" or else you will disable the menu buttons all throughout the game
+end
+
+harmony.set_callback("widget accept", "on_widget_accept")
+
+function on_widget_mouse_button_press(widget_handle, pressed_mouse_button)
+    if(pressed_mouse_button == "left button") then
+        -- Cancel event
+        return false
+    end
+
+    return true
+end
+
+harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")
+
+function on_key_press(modifiers, character, keycode)
+    if(character == "j") then
+        -- Cancel event
+        dialog.journal(perkScreenEvents(get_global("conv_short1")), true)
+        return false
+    end
+    if (character == "+") then
+        harmony.menu.close_widget()
+    end
+    return true
+
+end
+
+harmony.set_callback("key press", "on_key_press")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
---harmony.set_callback("widget accept", "onMenuAccept")
---harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")

@@ -5,26 +5,6 @@
 ------------------------------------------------------------------------------
 local interface = {}
 
--- TODO Add unit testing for this
----@param triggerName string
----@param triggersNumber number
----@return number
-function interface.triggers(triggerName, triggersNumber)
-    local restoreTriggersState = (function()
-        for triggerIndex = 1, triggersNumber do
-            -- TODO Replace this function with set global
-            execute_script("set " .. triggerName .. "_trigger_" .. triggerIndex .. " false")
-        end
-    end)
-    for i = 1, triggersNumber do
-        if (get_global(triggerName .. "_trigger_" .. i)) then
-            restoreTriggersState()
-            return i
-        end
-    end
-    return nil
-end
-
 --- Perform a child widget update on the specified widget
 ---@param widget tag
 ---@param widgetCount number
