@@ -37,7 +37,7 @@ local device_positions = {
 }
 
 ------------------------------------------------------------------------------
---- Main Menu Definitions
+--- Main Menu Definitions & Functions 
 ------------------------------------------------------------------------------
 local menuOpened = 1
 mapLoaded = 0
@@ -47,7 +47,20 @@ decision1 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_
 decision2 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_2]], tagClasses.uiWidgetDefinition)
 decision3 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_3]], tagClasses.uiWidgetDefinition)
 decision4 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_4]], tagClasses.uiWidgetDefinition)
---local newGameWidgetID = harmony.menu.get_widget_values(newGameWidget.id).tag_id
+saveMaster = blam.getTag([[ui\checkpoints\savegames]], tagClasses.uiWidgetDefinition)
+loadMaster = blam.getTag([[ui\checkpoints\checkpoint_loadgames]], tagClasses.uiWidgetDefinition)
+
+function journalOption(selection)
+    local instance = {}
+    instance.decisionID = (blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)).id
+    return instance
+end
+
+function save(iterator)
+    local saveInstance = {}
+    saveInstance.slotID = (blam.getTag("ui\\checkpoints\\save" .. iterator, tagClasses.uiWidgetDefinition)).id
+    return saveInstance
+end
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -162,6 +175,8 @@ local test = require "grounded.dialogs.test_noComments"
 local pat = require "grounded.dialogs.ltPatterson"
 local wright = require "grounded.dialogs.wright.wrightConv1"
 local perks = require "grounded.journal.perksTemplate"
+local journal = require "grounded.journal.journalForReal"
+local engHaydenScreen = require "grounded.dialogs.single_event.engineerHayden"
 ------------------------------------------------------------------------------  
 --- Testing Function flashlight
 ------------------------------------------------------------------------------      
@@ -266,8 +281,7 @@ local conversations = {
         unitName = "eng_sam",
         promptMessage = "Press\"E\" to talk to Engineer Hayden",
         action = function()
-            set_global("engineers_saved", 1)
-            engineersSaved = 1
+            dialog.open(engHayden(get_global("conv_short1")))
         end
     },
     --[[{ -- repair Hog system
@@ -535,11 +549,11 @@ local bspArray = {
 ------------------------------------------------------------------------------
 end
 
-function optionSelect(iterator)
-    blam.getTag("ui\\conversation\\dynamic_conversation\\options\\decision_" .. iterator, tagClasses.uiWidgetDefinition)
+function optionSelect(selection)
+    blam.getTag("ui\\conversation\\dynamic_conversation\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)
     local currentDialog = dialog.getState().currentDialog
     if (currentDialog and currentDialog.actions) then
-        local action = currentDialog.actions[iterator]
+        local action = currentDialog.actions[selection]
         if (action) then
             if (type(action) == "table") then
                 dialog.open(action)
@@ -549,6 +563,23 @@ function optionSelect(iterator)
         end
     end
 end
+
+function journalSelect(selection)
+    blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)
+    local currentDialog = dialog.getState().currentDialog
+    if (currentDialog and currentDialog.actions) then
+        local action = currentDialog.actions[selection]
+        if (action) then
+            if (type(action) == "table") then
+                dialog.open(action)
+            elseif (type(action) == "function") then
+                action()
+            end
+        end
+    end
+end
+
+
 
 function on_widget_accept(widget_handle)
     local widgetTagId = harmony.menu.get_widget_values(widget_handle).tag_id
@@ -562,6 +593,8 @@ function on_widget_accept(widget_handle)
         harmony.menu.close_widget()
     end
     --console_out(newGame.id)
+
+    -- Conversation Widgets
     if (widgetTagId == decision1.id) then
         optionSelect(1)
     elseif (widgetTagId == decision2.id) then
@@ -571,6 +604,30 @@ function on_widget_accept(widget_handle)
     elseif (widgetTagId == decision4.id) then
         optionSelect(4)
     end
+
+    -- Journal Widgets
+    if (widgetTagId == journalOption(1).decisionID) then
+        journalSelect(1)
+    elseif (widgetTagId == journalOption(2).decisionID) then
+        journalSelect(2)
+    elseif (widgetTagId == journalOption(3).decisionID) then
+        journalSelect(3)
+        --console_out(widgetTagId)
+    elseif (widgetTagId == journalOption(4).decisionID) then
+        journalSelect(4)
+        --console_out(widgetTagId)
+    end
+
+    -- Saving/Loading 
+    if (widgetTagId == saveMaster.id) then
+        saveWidget = load_ui_widget([[ui\checkpoints\checkpoint_master_save]])        
+        console_out(widgetTagId)
+    end
+    if (widgetTagId == save(2).slotID) then
+            console_out(widgetTagId)
+    end
+    --console_out(widgetTagId)
+    --console_out(save(1).slotID)
     return true             -- must keep "return true" or else you will disable the menu buttons all throughout the game
 end
 
@@ -590,14 +647,23 @@ harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press"
 function on_key_press(modifiers, character, keycode)
     if(character == "j") then
         -- Cancel event
-        dialog.journal(perkScreenEvents(get_global("conv_short1")), true)
+        dialog.journal(journalScreen(get_global("journal_short1")), true)
         return false
     end
     if (character == "+") then
         harmony.menu.close_widget()
     end
+    if (keycode == 5) then
+        execute_script("core_save")
+        hud_message("     Quicksaving...")
+    end
+    if (keycode == 6) then
+        execute_script("core_load")
+    end
+    if (keycode == 12) then
+        execute_script("chimera_lua_reload_scripts")
+    end
     return true
-
 end
 
 harmony.set_callback("key press", "on_key_press")

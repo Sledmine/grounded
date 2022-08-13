@@ -24,6 +24,7 @@ local dialogState = {
 
 ---@param convTable conversationTable
 function dialog.open(convTable, resetState)
+    execute_script("show_hud 0")
     if (resetState) then
         -- TODO Use a deep copy function to reset this using a default local state table
         dialogState = {

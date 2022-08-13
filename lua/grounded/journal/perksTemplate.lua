@@ -29,113 +29,105 @@ function perkScreenEvents(screenInstance)
         "Don't choose this on your first playthrough. This is a shitpost. You're sacrificing an entire \nperk slot just to laugh. Think before doing.", -- 4
     }
     local actionsArray = {                        
-        function ()                         
+        function()                         
             set_global("conv_short1", 1)   
             harmony.menu.close_widget()
         end,
-        function () 
+        function() 
             set_global("conv_short1", 2)
             harmony.menu.close_widget()
             periodic = set_timer(2, "perkReloader", "") 
-            perksSelect = perksSelect + 1
-            engineerPerk = 1
         end,
-        function ()
+        function()
             set_global("conv_short1", 3)
             harmony.menu.close_widget()
             periodic = set_timer(2, "perkReloader", "") 
-            perksSelect = perksSelect + 1
-            builtDifferent = 1
         end,
-        function ()
+        function()
             set_global("conv_short1", 4)
             harmony.menu.close_widget()
             periodic = set_timer(2, "perkReloader", "") 
-            perksSelect = perksSelect + 1
-            builtStupid = 1
         end,
-        function ()
+        function()
             set_global("conv_short1", 1)
             harmony.menu.close_widget()
             periodic = set_timer(2, "perkReloader", "") 
-            perksSelect = perksSelect + 1
-            medicPerk = 1
         end,
     }
     local journalOut = {}
     if screenInstance == 1 then
-        journalOut.npcText = questBody[1]        -- BODY TEXT
+        journalOut.questText = questBody[1]        -- BODY TEXT
         journalOut.questTitles = {questNames[1], questNames[2], questNames[3], questNames[4]}
         journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3], actionsArray[4]} 
     elseif screenInstance == 2 then
         if medicPerk == 1 then
-            journalOut.npcText = questBody[2]        -- BODY TEXT
+            journalOut.questText = questBody[2]        -- BODY TEXT
             journalOut.questTitles = {questNames[2], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[2], actionsArray[3], actionsArray[4]}
         elseif engineerPerk == 1 then
-            journalOut.npcText = questBody[2]        -- BODY TEXT
+            journalOut.questText = questBody[2]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[3], actionsArray[4]}
         elseif builtDifferent == 1 then
-            journalOut.npcText = questBody[2]        -- BODY TEXT
+            journalOut.questText = questBody[2]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[4]}
         elseif builtStupid == 1 then
-            journalOut.npcText = questBody[2]        -- BODY TEXT
+            journalOut.questText = questBody[2]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3]}                                
         else
-            journalOut.npcText = questBody[2]        -- BODY TEXT
+            journalOut.questText = questBody[2]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3], actionsArray[4]}        
         end
     elseif screenInstance == 3 then
         if medicPerk == 1 then
-            journalOut.npcText = questBody[3]        -- BODY TEXT
+            journalOut.questText = questBody[3]        -- BODY TEXT
             journalOut.questTitles = {questNames[2], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[2], actionsArray[3], actionsArray[4]}
         elseif engineerPerk == 1 then
-            journalOut.npcText = questBody[3]        -- BODY TEXT
+            journalOut.questText = questBody[3]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[3], actionsArray[4]}
         elseif builtDifferent == 1 then
-            journalOut.npcText = questBody[3]        -- BODY TEXT
+            journalOut.questText = questBody[3]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[4]}
         elseif builtStupid == 1 then
-            journalOut.npcText = questBody[3]        -- BODY TEXT
+            journalOut.questText = questBody[3]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3]}                                
         else
-            journalOut.npcText = questBody[3]        -- BODY TEXT
+            journalOut.questText = questBody[3]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3], actionsArray[4]}        
         end
     elseif screenInstance == 4 then
         if medicPerk == 1 then
-            journalOut.npcText = questBody[4]        -- BODY TEXT
+            journalOut.questText = questBody[4]        -- BODY TEXT
             journalOut.questTitles = {questNames[2], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[2], actionsArray[3], actionsArray[4]}
         elseif engineerPerk == 1 then
-            journalOut.npcText = questBody[4]        -- BODY TEXT
+            journalOut.questText = questBody[4]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[3], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[3], actionsArray[4]}
         elseif builtDifferent == 1 then
-            journalOut.npcText = questBody[4]        -- BODY TEXT
+            journalOut.questText = questBody[4]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[4]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[4]}
         elseif builtStupid == 1 then
-            journalOut.npcText = questBody[4]        -- BODY TEXT
+            journalOut.questText = questBody[4]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3]}
             journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3]}                                
         else
-            journalOut.npcText = questBody[4]        -- BODY TEXT
+            journalOut.questText = questBody[4]        -- BODY TEXT
             journalOut.questTitles = {questNames[1], questNames[2], questNames[3], questNames[4]}
-            journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3], actionsArray[4]}        
+            journalOut.playerActions = {actionsArray[5], actionsArray[2], actionsArray[3], actionsArray[4]}         
         end   
     end
     return {
-    questBody = {journalOut.npcText},
+    questBody = {journalOut.questText},
     questTitle = {
         journalOut.questTitles[1],
         journalOut.questTitles[2],
