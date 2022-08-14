@@ -16,13 +16,18 @@ end
 function journalScreen(screenInstance)
     local questNames = {          -- TITLES or in this case, PERK NAMES              
         "It Reaches Out", -- 1
+        "Floating Tin Can", -- 2
         }
     local questBody = {      -- BODY TEXT
         "Something has pulled the Biri out of slipspace and disabled the drive. The Biri is currently \non a collision course for Byellee Colony. \n \n - Evacuate Engineering \n - Evacuate Medical \n - Get to the Surface", 
+        "Engineer Hayden needs your help to prevent the reactor from flooding the ship with radiation \non contact with the atmosphere. \n \n - Activate Manual Overrides \n - Report back to Engineer Hayden", -- 2
+
     }
     local actionsArray = {                        
         function()                         
-            set_global("journal_short1", 1)   
+            set_global("journal_short1", 1)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "journalLoader", "")   
         end,
         function() 
             set_global("journal_short1", 2)
@@ -50,6 +55,10 @@ function journalScreen(screenInstance)
         journalOut.questText = questBody[1]        -- BODY TEXT
         journalOut.questTitles = {questNames[1]}
         journalOut.playerActions = {actionsArray[1],} 
+    elseif screenInstance == 2 then
+        journalOut.questText = questBody[1]        -- BODY TEXT
+        journalOut.questTitles = {questNames[1], questNames[2], }
+        journalOut.playerActions = {actionsArray[1], actionsArray[2], } 
     end
     return {
     questBody = {journalOut.questText},

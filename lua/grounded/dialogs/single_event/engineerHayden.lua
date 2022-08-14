@@ -2,6 +2,13 @@ local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 local harmony = require "mods.harmony"
 
+function navPointArray()
+    hsc.activateNav(2, "(player0)", "reactor1", "0.2")
+    hsc.activateNav(2, "(player0)", "reactor2", "0.2")
+    hsc.activateNav(2, "(player0)", "reactor3", "0.2")
+    set_global("journal_short1", 2)
+end
+
 function engHaydenReload()
     dialog.open(engHayden(get_global("conv_short1")), true)
     stop_timer(periodic)
@@ -22,6 +29,7 @@ function engHayden(screenInstance)
         "I hope you make it to the surface. <Leave Convesation>",           -- 9
         "How can I help?",                                                  -- 10
         "That's on the people who are slow to react. We need to go.",       -- 11
+        "See you down there, sir. <Leave Conversation>",                    -- 12
         }
     local npcWords = {
         "Lieutenant, thank god you're here.",       -- 1
@@ -31,46 +39,64 @@ function engHayden(screenInstance)
         "I need you to go under the slipspace drive and activate the three emergency override switches. \nThere's one at either end and one in the middle. Once you've done that, \nI can activate the master override from here.", -- 5
         "I'm not leaving, Lieutenant. We don't have time for everyone to reach the Escape Pods. If you \nwon't help me disable the reactor, I'll do it myself.", -- 6
         "It is really bad. But right now I need a hand to stop everyone on this shipped getting cooked. \nCan you help?", -- 7
+        "Thank you, Lieutenant. I'll make my way to an escape pod with the rest of the team."
     }
     local actionsArray = {                        
         function () -- 1         conversationEnd
             set_global("conv_short1", 1)   
             harmony.menu.close_widget()
+            execute_script("show_hud 1")
+            navPointArray()
         end,
-        function () -- 1         con1_fork2
+        function () -- 2         con1_fork2
             set_global("conv_short1", 2)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
         end,
-        function () -- 1         con1_fork3
+        function () -- 3         con1_fork3
             set_global("conv_short1", 3)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
         end,
-        function () -- 1         con1_fork4
+        function () -- 4         con1_fork4
             set_global("conv_short1", 4)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
         end,
-        function () -- 1         con1_fork5
+        function () -- 5         con1_fork5
             set_global("conv_short1", 5)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
             set_global("engineers_saved", 1)
         end,
-        function () -- 1         con1_fork6
+        function () -- 6         con1_fork6
             set_global("conv_short1", 6)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
         end,
-        function () -- 1         con1_fork7
+        function () -- 7         con1_fork7
             set_global("conv_short1", 7)   
             harmony.menu.close_widget()
             periodic = set_timer(2, "engHaydenReload", "")
         end,
+        function () -- 8        NO EVENT
+            set_global("conv_short1", 1)   
+            harmony.menu.close_widget()
+        end,
+        function () -- 9 success event
+            set_global("conv_short1", 1)
+            set_global("engineers_saved", 4)
+            harmony.menu.close_widget()
+            execute_script("show_hud 1")
+            execute_script("object_destroy_containing reac_fx")
+        end,
     }
     local scream = {}
-    if screenInstance == 1 then                     -- con1_fork1
+    if (screenInstance == 1 and finalReactorPos == 3) then
+        scream.npcText = npcWords[8]
+        scream.playerResponses = {response[12]}
+        scream.playerActions = {actionsArray[9]}
+    elseif screenInstance == 1 then                     -- con1_fork1
         scream.npcText = npcWords[1]
         scream.playerResponses = {response[1], response[2], response[3],}
         scream.playerActions = {actionsArray[2], actionsArray[3], actionsArray[4]}
@@ -98,7 +124,7 @@ function engHayden(screenInstance)
     elseif screenInstance == 6 then                     -- con1_fork6
         scream.npcText = npcWords[6]
         scream.playerResponses = {response[8], response[9],}
-        scream.playerActions = {actionsArray[5], actionsArray[1],}
+        scream.playerActions = {actionsArray[5], actionsArray[8],}
         ------------------------------------------------------------------------------ 
     elseif screenInstance == 7 then                     -- con1_fork7
         scream.npcText = npcWords[7]

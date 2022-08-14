@@ -61,10 +61,13 @@ function patScreen(screenInstance)
             harmony.menu.close_widget()
             periodic = set_timer(2, "patOpenAgainPlease", "") 
         end,
-        function ()                         -- 5
+        function ()                         -- 5 GOOD ENDING
             set_global("conv_short1", 1)
             set_global("patterson", 1)
+            hsc.activateNav(2, "(player0)", "repair_hog", 1)
+            hsc.activateNav(2, "(player0)", "motor", 1)
             harmony.menu.close_widget()
+            hsc.showHud(1)
         end,
         function ()                         -- 6
             set_global("conv_short1", 6)
@@ -80,6 +83,12 @@ function patScreen(screenInstance)
             set_global("conv_short1", 8)
             harmony.menu.close_widget()
             periodic = set_timer(2, "patOpenAgainPlease", "") 
+        end,
+        function ()                         -- 9 bad ending
+            set_global("conv_short1", 1)
+            set_global("patterson", 1)
+            harmony.menu.close_widget()
+            hsc.showHud(1)
         end,
     }
     ------------------------------------------------------------------------------
@@ -122,7 +131,7 @@ function patScreen(screenInstance)
     elseif screenInstance == 8 then
         scream.npcText = patNpcArray[4]
         scream.playerResponses = {patResponseArray[7], patResponseArray[5],}
-        scream.playerActions = {patActionsArray[5], patActionsArray[5]}
+        scream.playerActions = {patActionsArray[5], patActionsArray[9]}
         ------------------------------------------------------------------------------
     end
 

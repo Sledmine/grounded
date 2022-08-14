@@ -36,6 +36,10 @@ local device_positions = {
     },
 }
 
+reactor1pos = 0
+reactor2pos = 0
+reactor3pos = 0
+landingCleanup = 0
 ------------------------------------------------------------------------------
 --- Main Menu Definitions & Functions 
 ------------------------------------------------------------------------------
@@ -125,6 +129,7 @@ function OnTick()
 ------------------------------------------------------------------------------
 --- On Tick Globals 
 ------------------------------------------------------------------------------
+    finalReactorPos = reactor1pos + reactor2pos + reactor3pos
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
     local engineersSaved = 0
@@ -132,7 +137,7 @@ function OnTick()
     --console_out(newGameWidget)
     local objectivePrompts = {    
         {
-            unitName = "warthog",-- "repair hog"
+            unitName = "repair_hog",-- "repair hog"
             promptMessage = modularPromptHog(),            
             action = function()
                 if (get_global("act1_landed") < 2) then
@@ -156,7 +161,31 @@ function OnTick()
              set_global("act1_landed", 2)
                 execute_script("object_destroy motor")
             end
-        }
+        },    
+        { -- Single event names
+            unitName = "reactor1",
+            promptMessage = "Press \"E\" to activate manual override",
+            action = function()
+                reactor1pos = 1
+                execute_script("object_destroy reactor1")
+            end,
+        },
+        {
+            unitName = "reactor2",
+            promptMessage = "Press \"E\" to activate manual override",
+            action = function()
+                reactor2pos = 1
+                execute_script("object_destroy reactor2")
+            end,
+        },
+        {
+            unitName = "reactor3",
+            promptMessage = "Press \"E\" to activate manual override",
+            action = function()
+                reactor3pos = 1
+                execute_script("object_destroy reactor3")
+            end,
+        },
     }
     local intro = get_global("act1_landed")
     local playerBiped = blam.biped(get_dynamic_player())
@@ -182,7 +211,7 @@ local engHaydenScreen = require "grounded.dialogs.single_event.engineerHayden"
 ------------------------------------------------------------------------------      
         --[[ Testing function]]
         if (playerBiped and playerBiped.flashlightKey) then
-            dialog.open(wrightConvScreen(get_global("conv_short1")))
+            --dialog.open(wrightConvScreen(get_global("conv_short1")))
             --load_ui_widget("ui\\grounded\\main_menu")
             --local decision1 = blam.getTag([[ui\journal\options\decision_2]], tagClasses.uiWidgetDefinition)
             --console_out(decision1.id)
@@ -277,18 +306,13 @@ local conversations = {
                 dialog.open(wrightConvScreen(wrightVariableCalculator()), true)
             end
     },
-    { -- Engineer Sam
-        unitName = "eng_sam",
+    { -- Engineer Hayden
+        unitName = "eng_hayden",
         promptMessage = "Press\"E\" to talk to Engineer Hayden",
         action = function()
             dialog.open(engHayden(get_global("conv_short1")))
         end
     },
-    --[[{ -- repair Hog system
-        unitName = "motor"
-        promptMessage = "Press\"E\" to collect parts"
-        actions = execute_script("object_destroy motor")
-    }]]
 }
 ------------------------------------------------------------------------------
 --- Journal 
@@ -318,23 +342,33 @@ local conversations = {
                         end
                     end
                 end  
+            end
+        end
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 --- Objective System
 ------------------------------------------------------------------------------
-                --- For Objectives
-                for _, objectivePrompts in pairs(objectivePrompts) do
-                    if (tag and tag.path:find(objectivePrompts.unitName)) then
-                        if (core.playerIsNearTo(object, 1.2)) then
-                            interface.promptHud(objectivePrompts.promptMessage)
-                            if (playerBiped.actionKey) then
-                                objectivePrompts.action()
+       local scenario = blam.scenario(0)
+        for _, objectIndex in pairs(blam.getObjects()) do
+            local object = blam.object(get_object(objectIndex))
+            if (object and object.type == objectClasses.scenery or object.type == objectClasses.vehicle) then
+                if (not blam.isNull(object.nameIndex)) then
+                    local objectName = scenario.objectNames[object.nameIndex + 1]
+                    --console_out(objectName)
+                    for _, objectivePrompts in pairs(objectivePrompts) do
+                        --if (tag and tag.path:find(conversation.unitName)) then
+                        if (objectName == objectivePrompts.unitName) then
+                            if (core.playerIsNearTo(object, 1.2)) then
+                                interface.promptHud(objectivePrompts.promptMessage)
+                                if (playerBiped.actionKey) then
+                                    objectivePrompts.action()
+                                end
+                            elseif (core.playerIsNearTo(object, 1.3)) then
+                                interface.promptHud("")
                             end
-                        elseif (core.playerIsNearTo(object, 1.3)) then
-                            interface.promptHud("")
                         end
                     end
-                end
+                end 
             end
         end
 ------------------------------------------------------------------------------
@@ -484,7 +518,6 @@ local bspArray = {
         elseif hsc.isPlayerInsideVolume("scen_escape") then --DEBUG
             if (bspBenjamin == 0) then
                 execute_script("begin (ft_escapepod)")
-                execute_script("object_destroy_containing \"cine\"")
                 bspBenjamin = 1
             end
         else
@@ -496,29 +529,28 @@ local bspArray = {
 ------------------------------------------------------------------------------
 ----------------------- Pre-landing sequence        --------------------------
 ------------------------------------------------------------------------------
-    if playerBiped then
+    if (playerBiped) then
         if (hsc.deviceGet(2, "engineering1") == 1) then
             execute_script("object_teleport (player0) engineering")
+            execute_script("object_destroy_containing cine")
             hsc.deviceSet(2, "engineering1", 0)
         elseif (hsc.deviceGet(2, "engineering2") == 1) then
             execute_script("object_teleport (player0) escaperoom")
             hsc.deviceSet(2, "engineering2", 0)
-        end
-        if engineersSaved == 4 then
-            set_global("engineers_saved", 4)
         end
     end
 
 ----------------------- Player Landing on Planet    --------------------------
 ------------------------------------------------------------------------------
     if (intro == 0) then
-        hsc.unitEnterable("repair_hog", 0)
+        if (landingCleanup == 0) then
+            execute_script("deactivate_nav_point_object (player0) reactor 1")
+            execute_script("deactivate_nav_point_object (player0) reactor 2")
+            execute_script("deactivate_nav_point_object (player0) reactor 3")
+            hsc.unitEnterable("repair_hog", 0)
+            landingCleanup = 1
+        end
         ------------------------------------------------------------------------------  -- Player Has Landed
-    elseif (intro == 1 and engine_saver == 0) then
-        ------------------------------------------------------------------------------  -- Player has interacted with Patterson
-        hsc.activateNav(2, "(player0)", "repair_hog", 1)
-        hsc.activateNav(2, "(player0)", "motor", 1)
-        engine_saver = 1
     elseif (intro == 2) then
         hsc.clearNav(2, "(player0)", "motor")
     elseif (intro == 3) then
@@ -537,15 +569,6 @@ local bspArray = {
                 end
             end
         end
-        ------------------------------------------------------------------------------
---- Map Loading Definitions
-------------------------------------------------------------------------------
-    if (playerBiped) then
-        if mapLoaded == 0 then
-            --- WIDGET TAGS
-            mapLoaded = 1
-        end
-    end
 ------------------------------------------------------------------------------
 end
 
@@ -587,6 +610,7 @@ function on_widget_accept(widget_handle)
         -- Cancel event
         set_global("clua_short3", 1)
         harmony.menu.close_widget()
+        execute_script("object_destroy_containing cine")
     end
     if (widgetTagId == continue.id) then
         set_global("reload_now", true)
@@ -652,17 +676,22 @@ function on_key_press(modifiers, character, keycode)
     end
     if (character == "+") then
         harmony.menu.close_widget()
+        hsc.showHud(1)
     end
-    if (keycode == 5) then
+    if (keycode == 5) then          -- F5
         execute_script("core_save")
         hud_message("     Quicksaving...")
     end
-    if (keycode == 6) then
+    if (keycode == 6) then          -- F6
         execute_script("core_load")
     end
-    if (keycode == 12) then
+    if (keycode == 12) then         -- F12
         execute_script("chimera_lua_reload_scripts")
     end
+    if (keycode == 81) then     -- INS key
+        execute_script("speed 4")
+    end
+    --console_out(keycode)  -- DEBUG for trying to find key codes
     return true
 end
 
