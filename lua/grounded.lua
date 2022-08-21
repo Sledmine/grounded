@@ -570,6 +570,18 @@ local bspArray = {
             end
         end
 ------------------------------------------------------------------------------
+--- Testing Stuff
+------------------------------------------------------------------------------
+
+        if (playerBiped) then
+            if (playerBiped and playerBiped.actionKeyHold) then
+                local pr = blam.getTag("weapons\\plasma rifle\\plasma rifle", tagClasses.weapon)
+                local prBolt = blam.getTag("weapons\\plasma rifle\\bolt", tagClasses.projectile)
+                --local globals = blam.globalsTag()
+                --spawn_object(prBolt.id, (playerBiped.x + 0.1), (playerBiped.y - .01), (playerBiped.z + .5))
+                --console_out(globals.firstPersonInterface.type)
+            end
+        end
 end
 
 function optionSelect(selection)
