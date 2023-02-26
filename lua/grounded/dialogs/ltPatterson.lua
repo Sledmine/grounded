@@ -101,7 +101,7 @@ function patScreen(screenInstance)
     elseif screenInstance == 2 then
         scream.npcText = patNpcArray[2]
         scream.playerResponses = {patResponseArray[4], patResponseArray[5],} 
-        scream.playerActions = {patActionsArray[7], patActionsArray[5]}
+        scream.playerActions = {patActionsArray[7], patActionsArray[9]}
         ------------------------------------------------------------------------------  
     elseif screenInstance == 3 then
         scream.npcText = patNpcArray[7]
@@ -121,7 +121,7 @@ function patScreen(screenInstance)
     elseif screenInstance == 6 then
         scream.npcText = patNpcArray[6]
         scream.playerResponses = {patResponseArray[4], patResponseArray[5],}
-        scream.playerActions = {patActionsArray[7], patActionsArray[5]}
+        scream.playerActions = {patActionsArray[7], patActionsArray[9]}
         ------------------------------------------------------------------------------
     elseif screenInstance == 7 then
         scream.npcText = patNpcArray[3]

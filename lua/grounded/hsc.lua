@@ -366,10 +366,10 @@ end
 
 --- Navpoint functions
 --- Enable navpoint
----@param1 Type (1 = Flag, 2 = Object)
----@param2 Unit (usually player)
----@param3 Source (Flag or object)
----@param4 Vertical Offset in Halo World Units
+---@param Type (1 = Flag, 2 = Object)
+---@param Unit (usually player)
+---@param source (flag or object name)
+---@param vertical Offset in Halo World Units
 function hsc.activateNav(type, unit, source, verticalOffset)
     local returnType = {"flag", "object"}
         execute_script("activate_nav_point_" .. returnType[type] .. " default " .. " " .. unit .. " " .. source .. " " .. verticalOffset)

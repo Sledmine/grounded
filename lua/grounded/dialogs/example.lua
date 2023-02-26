@@ -2,6 +2,12 @@
 --- Dialogue System - Conversation Template / Explainer
 ------------------------------------------------------------------------------
 
+--[[[
+        DEBUG TIPS - If you're having trouble with a particular screen, you can use the search function "CTRL+F" and search by the npcWords arrary. Number the array so you can search by 
+            "npcWords[2]"
+]]
+
+
 --- Declare dependent modules
 local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
@@ -27,11 +33,11 @@ function exampleConvScreen(screenInstance)
         }
 
     local npcWords = {                                  -- NPC
-        "npc line 1", 
-        "npc line 2", 
-        "npc line 4", 
-        "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua.",
-        "you can also"
+        "npc line 1", -- 1
+        "npc line 2", -- 2
+        "npc line 4", -- 3
+        "when you have npc's saying a lot of dialogue you need to use the new line\nfeature built into lua.", -- 4
+        "you can also" -- 4
     }  
     ------------------------------------------------------------------------------
     --- Actions Array 

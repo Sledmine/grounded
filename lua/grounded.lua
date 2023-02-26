@@ -19,6 +19,19 @@ local interface = require "grounded.interface"
 local dialog = require "grounded.dialog"
 local scenario = blam.scenario()
 local harmony = require "mods.harmony"
+----------------------
+--- Harmony Functions
+----------------------
+function createSound(string)
+    local directory_source = harmony.optic.create_sound(string)
+    return directory_source
+end
+
+function createAudioEngine()
+    local instance = harmony.optic.create_audio_engine()
+    return instance
+end
+
 --local cursor = harmony.menu.set_cursor_scale(0.65)
 -- Array for fast travel devices
 local device_positions = {
@@ -200,6 +213,7 @@ function OnTick()
 --- Conversations
 ------------------------------------------------------------------------------  
 local forbesConv = require "grounded.dialogs.forbes.forbesConv1"
+local forbesSideConv1 = require "grounded.dialogs.forbes.forbes_side1"
 local test = require "grounded.dialogs.test_noComments"
 local pat = require "grounded.dialogs.ltPatterson"
 local wright = require "grounded.dialogs.wright.wrightConv1"
@@ -277,7 +291,7 @@ local conversations = {
         promptMessage = "Press \"E\" to talk to Sergeant Forbes",
         action = function()
             if (get_global("unsc_quests") < 1) then
-            dialog.open(forbesConvScreen1(get_global("conv_short1")), true)
+            dialog.open(forbesSideScreen1(convShort), true)
             end
         end
     },
@@ -312,6 +326,11 @@ local conversations = {
         action = function()
             dialog.open(engHayden(get_global("conv_short1")))
         end
+    },
+    { -- Science Officer Sinclair
+        unitName = "sci_sinclair",
+        promptMessage = "Press\"E\" to talk to Doctor Sinclair",
+        action = {}
     },
 }
 ------------------------------------------------------------------------------
@@ -423,6 +442,37 @@ local conversations = {
         elseif (hsc.isPlayerInsideVolume("high2")) and ((hsc.deviceGet(2, "lift2")) == 0) then
             hsc.deviceSet(2, "lift1", 0.463)
         end
+        if (hsc.isPlayerInsideVolume("gravlift")) then
+            if (hsc.deviceGet(2, "gravlift1") == 1) then
+                hsc.objectCreate("dosparticles")
+                if (playerBiped.zVel < 0.2) then
+                    playerBiped.zVel = playerBiped.zVel + 0.12
+                    if (playerBiped.zVel > 0.24) then
+                        playerBiped.zVel = playerBiped.zVel - 0.01
+                    end
+                end
+                hsc.deviceSet(2, "gravlift1", 0)
+            else
+                local playerX = playerBiped.x
+                local playerY = playerBiped.y
+                local playerZ = playerBiped.z
+                if (playerX > -206.4) then
+                    playerBiped.xVel = playerBiped.xVel - 0.002
+                elseif (playerX < -206.4) then
+                    playerBiped.xVel = playerBiped.xVel + 0.002
+                end
+                if (playerY > 138.6) then
+                    playerBiped.yVel = playerBiped.yVel - 0.002
+                elseif (playerY < 138.6) then
+                    playerBiped.yVel = playerBiped.yVel + 0.002
+                end
+                if (playerBiped.zVel < -0.0001) then
+                    playerBiped.zVel = playerBiped.zVel + 0.0035
+                end
+                execute_script("object_destroy dosparticles")
+            end
+            --console_out(playerBiped.y)
+        end
     end
 ------------------------------------------------------------------------------
 --- BSP Switching
@@ -440,6 +490,8 @@ local bspArray = {
     "structure_bsp4",                                           -- 10                               - Now that bspBenjamin = 1, nothing else will happen until the player leaves the volume. bspBenjamin is reset to 0
     "naturalcaves_caverns",                                     -- 11
     "caverns_naturalcaves",                                     -- 12
+    "bsp4_caves",                                               -- 13
+    "caves_bsp4",                                               -- 14
 }
     if (playerBiped) then
         if (hsc.isPlayerInsideVolume(bspArray[1])) or (hsc.isPlayerInsideVolume(bspArray[7])) then -- For transitioning between Byellee Structure and Byellee Colony 
@@ -520,11 +572,35 @@ local bspArray = {
                 execute_script("begin (ft_escapepod)")
                 bspBenjamin = 1
             end
+        elseif (hsc.isPlayerInsideVolume(bspArray[13])) then -- For transitioning between Caves and BSP4
+            if (bspBenjamin == 0) then
+                if (hsc.bspIndex() == 3) then
+                    execute_script("switch_bsp 2")
+                    bspBenjamin = 1
+                elseif (hsc.bspIndex() == 2) then
+                    execute_script("switch_bsp 3")
+                    bspBenjamin = 1
+                end
+            end
         else
             bspBenjamin = 0   
         end
     end
-------------------------------------------------------------------------------
+    ------------------------------------------------------------------------------
+    --- Doors
+    ------------------------------------------------------------------------------
+    if (playerBiped) then
+        if hsc.isPlayerInsideVolume("trig_bsp1door") then
+            hsc.deviceSet(2, "bsp1door", 1)
+        elseif hsc.isPlayerInsideVolume("trig_bsp2door") then
+            hsc.deviceSet(2, "bsp2door", 1)
+        end
+        if ((hsc.deviceGet(2, "bsp1door") == 1) and (not hsc.isPlayerInsideVolume("trig_bsp1door"))) then
+            hsc.deviceSet(2, "bsp1door", 0)
+        elseif ((hsc.deviceGet(2, "bsp2door") == 1) and (not hsc.isPlayerInsideVolume("trig_bsp2door"))) then
+            hsc.deviceSet(2, "bsp2door", 0)
+        end
+    end
 --- Game events
 ------------------------------------------------------------------------------
 ----------------------- Pre-landing sequence        --------------------------
@@ -681,6 +757,7 @@ end
 harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")
 
 function on_key_press(modifiers, character, keycode)
+    local playerBiped = blam.biped(get_dynamic_player())
     if(character == "j") then
         -- Cancel event
         dialog.journal(journalScreen(get_global("journal_short1")), true)
@@ -698,10 +775,14 @@ function on_key_press(modifiers, character, keycode)
         execute_script("core_load")
     end
     if (keycode == 12) then         -- F12
-        execute_script("chimera_lua_reload_scripts")
+        execute_script("rs")
     end
     if (keycode == 81) then     -- INS key
-        execute_script("speed 4")
+        console_out(playerBiped.x)
+        console_out(playerBiped.y)
+        console_out(playerBiped.z)
+    end
+    if (keycode == 67) then
     end
     --console_out(keycode)  -- DEBUG for trying to find key codes
     return true
