@@ -274,7 +274,7 @@ local conversations = {
                 console_out("An error occurred while loading ui widget!")
             end
         end
-    },
+    },  -- merchant 1
     {
         unitName = "merchant_2",
         promptMessage = "Press \"E\" to talk to Armour Merchant",
@@ -285,7 +285,7 @@ local conversations = {
                 console_out("An error occurred while loading ui widget!")
             end
         end
-    },
+    },  -- merchant 2
     {-- Forbes
         unitName = "forbes",
         promptMessage = "Press \"E\" to talk to Sergeant Forbes",
@@ -294,7 +294,7 @@ local conversations = {
             dialog.open(forbesSideScreen1(convShort), true)
             end
         end
-    },
+    }, -- forbes
     {-- Elite Captain
         unitName = "podguard",
         promptMessage = "Press \"E\" to talk to \"Elite Captain\"",
@@ -317,7 +317,7 @@ local conversations = {
         unitName = "wright",
         promptMessage = "Press \"E\" to talk to Judith Wright",
         action = function()
-                dialog.open(wrightConvScreen(wrightVariableCalculator()), true)
+                dialog.open(wrightConvScreen(get_global("conv_short1")), true)
             end
     },
     { -- Engineer Hayden
@@ -738,6 +738,7 @@ function on_widget_accept(widget_handle)
     if (widgetTagId == save(2).slotID) then
             console_out(widgetTagId)
     end
+    console_out(widgetTagId)
     --console_out(widgetTagId)
     --console_out(save(1).slotID)
     return true             -- must keep "return true" or else you will disable the menu buttons all throughout the game

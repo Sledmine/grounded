@@ -2,16 +2,6 @@ local dialog = require "grounded.dialog"
 local hsc = require "grounded.hsc"
 local harmony = require "mods.harmony"
 
-function wrightVariableCalculator()
-    local variable = get_global("conv_short1")
-    if (get_global("speedyboi") == "4") then
-        set_global("conv_short1", 10)
-    else 
-        set_global("conv_short1", 1)
-    end
-    return variable
-end
-
 function wrightConv1Reload()
     dialog.open(wrightConvScreen(get_global("conv_short1")), true)
     stop_timer(periodic)
@@ -151,15 +141,15 @@ function wrightConvScreen(screenInstance)
         end,
     }
     local scream = {}
-    if screenInstance == 1 then                     -- wright_supplyConIntro1
-        scream.npcText = npcWords[1]
-        scream.playerResponses = {response[1], response[3],}
-        scream.playerActions = {actionsArray[1], actionsArray[15]} 
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 10 then               -- CONDITIONAL - FORBES MISSION wright_supplyConIntro1
+    if ((screenInstance == 1) and (((get_global("eviction")) == 1))) then               -- CONDITIONAL - FORBES MISSION wright_supplyConIntro1
         scream.npcText = npcWords[1]
         scream.playerResponses = {response[1], response[2], response[3]} 
         scream.playerActions = {actionsArray[1], actionsArray[2], response[3]} 
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 1 then                     -- wright_supplyConIntro1
+        scream.npcText = npcWords[1]
+        scream.playerResponses = {response[1], response[3],}
+        scream.playerActions = {actionsArray[1], actionsArray[15]} 
         ------------------------------------------------------------------------------
     elseif screenInstance == 2 then       -- wright_supplyCon1_fork1        
         scream.npcText = npcWords[2]

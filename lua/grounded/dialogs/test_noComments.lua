@@ -44,11 +44,16 @@ function fakeConversationScreen(screenInstance)
             harmony.menu.close_widget()
         end,
     }
-    local scream = {}
-    if screenInstance == 1 then
+
+    local function con1_fork1()
         scream.npcText = npcWords[1]
         scream.playerResponses = {response[1], response[2],}
         scream.playerActions = {actionsArray[2], actionsArray[3]} 
+    end   
+
+    local scream = {}
+    if screenInstance == 1 then
+        con1_fork1()
     elseif screenInstance == 2 then
         scream.npcText = npcWords[2]
         scream.playerResponses = {response[2], response[1],} 
@@ -67,6 +72,13 @@ function fakeConversationScreen(screenInstance)
         scream.npcText = npcWords[4]
         scream.playerResponses = {response[1], response[2], response[3]}
         scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[1]} 
+
+    local function con1_fork1()
+        scream.npcText = npcWords[1]
+        scream.playerResponses = {response[1], response[2],}
+        scream.playerActions = {actionsArray[2], actionsArray[3]} 
+    end        
+        
     end
     return {
     objectName = "",

@@ -83,6 +83,7 @@ function forbesSideScreen1(screenInstance)
         "I'll believe it when I hear it from the UEG. Until such a time, all UNSC persons will assume \nhostile intent and engage the Covenant on-sight.", -- 26 forbesCon1_forkInvWar1
         "I think we've spent enough time on this topic. Would you like to know anything else?", --27  forbesCon1_forkInvWar2
         "Let's begin with the Raiders, then we can take care of the rot on the other side of the wall.", -- 28  forbesCon1_forkInvWar3
+        "Of course you would say that. Don't come back unless you've dealt with the raiders.", -- 29 forbesCon1_aggroAccept
 
     } 
     ------------------------------------------------------------------------------
@@ -241,165 +242,315 @@ function forbesSideScreen1(screenInstance)
     }
     ------------------------------------------------------------------------------
     local scream = {}
-        ------------------------------------------------------------------------------    
-    if ((screenInstance == 1) and ((get_global("forbesshort")) == -1) and ((get_global("eviction")) == 1)) then             -- forbesCon1_reallyBadRestart
-        scream.npcText = forbesNpcArray[22]
-        scream.playerResponses = {forbesResponseArray[19],}
-        scream.playerActions = {forbesActionArray[2],}
-    elseif ((screenInstance == 1) and ((get_global("eviction")) == 1)) then             -- forbesCon1_goodRestart
-        scream.npcText = forbesNpcArray[3]
-        scream.playerResponses = {forbesResponseArray[2], forbesResponseArray[5]}
-        scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
-        ------------------------------------------------------------------------------
-    elseif ((screenInstance == 6) and ((get_global("eviction")) == 1)) then             -- forbesCon1_ImprovLine
-        scream.npcText = forbesNpcArray[10]
-        scream.playerResponses = {forbesResponseArray[11], forbesResponseArray[6]}
-        scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
-        ------------------------------------------------------------------------------    
-    elseif ((screenInstance == 1) and ((get_global("forbesshort")) == -1)) then             -- forbesCon1_reallyBadRestart
-        scream.npcText = forbesNpcArray[21]
-        scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[19],}
-        scream.playerActions = {forbesActionArray[18], forbesActionArray[19],}
-        ------------------------------------------------------------------------------    
-    elseif ((screenInstance == 1) and ((get_global("forbesshort")) == 1)) then             -- forbesCon1_badRestart
-        scream.npcText = forbesNpcArray[6]
-        scream.playerResponses = {forbesResponseArray[1], forbesResponseArray[2], forbesResponseArray[3]}
-        scream.playerActions = {forbesActionArray[1], forbesActionArray[5], forbesActionArray[4]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 1 then             -- forbesCon1_fork1
-        scream.npcText = forbesNpcArray[1]
-        scream.playerResponses = {forbesResponseArray[1], forbesResponseArray[2], forbesResponseArray[3]}
-        scream.playerActions = {forbesActionArray[1], forbesActionArray[5], forbesActionArray[4]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 2 then         -- forbesCon1_fork2 AKA ACCEPT ENDING
+    local function endConv()
+        return {forbesResponseArray[4]}
+    end
+        ---------------------------------------------------
+    local function forbesCon1_fork1()       -- ForbesCon1_fork1 & Variations
+        if (get_global("forbesshort")) == -1 and (get_global("eviction")) == 1 then             -- forbesCon1_reallyBadRestart
+            scream.npcText = forbesNpcArray[22]
+            scream.playerResponses = {forbesResponseArray[19],}
+            scream.playerActions = {forbesActionArray[2],}
+            console_out("forbesCon1_reallyBadRestart")
+        elseif (get_global("eviction")) == 1 then             -- forbesCon1_goodRestart
+            scream.npcText = forbesNpcArray[3]
+            scream.playerResponses = {forbesResponseArray[2], forbesResponseArray[5]}
+            scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
+            console_out("forbesCon1_goodRestart")
+        elseif ((screenInstance == 1) and ((get_global("forbesshort")) == -1)) then             -- forbesCon1_reallyBadRestart
+            scream.npcText = forbesNpcArray[21]
+            scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[19],}
+            scream.playerActions = {forbesActionArray[18], forbesActionArray[19],}
+            console_out("forbesCon1_reallyBadRestart")
+            ------------------------------------------------------------------------------    
+        elseif ((screenInstance == 1) and ((get_global("forbesshort")) == 1)) then             -- forbesCon1_badRestart
+            scream.npcText = forbesNpcArray[6]
+            scream.playerResponses = {forbesResponseArray[1], forbesResponseArray[2], forbesResponseArray[3]}
+            scream.playerActions = {forbesActionArray[1], forbesActionArray[5], forbesActionArray[4]}
+            console_out("forbesCon1_badRestart")
+            ------------------------------------------------------------------------------
+        elseif screenInstance == 1 then             -- forbesCon1_fork1
+            scream.npcText = forbesNpcArray[1]
+            scream.playerResponses = {forbesResponseArray[1], forbesResponseArray[2], forbesResponseArray[3]}
+            scream.playerActions = {forbesActionArray[1], forbesActionArray[5], forbesActionArray[4]}
+            console_out("forbesCon1_fork1")
+        end
+    end
+
+    local function forbesCon1_fork2()
         scream.npcText = forbesNpcArray[2]
         scream.playerResponses = {forbesResponseArray[4]}
         scream.playerActions = {forbesActionArray[2]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 3 then         -- forbesCon1_fork5 AKA ACCEPT RESTART ENDING
+        console_out("forbesCon1_fork2")
+    end
+
+    local function forbesCon1_fork5()
         scream.npcText = forbesNpcArray[4]
         scream.playerResponses = {forbesResponseArray[4]}
         scream.playerActions = {forbesActionArray[2]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 4 then         -- forbesCon1_fork3 AKA REJECT ENDING
+        console_out("forbesCon1_fork5")
+    end
+
+    local function forbesCon1_fork3()
         scream.npcText = forbesNpcArray[5]
         scream.playerResponses = {forbesResponseArray[4]}
         scream.playerActions = {forbesActionArray[2]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 5 then             -- forbesCon1_forkInv                                                                       TODO
+        console_out("forbesCon1_fork3")
+    end
+
+    local function forbesCon1_ImprovLine()
+        scream.npcText = forbesNpcArray[10]
+        scream.playerResponses = {forbesResponseArray[11], forbesResponseArray[6]}
+        scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
+        console_out("forbesCon1_ImprovLine")
+    end
+
+    local function forbesCon1_forkInv()
         scream.npcText = forbesNpcArray[7]
         scream.playerResponses = {forbesResponseArray[7], forbesResponseArray[8], forbesResponseArray[9], forbesResponseArray[10]}
         scream.playerActions = {forbesActionArray[7], forbesActionArray[13], forbesActionArray[9], forbesActionArray[6]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 6 then             -- forbesCon1_badRestart
+        console_out("forbesCon1_forkInv")
+    end
+
+    local function forbesCon1_badRestart()
         scream.npcText = forbesNpcArray[8]
         scream.playerResponses = {forbesResponseArray[1], forbesResponseArray[2], forbesResponseArray[3]}
         scream.playerActions = {forbesActionArray[1], forbesActionArray[5], forbesActionArray[4]}   
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 7 then             -- forbesCon1_forkInv1                                                                      TODO
+        console_out("forbesCon1_badRestart")
+    end
+
+    local function forbesCon1_forkInv1()
         scream.npcText = forbesNpcArray[9]
         scream.playerResponses = {forbesResponseArray[12], forbesResponseArray[8], forbesResponseArray[9], forbesResponseArray[10]}
         scream.playerActions = {forbesActionArray[8], forbesActionArray[13], forbesActionArray[9], forbesActionArray[6]}   
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 8 then             -- forbesCon1_forkInv1.1
+        console_out("forbesCon1_forkInv1")
+    end
+
+    local function forbesCon1_forkInv1_1()
         scream.npcText = forbesNpcArray[11]
         scream.playerResponses = {forbesResponseArray[13], forbesResponseArray[14],}
         scream.playerActions = {forbesActionArray[9], forbesActionArray[5],}   
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 9 then             -- forbesCon1_forkInv3
+        console_out("forbesCon1_forkInv1_1")
+    end
+    
+    local function forbesCon1_forkInv3()
         scream.npcText = forbesNpcArray[12]
         scream.playerResponses = {forbesResponseArray[15], forbesResponseArray[16], forbesResponseArray[17],}
         scream.playerActions = {forbesActionArray[10], forbesActionArray[12], forbesActionArray[5],}   
-        ------------------------------------------------------------------------------
-            elseif ((screenInstance == 10) and ((get_global("eviction")) == 1)) then             -- forbesCon1_forkInvDesert ACCEPTED ENDING
-                scream.npcText = forbesNpcArray[13]
-                scream.playerResponses = {forbesResponseArray[17], forbesResponseArray[19],}
-                scream.playerActions = {forbesActionArray[5], forbesActionArray[3],}   
-            elseif screenInstance == 10 then             -- forbesCon1_forkInvDesert REJECTION ENDING
-                scream.npcText = forbesNpcArray[13]
-                scream.playerResponses = {forbesResponseArray[17], forbesResponseArray[18], forbesResponseArray[19],}
-                scream.playerActions = {forbesActionArray[5], forbesActionArray[2], forbesActionArray[11],}   
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 11 then         -- -> forbeCon1_fork6     AKA convBadEnding  
+        console_out("forbesCon1_forkInv3")
+    end
+
+    local function forbesCon1_forkInvDesert()
+        if (get_global("eviction")) == 1 then             -- forbesCon1_forkInvDesert ACCEPTED ENDING
+            scream.npcText = forbesNpcArray[13]
+            scream.playerResponses = {forbesResponseArray[17], forbesResponseArray[19],}
+            scream.playerActions = {forbesActionArray[5], forbesActionArray[3],}   
+            console_out("forbesCon1_forkInvDesert ACCEPTED ENDING")
+        else            -- forbesCon1_forkInvDesert REJECTION ENDING
+            scream.npcText = forbesNpcArray[13]
+            scream.playerResponses = {forbesResponseArray[17], forbesResponseArray[18], forbesResponseArray[19],}
+            scream.playerActions = {forbesActionArray[5], forbesActionArray[2], forbesActionArray[11],}   
+            console_out("forbesCon1_forkInvDesert REJECTION ENDING")
+        end
+    end
+
+    local function forbesCon1_fork6()
         scream.npcText = forbesNpcArray[14]
-        scream.playerResponses = {forbesResponseArray[4]}
+        scream.playerResponses = {endConv()}
         scream.playerActions = {forbesActionArray[2]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 12 then         -- forbesCon1_forkInvAnimals
+        console_out("forbesCon1_fork6")
+    end
+
+    local function forbesCon1_forkInvAnimals()
         scream.npcText = forbesNpcArray[15]
         scream.playerResponses = {"Okay let's talk about something else."}
         scream.playerActions = {forbesActionArray[5]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 13 then         -- forbesCon1_forkInv2
+        console_out("forbesCon1_forkInvAnimals")
+        end
+
+    local function forbesCon1_forkInv2()
         scream.npcText = forbesNpcArray[16]
         scream.playerResponses = {forbesResponseArray[20], forbesResponseArray[7], forbesResponseArray[9], forbesResponseArray[10]}
         scream.playerActions = {forbesActionArray[14], forbesActionArray[7], forbesActionArray[9], forbesActionArray[6]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 14 then         -- forbesCon1_forkInv5
+        console_out("forbesCon1_forkInv2")
+    end
+
+    local function forbesCon1_forkInv5()
         scream.npcText = forbesNpcArray[17]
         scream.playerResponses = {forbesResponseArray[21], forbesResponseArray[22], forbesResponseArray[23], forbesResponseArray[17]}
         scream.playerActions = {forbesActionArray[15], forbesActionArray[21], forbesActionArray[22], forbesActionArray[5]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 15 then         -- forbesCon1_forkInv6
+        console_out("forbesCon1_forkInv5")
+    end
+
+    local function forbesCon1_forkInv6()
         scream.npcText = forbesNpcArray[18]
         scream.playerResponses = {forbesResponseArray[24], forbesResponseArray[25], forbesResponseArray[17]}
         scream.playerActions = {forbesActionArray[16], forbesActionArray[20], forbesActionArray[5]}
-        ------------------------------------------------------------------------------
-            elseif ((screenInstance == 16) and ((get_global("eviction")) == 1)) then         -- forbesCon1_forkInvDisgust
-                scream.npcText = forbesNpcArray[19]
-                scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[26], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[1], forbesActionArray[17], forbesActionArray[3]}
-            elseif screenInstance == 16 then         -- forbesCon1_forkInvDisgust
-                scream.npcText = forbesNpcArray[19]
-                scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[26], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[1], forbesActionArray[17], forbesActionArray[11]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 17 then         -- forbesCon1_aggro
-        scream.npcText = forbesNpcArray[20]
-        scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[19], forbesResponseArray[17]}
-        scream.playerActions = {forbesActionArray[18], forbesActionArray[19], forbesActionArray[2]}
-        ------------------------------------------------------------------------------
-            elseif ((screenInstance == 20) and ((get_global("eviction")) == 1)) then         -- forbesCon1_forkInvAlien
-                scream.npcText = forbesNpcArray[23]
-                scream.playerResponses = {forbesResponseArray[27], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
-            elseif screenInstance == 20 then         -- forbesCon1_forkInvAlien
-                scream.npcText = forbesNpcArray[23]
-                scream.playerResponses = {forbesResponseArray[27], forbesResponseArray[18], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[18], forbesActionArray[1], forbesActionArray[11]}
-        ------------------------------------------------------------------------------
-            elseif ((screenInstance == 21) and ((get_global("eviction")) == 1)) then         -- forbesCon1_forkInv7
-                scream.npcText = forbesNpcArray[24]
-                scream.playerResponses = {forbesResponseArray[28], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[5],forbesActionArray[3]}
-            elseif screenInstance == 21 then         -- forbesCon1_forkInv7
-                scream.npcText = forbesNpcArray[24]
-                scream.playerResponses = {forbesResponseArray[28], forbesResponseArray[18], forbesResponseArray[19]}
-                scream.playerActions = {forbesActionArray[5], forbesActionArray[1], forbesActionArray[11]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 22 then         -- forbesCon1_forkInv8
+        console_out("forbesCon1_forkInv6")
+    end
+
+    local function forbesCon1_forkInvDisgust()
+        if ((get_global("eviction")) == 1) then         -- forbesCon1_forkInvDisgust
+            scream.npcText = forbesNpcArray[19]
+            scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[26], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[1], forbesActionArray[17], forbesActionArray[3]}
+            console_out("forbesCon1_forkInvDisgust - Accepted Mission")
+        else         -- forbesCon1_forkInvDisgust
+            scream.npcText = forbesNpcArray[19]
+            scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[26], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[1], forbesActionArray[17], forbesActionArray[11]}
+            console_out("forbesCon1_forkInvDisgust - no acceptance yet ")
+        end
+    end
+
+    local function forbesCon1_aggro()
+        if get_global("eviction") == 1 then
+            scream.npcText = forbesNpcArray[29]
+            scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[19], forbesResponseArray[17]}
+            scream.playerActions = {forbesActionArray[18], forbesActionArray[19], forbesActionArray[2]}
+            console_out("forbesCon1_aggro accept - you're lucky he didn't rip your head off.")
+        else
+            scream.npcText = forbesNpcArray[20]
+            scream.playerResponses = {forbesResponseArray[18], forbesResponseArray[19], forbesResponseArray[17]}
+            scream.playerActions = {forbesActionArray[18], forbesActionArray[19], forbesActionArray[2]}
+            console_out("forbesCon1_aggro - mate you didn't have to be so rude.")
+        end
+    end
+
+    local function forbesCon1_forkInvAlien()
+        if ((get_global("eviction")) == 1) then         -- forbesCon1_forkInvAlien
+            scream.npcText = forbesNpcArray[23]
+            scream.playerResponses = {forbesResponseArray[27], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[5], forbesActionArray[3]}
+            console_out("forbesCon1_forkInvAlien - accepted ending")
+        else         -- forbesCon1_forkInvAlien
+            scream.npcText = forbesNpcArray[23]
+            scream.playerResponses = {forbesResponseArray[27], forbesResponseArray[18], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[18], forbesActionArray[1], forbesActionArray[11]}
+            console_out("forbesCon1_forkInvAlien - no acceptance")
+        end
+    end
+
+    local function forbesCon1_forkInv7()
+        if ((get_global("eviction")) == 1) then         -- forbesCon1_forkInv7
+            scream.npcText = forbesNpcArray[24]
+            scream.playerResponses = {forbesResponseArray[28], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[5],forbesActionArray[3]}
+            console_out("forbesCon1_forkInv7 - accepted ending")
+        elseif screenInstance == 21 then         -- forbesCon1_forkInv7
+            scream.npcText = forbesNpcArray[24]
+            scream.playerResponses = {forbesResponseArray[28], forbesResponseArray[18], forbesResponseArray[19]}
+            scream.playerActions = {forbesActionArray[5], forbesActionArray[1], forbesActionArray[11]}
+            console_out("forbesCon1_forkInv7 - no acceptance yet")
+        end
+    end
+
+    local function forbesCon1_forkInv8()
         scream.npcText = forbesNpcArray[25]
         scream.playerResponses = {forbesResponseArray[29], forbesResponseArray[30], forbesResponseArray[31]}
         scream.playerActions = {forbesActionArray[23], forbesActionArray[24], forbesActionArray[25]}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 23 then         -- forbesCon1_forkInvWar1
+        console_out("forbesCon1_forkInv8")
+    end
+
+    local function forbesCon1_forkInvWar1()
         scream.npcText = forbesNpcArray[26]
         scream.playerResponses = {forbesResponseArray[32], forbesResponseArray[33],}
         scream.playerActions = {forbesActionArray[5], forbesActionArray[2],}
-        ------------------------------------------------------------------------------
-    elseif screenInstance == 24 then         -- forbesCon1_forkInvWar2
+        console_out("forbesCon1_forkInvWar1")
+    end
+
+    local function forbesCon1_forkInvWar2()
         scream.npcText = forbesNpcArray[27]
         scream.playerResponses = {forbesResponseArray[7], forbesResponseArray[8], forbesResponseArray[10]}
         scream.playerActions = {forbesActionArray[7], forbesActionArray[13], forbesActionArray[6]}
+        console_out("forbesCon1_forkInvWar2")
+    end
+
+    local function forbesCon1_forkInvWar3()
+        if  ((get_global("eviction")) == 1) then         -- forbesCon1_forkInvWar3
+            scream.npcText = forbesNpcArray[28]
+            scream.playerResponses = {forbesResponseArray[34], forbesResponseArray[17],}
+            scream.playerActions = {forbesActionArray[3], forbesActionArray[5],}
+            console_out("forbesCon1_forkInvWar3 - accepted ending")
+        else        -- forbesCon1_forkInvWar3
+            scream.npcText = forbesNpcArray[28]
+            scream.playerResponses = {forbesResponseArray[34], forbesResponseArray[17], forbesResponseArray[35]}
+            scream.playerActions = {forbesActionArray[3], forbesActionArray[5], forbesActionArray[4]}
+            console_out("forbesCon1_forkInvWar3 - no acceptance yet")
+        end
+    end
+        ------------------------------------------------------------------------------    
+    if screenInstance == 1 then
+        forbesCon1_fork1()
         ------------------------------------------------------------------------------
-            elseif ((screenInstance == 25) and ((get_global("eviction")) == 1)) then         -- forbesCon1_forkInvWar3
-                scream.npcText = forbesNpcArray[28]
-                scream.playerResponses = {forbesResponseArray[34], forbesResponseArray[17],}
-                scream.playerActions = {forbesActionArray[3], forbesActionArray[5],}
-            elseif screenInstance == 25 then         -- forbesCon1_forkInvWar3
-                scream.npcText = forbesNpcArray[28]
-                scream.playerResponses = {forbesResponseArray[34], forbesResponseArray[17], forbesResponseArray[35]}
-                scream.playerActions = {forbesActionArray[3], forbesActionArray[5], forbesActionArray[4]}
+    elseif screenInstance == 2 then         -- forbesCon1_fork2 AKA ACCEPT ENDING
+        forbesCon1_fork2()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 3 then         -- forbesCon1_fork5 AKA ACCEPT RESTART ENDING
+        forbesCon1_fork5()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 4 then         -- forbesCon1_fork3 AKA REJECT ENDING
+        forbesCon1_fork3()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 5 then             -- forbesCon1_forkInv                                                                      
+        forbesCon1_forkInv()
+        ------------------------------------------------------------------------------
+    elseif ((screenInstance == 6) and ((get_global("eviction")) == 1)) then             -- forbesCon1_ImprovLine
+        forbesCon1_ImprovLine()
+        ------------------------------------------------------------------------------  
+    elseif screenInstance == 6 then             -- forbesCon1_badRestart
+        forbesCon1_badRestart()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 7 then             -- forbesCon1_forkInv1                                                                      TODO
+        forbesCon1_forkInv1()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 8 then             -- forbesCon1_forkInv1.1
+        forbesCon1_forkInv1_1()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 9 then             -- forbesCon1_forkInv3
+        forbesCon1_forkInv3()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 10 then             -- forbesCon1_forkInvDesert ACCEPTED ENDING
+        forbesCon1_forkInvDesert()   
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 11 then         -- -> forbeCon1_fork6     AKA convBadEnding  
+        forbesCon1_fork6()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 12 then         -- forbesCon1_forkInvAnimals
+        forbesCon1_forkInvAnimals()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 13 then         -- forbesCon1_forkInv2
+        forbesCon1_forkInv2()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 14 then         -- forbesCon1_forkInv5
+        forbesCon1_forkInv5()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 15 then         -- forbesCon1_forkInv6
+        forbesCon1_forkInv6()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 16 then         -- forbesCon1_forkInvDisgust
+        forbesCon1_forkInvDisgust()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 17 then         -- forbesCon1_aggro
+        forbesCon1_aggro()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 20 then         -- forbesCon1_forkInvAlien
+        forbesCon1_forkInvAlien()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 21 then         -- forbesCon1_forkInv7
+        forbesCon1_forkInv7()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 22 then         -- forbesCon1_forkInv8
+        forbesCon1_forkInv8()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 23 then         -- forbesCon1_forkInvWar1
+        forbesCon1_forkInvWar1()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 24 then         -- forbesCon1_forkInvWar2
+        forbesCon1_forkInvWar2()
+        ------------------------------------------------------------------------------
+    elseif screenInstance == 25 then         -- forbesCon1_forkInvWar3
+        forbesCon1_forkInvWar3()
     end
 
     return {
