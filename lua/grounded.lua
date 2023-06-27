@@ -113,6 +113,9 @@ function modularPromptHog()
     end
 end
 
+harmony.menu.set_cursor_scale(0.65)
+--harmony.menu.set_aspect_ratio(16, 9)
+
 --- Clear navpoints based on proximity
 ---
 local navpoints = {
@@ -296,10 +299,10 @@ local conversations = {
         end
     }, -- forbes
     {-- Elite Captain
-        unitName = "podguard",
-        promptMessage = "Press \"E\" to talk to \"Elite Captain\"",
+        unitName = "guard1",
+        promptMessage = "Press \"E\" to talk to Elite Captain",
         action = function()
-            hsc.SoundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
+            hsc.soundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
         end
     },
     { -- Lt Patterson
@@ -640,7 +643,7 @@ local bspArray = {
                 hsc.groundedOpen()
                 set_timer(2000, "setFalse", "started")
                 if (aiStuff) then
-                    execute_script("switch_bsp 1")
+                    --execute_script("switch_bsp 1")
                     aiStuff = false
                 end
             end
@@ -761,7 +764,7 @@ function on_key_press(modifiers, character, keycode)
     local playerBiped = blam.biped(get_dynamic_player())
     if(character == "j") then
         -- Cancel event
-        dialog.journal(journalScreen(get_global("journal_short1")), true)
+        dialog.open(wrightConvScreen(get_global("conv_short1")), true)
         return false
     end
     if (character == "+") then
@@ -776,7 +779,7 @@ function on_key_press(modifiers, character, keycode)
         execute_script("core_load")
     end
     if (keycode == 12) then         -- F12
-        execute_script("rs")
+        execute_script("chimera_lua_reload_scripts")
     end
     if (keycode == 81) then     -- INS key
         console_out(playerBiped.x)
@@ -784,6 +787,12 @@ function on_key_press(modifiers, character, keycode)
         console_out(playerBiped.z)
     end
     if (keycode == 67) then
+    end
+    if (keycode == 12) then
+        execute_script("chimera_lua_reload_scripts")
+    end
+    if keycode == 66 then
+        harmony.menu.close_widget()
     end
     --console_out(keycode)  -- DEBUG for trying to find key codes
     return true

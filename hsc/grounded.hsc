@@ -3,7 +3,6 @@
 (global short clua_short1 0)
 (global short clua_short2 0)
 (global short clua_short3 0) ; Designed for the opening menu
-(global short credits 40) ;sets a global called "credits". It's how the player buys stuff.
 (global boolean merchantboi_1 false) ;this sets merch1 as a global
 (global boolean merchantboi_2 false) ;this sets merchantboi_2 as a global
 (global boolean conversation false)
@@ -23,7 +22,8 @@
 (global short speedyboi 0)
 (global short patterson 0)
 (global short bsp3_struc1_test 0)
-(global short time_of_day 0) ; 0 = Day, 6 = Sunset/sunrise, 7 = Night
+(global short rep_medsupply 0)
+(global short republic_status 1)
 
 (script static void newgame
 	(set clua_short3 1)
@@ -133,16 +133,6 @@
 	)
 )
 
-(script continuous daynightcycle
-	(if (= switchrest 1)
-		(begin
-			(sleep 60)
-			(set switchrest 0)
-		)
-	)
-	
-)
-
 ;here is fast travel
 (script static void ft_capital
 	(player_enable_input 0)
@@ -249,77 +239,6 @@
 
 (script static void crewman_1
 	(sound_impulse_start sound\dialog\npc_generic\generic barman 1)
-)
-
-(script continuous ambient_ai_bsp
-	(if (and (= (structure_bsp_index) 2) (= encounter_spawned_bsp3 0))
-		(begin
-			(begin_random
-				(begin ;LEDGE Jackal & Core Elite
-					(if (= (ai_living_count g_enc_bsp3struc2) 0)
-					(begin
-					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-					(ai_place g_enc_bsp3struc2/sqd_elite_core)
-					(set encounter_spawned_bsp3 1)
-					)
-					(sleep 10)
-					)
-				)
-				(begin ;Hunters only
-					(if (= (ai_living_count g_enc_bsp3struc2) 0)
-					(begin
-					(ai_place g_enc_bsp3struc2/sqd_hunter)
-					(set encounter_spawned_bsp3 1)
-					)
-					(sleep 10)
-					)
-				)
-				(begin ;all core units
-					(if (= (ai_living_count g_enc_bsp3struc2) 0)
-					(begin
-					(ai_place g_enc_bsp3struc2/sqd_jackal_core)
-					(ai_place g_enc_bsp3struc2/sqd_elite_core)
-					(ai_place g_enc_bsp3struc2/sqd_grunt_core)
-					(set encounter_spawned_bsp3 1)
-					)
-					(sleep 10)
-					)
-				)
-				(begin ;hunters and jackal ridge
-					(if (= (ai_living_count g_enc_bsp3struc2) 0)
-					(begin
-					(ai_place g_enc_bsp3struc2/sqd_hunter)
-					(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
-					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-					(set encounter_spawned_bsp3 1)
-					)
-					(sleep 10)
-					)
-				)
-				(begin ;jackal ledge, grunt ledge, elite ridge, jackal ridge
-					(if (= (ai_living_count g_enc_bsp3struc2) 0)
-					(begin
-					(ai_place g_enc_bsp3struc2/sqd_jackal_ledge)
-					(ai_place g_enc_bsp3struc2/sqd_jackal_ridge)
-					(ai_place g_enc_bsp3struc2/sqd_elite_ridge)
-					(ai_place g_enc_bsp3struc2/sqd_grunt_ledge)
-					(set encounter_spawned_bsp3 1)
-					)
-					(sleep 10)
-					)
-				)
-			)
-			(if (= bsp3_struc1_test 0)
-				(begin 
-					(ai_place bsp3_struc1)
-					(set bsp3_struc1_test 1)
-				)
-			)
-		)
-	)
-	(if (not (= (structure_bsp_index) 2))
-		(set encounter_spawned_bsp3 0)
-	)
 )
 
 (script startup ambience
