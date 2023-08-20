@@ -3,6 +3,13 @@
 (global short clua_short1 0)
 (global short clua_short2 0)
 (global short clua_short3 0) ; Designed for the opening menu
+(global short clua_short4 0)
+(global short conv_short1 1) ; for conversation 
+(global short conv_short2 1) ; for conversation 
+(global short conv_short3 1) ; for conversation 
+(global short conv_short4 1) ; for conversation 
+(global short journal_short1 1) ; for journal
+(global short credits 40) ;sets a global called "credits". It's how the player buys stuff.
 (global boolean merchantboi_1 false) ;this sets merch1 as a global
 (global boolean merchantboi_2 false) ;this sets merchantboi_2 as a global
 (global boolean conversation false)
@@ -19,15 +26,13 @@
 (global boolean sentinel_ally true)
 (global short unit_health 0)
 (global short switchrest 0)
-(global short speedyboi 0)
+(global short engineers_saved 0)
 (global short patterson 0)
+(global short forbesshort 0)
+(global short eviction 0)
 (global short bsp3_struc1_test 0)
-(global short rep_medsupply 0)
-(global short republic_status 1)
-
-(script static void newgame
-	(set clua_short3 1)
-)
+(global short republic_status 0)
+; And now, for something completely different.
 
 (script continuous starting_loop
 	(if (= openingmenu false)
@@ -61,10 +66,6 @@
 	)
 )
 
-(script static void continuegame
-	(set reload_now true)
-)
-
 (script static unit player0					;this defines "player0" as a unit. This literally just saves time scripting by referencing (player0) instead of (unit (list_get (players) 0))
     (unit (list_get (players) 0))
 )
@@ -75,31 +76,7 @@
 	)
 )
 
-(script static void save_game1
-	(set save 1)
-	(sleep 1)
-	(set save 0)
-)
-(script static void save_game2
-	(set save 2)
-	(sleep 1)
-	(set save 0)
-)
-(script static void save_game3
-	(set save 3)
-	(sleep 1)
-	(set save 0)
-)
-(script static void save_game4
-	(set save 4)
-	(sleep 1)
-	(set save 0)
-)
-(script static void save_game5
-	(set save 5)
-	(sleep 1)
-	(set save 0)
-)
+
 (script static void load_game1
 	(set load 1)
 	(sleep 1)
@@ -138,8 +115,9 @@
 	(player_enable_input 0)
 	(fade_out 0 0 0 30)
 	(sleep 30)
-	(if (not (= 6 (structure_bsp_index)))
-		(switch_bsp 6)
+	(if (not (= 5 (structure_bsp_index)))
+		(switch_bsp 5)
+		(ai_migrate g_enc_bsp1raiderCave g_enc_bsp2raiderCave)
 	)
 	(sleep 10)
 	(object_teleport (player0) ft_capital)
@@ -154,6 +132,7 @@
 	(sleep 30)
 	(if (not (= 0 (structure_bsp_index)))
 		(switch_bsp 0)
+		(ai_migrate g_enc_bsp2raiderCave g_enc_bsp1raiderCave)
 	)
 	(sleep 10)
 	(object_teleport (player0) bsp1_spawn)
@@ -168,8 +147,9 @@
 	(player_enable_input 0)
 	(fade_out 0 0 0 30)
 	(sleep 30)
-	(if (not (= 6 (structure_bsp_index)))
-		(switch_bsp 6)
+	(if (not (= 5 (structure_bsp_index)))
+		(switch_bsp 5)
+		(ai_migrate g_enc_bsp1raiderCave g_enc_bsp2raiderCave)
 	)
 	(sleep 10)
 	(object_teleport (player0) ft_bar)
@@ -181,8 +161,9 @@
 	(player_enable_input 0)
 	(fade_out 0 0 0 30)
 	(sleep 30)
-	(if (not (= 6 (structure_bsp_index)))
-		(switch_bsp 6)
+	(if (not (= 5 (structure_bsp_index)))
+		(switch_bsp 5)
+		(ai_migrate g_enc_bsp1raiderCave g_enc_bsp2raiderCave)
 	)
 	(sleep 10)
 	(object_teleport (player0) ft_oni)
@@ -204,6 +185,18 @@
 	(fade_in 0 0 0 30)
 )
 
+(script static void ft_woodtown
+	(player_enable_input 0)
+	(fade_out 0 0 0 30)
+	(sleep 30)
+	(if (not (= 6 (structure_bsp_index)))
+		(switch_bsp 6)
+	)
+	(sleep 10)
+	(object_teleport (player0) ft_woodtown)
+	(player_enable_input 1)
+	(fade_in 0 0 0 30)
+)
 
 (script static void overcharged_shields
 	(unit_set_maximum_vitality (player0) 50 150)	;boolean1 health boolean2 shields
@@ -242,7 +235,7 @@
 )
 
 (script startup ambience
-	(fade_in 0 0 0 150)
+	(fade_in 0 0 0 30)
 	(sound_looping_start "sound\music\grounded\menu\menu" none 1)
 	(set cheat_deathless_player 1)
 	(camera_control 1)
@@ -260,15 +253,14 @@
 	(ai_attach surv3 enc_pod1/sqd_crewman)
 	(ai_attach surv4 enc_pod1/sqd_crewman)
 	(object_create_anew_containing "openworld")
-	(object_destroy_containing "cine")
-	(ai_place bsp2_guard)
+	(object_destroy_containing cine)
 	(ai_allegiance "player" "sentinel")
 	(ai_allegiance "player" "human")
 	(sleep 10)
 	(ai_place g_enc_bsp2bar)
 	(ai_place g_enc_bsp1raiderCave)
 	(ai_place bsp3_pod1guard)
-	(ai_attach raider_michael g_enc_bsp1raiderCave/sqd_human2)
+	(ai_attach raider_cave g_enc_bsp1raiderCave/sqd_human2)
 	;(ai_attach elite_guard1 bsp3_pod1guard/sqd_captain)
 	(act1_landing)
 	;================= Predict Sounds =======================

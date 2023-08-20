@@ -58,9 +58,9 @@ end
 --- Attempt to get the counter of an AI encounter
 ---@param encounterName string Name of the encounter in Sapien
 function hsc.aiLivingCount(encounterName)
-    local getAiLivingCountScript = [[(begin (set clua_blabla (ai_living_count "%s")))]]
+    local getAiLivingCountScript = [[(begin (set clua_short1 (ai_living_count "%s")))]]
     execute_script(getAiLivingCountScript:format(encounterName))
-    return get_global("clua_blabla")
+    return get_global("clua_short1")
 end
 
 --- AI Spawning
@@ -70,6 +70,13 @@ end
 function hsc.aiSpawn(type, encounterName)
     local returnType = {"place", "kill", "kill_silent", "erase", "erase_all"}
     execute_script("ai_" .. returnType[type] .. " " .. encounterName)
+end
+
+--- AI Migration
+--- @param1 fromEncounter
+--- @param2 toEncounter
+function hsc.aiMigrate(from, to)
+    execute_script("ai_migrate ".. from .. " " .. to)
 end
 
 --- Magic Sight
@@ -221,6 +228,7 @@ end
 function hsc.soundImpulseStop(source)
     execute_script("sound_impulse_stop " .. source)
 end
+
 
 --- Sound Impulse Time
 ---@param1 Source

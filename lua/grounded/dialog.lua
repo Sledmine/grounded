@@ -47,10 +47,10 @@ function dialog.open(convTable, resetState)
         local widget = blam.uiWidgetDefinition(dialogTag.id)                                                      -- Define dialogTag.id as "widget"
         local options = blam.uiWidgetDefinition(widget.childWidgetsList[2])                                       -- Call the "options" child widget, being in the second slot of the dialogTag 
         local playerResponses = blam.unicodeStringList(playerDialog.id)                                             -- Define playerDialog.id as widgetStrings
-        local npcDialogs = blam.unicodeStringList(characterDialog.id)                                             -- Define chracterDialog.id as npcDialogs
+        local npcDialogs = blam.unicodeStringList(characterDialog.id)                            -- Define chracterDialog.id as npcDialogs
         -- For PLAYER DIALOG
-        local newStrings = {playerResponses.stringList}                                                               -- Defines newStrings as the .stringlist table from WidgetStrings. 
-        options.childWidgetsCount = (#convTable.options)                                                            -- Dynamically generates the number of options
+        local newStrings = {playerResponses.stringList}                                          -- Defines newStrings as the .stringlist table from WidgetStrings. 
+        options.childWidgetsCount = (#convTable.options)                                          -- Dynamically generates the number of options
         for optionIndex, optionText in ipairs(convTable.options) do                                             -- For every child widget in "options" read the unicode strings
             newStrings[optionIndex] = optionText                                                                -- Iterate into each unique string list entry
         end
