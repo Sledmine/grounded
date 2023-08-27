@@ -1,5 +1,5 @@
-local dialog = require "grounded.dialog"
-local hsc = require "grounded.hsc"
+local dialog = require "lua_modules.dialog"
+local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
 
 function testConvReload()
@@ -39,8 +39,7 @@ function fakeConversationScreen(screenInstance)
     if screenInstance == 1 then
         con1_fork1()
     end        
-        
-    end
+    
     return {
     objectName = "",
     npcDialog = { scream.npcText },

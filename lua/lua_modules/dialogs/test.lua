@@ -3,8 +3,8 @@
 ------------------------------------------------------------------------------
 
 --- Declare dependent modules
-local dialog = require "grounded.dialog"
-local hsc = require "grounded.hsc"
+local dialog = require "lua_modules.dialog"
+local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
 
 function exampleConvReload()   -- IMPORTANT - give this function a new name for every conversation. In VSCode, highlight the name and press CTRL+F2 to rename all. If you don't, the conversations will interfere with each other and load conversations from other modules

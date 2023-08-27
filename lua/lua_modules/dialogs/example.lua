@@ -9,8 +9,8 @@
 
 
 --- Declare dependent modules
-local dialog = require "grounded.dialog"
-local hsc = require "grounded.hsc"
+local dialog = require "lua_modules.dialog"
+local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
 
 

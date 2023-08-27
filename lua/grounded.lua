@@ -13,10 +13,10 @@ debug = require "debug"
 -- Provide global and short syntax for multiple tag classes references
 tagClasses = blam.tagClasses
 objectClasses = blam.objectClasses
-local hsc = require "grounded.hsc"
-local core = require "grounded.core"
-local interface = require "grounded.interface"
-local dialog = require "grounded.dialog"
+local hsc = require "lua_modules.hsc"
+local core = require "lua_modules.core"
+local interface = require "lua_modules.interface"
+local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
 
 --chimera.fontOverride()
@@ -89,16 +89,15 @@ forbesStatus = 0
 ------------------------------------------------------------------------------
 --- Conversations
 ------------------------------------------------------------------------------
-require "grounded.dialogs.forbes.forbesConv1"
-require "grounded.dialogs.forbes.forbes_side1"
-require "grounded.dialogs.test_noComments"
-require "grounded.dialogs.ltPatterson"
-require "grounded.dialogs.wright.wrightConv1"
-require "grounded.journal.perksTemplate"
-require "grounded.journal.journalForReal"
-require "grounded.dialogs.single_event.engineerHayden"
-require "grounded.dialogs.raiders.raiderCave_betasidemission"
-require "grounded.dialogs.young.young1"
+require "lua_modules.dialogs.forbes"
+--require "grounded.dialogs.test_noComments"
+require "lua_modules.dialogs.ltPatterson"
+require "lua_modules.dialogs.wright"
+require "lua_modules.journal.perksTemplate"
+require "lua_modules.journal.journalForReal"
+require "lua_modules.dialogs.single_event.engineerHayden"
+require "lua_modules.dialogs.raiders.raiderCave_betasidemission"
+require "lua_modules.dialogs.young"
 
 function journalOption(selection)
     local instance = {}
@@ -227,9 +226,21 @@ factions = {
 }
 
 relationships = {
-    factions.unsc.relationship,
-    factions.republic.relationship,
-    factions.covenant.relationship,
+    unsc = factions.unsc.relationship,
+    republic = factions.republic.relationship,
+    covenant = factions.covenant.relationship,
+}
+
+missions = {
+  unsc = factions.unsc.mission,
+  republic = factions.republic.mission,
+  covenant = factions.covenant.mission,
+}
+
+members = {
+  unsc = factions.unsc.members,
+  republic = factions.republic.members,
+  covenant = factions.covenant.members,
 }
 
 activeConversation = false
@@ -244,8 +255,9 @@ function medicalSupplies()
         if ((ai[1] == 0) and (ai[2] == 0) and (unsc.mission.clearOut.event == 0)) then
             unsc.mission.clearOut.resolved = true
             unsc.mission.clearOut.event = 1
+            missions.republic.medicalSupplies.event = -1
             factions.republic.relationship = republic.relationship - 1
-            console_out("You killed them all!")
+            --console_out("You killed them all!")
         end
     end
 end
@@ -375,9 +387,10 @@ function OnTick()
             unitName = "forbes",
             promptMessage = "Press \"E\" to talk to Sergeant Forbes",
             action = function()
-                if (get_global("unsc_quests") < 1) then
-                    dialog.open(forbesSideScreen1(convShort), true)
-                end
+              dialog.open(forbesSideScreen1(convShort), true)
+              if (missions.unsc.clearOut.resolved == true) or (missions.republic.medicalSupplies.resolved == true) then
+                dialog.open(forbesSideScreen2(convShort), true)
+              end
             end
         }, -- forbes
         {  -- Elite Captain
@@ -481,13 +494,22 @@ function OnTick()
                         --if (tag and tag.path:find(conversation.unitName)) then
                         if (objectName == conversation.unitName) then
                             if (core.playerIsNearTo(object, 0.7)) then
-                                interface.promptHud(conversation.promptMessage)
+                              if (object.type == objectClasses.biped) then
+                                if (hsc.unitGetHealth(objectName) > 0) then
+                                  interface.promptHud(conversation.promptMessage)
+                                elseif (hsc.unitGetHealth(objectName) == 0) then
+                                  interface.promptHud("")
+                                end
+                              elseif (object.type == objectClasses.control) then
+                              interface.promptHud(conversation.promptMessage)
                                 if (playerBiped.actionKey) then
                                     conversation.action()
                                 end
+                              end
                             elseif (core.playerIsNearTo(object, 0.8)) then
                                 interface.promptHud("")
                             end
+
                         end
                     end
                 end
@@ -932,7 +954,7 @@ function on_key_press(modifiers, character, keycode)
     end
     if (character == "k") then
         -- Cancel event
-        dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
+        missions.unsc.clearOut.active = false
         return false
     end
     if (character == "+") then
@@ -940,7 +962,7 @@ function on_key_press(modifiers, character, keycode)
         hsc.showHud(1)
     end
     if (character == "p") then
-        factions.republic.relationship = 0
+        missions.unsc.clearOut.resolved = true
     end
     if (keycode == 5) then -- F5
         execute_script("core_save")
