@@ -1,6 +1,10 @@
 local dialog = require "lua_modules.dialog"
 local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
+local optic = harmony.optic
+
+local forbesSpeech = optic.create_audio_engine()
+
 
 local scream = {}
 
@@ -9,12 +13,11 @@ local scream = {}
 ------------------------------------------------------------------------------
 function forbesOpenAgainPlease()
   dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
-  stop_timer(periodic)
+  hsc.soundImpulseStop(scream.activeTrack)
 end
 
 function forbes_side2Reload()
   dialog.open(forbesSideScreen2(get_global("conv_short1")), true)
-  stop_timer(periodic)
 end
 
 ------------------------------------------------------------------------------
@@ -95,12 +98,15 @@ function forbesSideScreen1(screenInstance)
     "Let's begin with the Raiders, then we can take care of the rot on the other side of the wall.", -- 28  forbesCon1_forkInvWar3
     "Of course you would say that. Don't come back unless you've dealt with the raiders.", -- 29 forbesCon1_aggroAccept
   }
+  local forbesDialogArray = {
+    "sound\\dialog\\forbes\\tts\\sidescreen1\\npc1",
+  }
   local forbesCon1_actionsArray = {
       function()  -- 1       -> forbesCon1_fork2
           set_global("conv_short1", 2)
           factions.unsc.mission.clearOut.active = true
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 2       -> END CONVERSATION
@@ -112,94 +118,94 @@ function forbesSideScreen1(screenInstance)
       function()  -- 3        -> forbeCon1_fork5
           set_global("conv_short1", 3)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 4        -> forbeCon1_fork3
           set_global("conv_short1", 4)
           relationship = 1
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 5        -> forbeCon1_forkInv
           set_global("conv_short1", 5)
           relationship = 1
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 6        -> forbeCon1_fork4
           set_global("conv_short1", 6)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 7        -> forbeCon1_forkInv1
           set_global("conv_short1", 7)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 8        -> forbeCon1_forkInv1.1
           set_global("conv_short1", 8)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 9        -> forbeCon1_forkInv3
           set_global("conv_short1", 9)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 10        -> forbeCon1_forkInvDesert
           set_global("conv_short1", 10)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 11        -> forbeCon1_fork6     AKA convBadEnding
           set_global("conv_short1", 11)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 12        -> forbeCon1_forkInvAnimals
           set_global("conv_short1", 12)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 13        -> forbeCon1_forkInv2
           set_global("conv_short1", 13)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 14        -> forbeCon1_forkInv5
           set_global("conv_short1", 14)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 15        -> forbeCon1_forkInv6
           set_global("conv_short1", 15)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 16        -> forbeCon1_forkInvDisgust
           set_global("conv_short1", 16)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 17        -> forbeCon1_aggro
           set_global("conv_short1", 17)
           relationship = -1
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 18        -> forbeCon1_aggro acceptEnding
@@ -218,37 +224,37 @@ function forbesSideScreen1(screenInstance)
       function()  -- 20        -> forbeCon1_forkInvAlien
           set_global("conv_short1", 20)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 21        -> forbeCon1_forkInv7
           set_global("conv_short1", 21)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 22        -> forbeCon1_forkInv8
           set_global("conv_short1", 22)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 23        -> forbeCon1_forkInvWar1
           set_global("conv_short1", 23)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 24        -> forbeCon1_forkInvWar2
           set_global("conv_short1", 24)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
       --======================================================================--
       function()  -- 25        -> forbeCon1_forkInvWar3
           set_global("conv_short1", 25)
           harmony.menu.close_widget()
-          periodic = set_timer(2, "forbesOpenAgainPlease", "")
+          forbesOpenAgainPlease()
       end,
   }
   ------------------------------------------------------------------------------
@@ -287,11 +293,12 @@ function forbesSideScreen1(screenInstance)
           end
           ------------------------------------------------------------------------------
       elseif screenInstance == 1 then -- forbesCon1_fork1
-        scream.npcDialog = "sound\\dialog\\forbes\\tts\\sidescreen1\\npc1"
-          scream.npcText = forbesCon1_npcArray[1]
-          scream.playerResponses = { forbesCon1_playerArray[1], forbesCon1_playerArray[2], forbesCon1_playerArray[3] }
-          scream.playerActions = { forbesCon1_actionsArray[1], forbesCon1_actionsArray[5], forbesCon1_actionsArray[4] }
-          ----console_out("forbesCon1_fork1")
+        hsc.soundImpulseStart(forbesDialogArray[1], "forbes", 0.7)
+        scream.activeTrack = forbesDialogArray[1]
+        scream.npcText = forbesCon1_npcArray[1]
+        scream.playerResponses = { forbesCon1_playerArray[1], forbesCon1_playerArray[2], forbesCon1_playerArray[3] }
+        scream.playerActions = { forbesCon1_actionsArray[1], forbesCon1_actionsArray[5], forbesCon1_actionsArray[4] }
+        ----console_out("forbesCon1_fork1")
       end
   end
 
@@ -598,7 +605,8 @@ function forbesSideScreen1(screenInstance)
   end
 
   return {
-      objectName = "",
+      objectName = "forbes",
+      npcSpeech = hsc.soundImpulseStart(scream.activeTrack, "forbes", 0.7),
       npcDialog = { scream.npcText },
       options = {
           scream.playerResponses[1],

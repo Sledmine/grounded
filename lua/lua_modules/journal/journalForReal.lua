@@ -1,66 +1,44 @@
 local dialog = require "lua_modules.dialog"
 local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
-perksSelect = 0
--- We re-use the dialog templates for perks & journal stuff
 
 function journalLoader()
-    if (perksSelect < 2) then
-        dialog.journal(journalScreen(get_global("journal_short1")), true)
-        stop_timer(periodic)
-    end
+  dialog.journal(journalScreen(selectedMission), true)
+  --stop_timer(periodic)
 end
 ------------------------------------------------------------------------------
 --- Table Definitions
 ------------------------------------------------------------------------------
 function journalScreen(screenInstance)
-    local questNames = {          -- TITLES or in this case, PERK NAMES              
-        "It Reaches Out", -- 1
-        "Floating Tin Can", -- 2
-        }
-    local questBody = {      -- BODY TEXT
-        "Something has pulled the Biri out of slipspace and disabled the drive. The Biri is currently \non a collision course for Byellee Colony. \n \n - Evacuate Engineering \n - Evacuate Medical \n - Get to the Surface", 
-        "Engineer Hayden needs your help to prevent the reactor from flooding the ship with radiation \non contact with the atmosphere. \n \n - Activate Manual Overrides \n - Report back to Engineer Hayden", -- 2
-
+  if #activeMission < 1 then        
+    local empty = {
+      name = "No Quests Active",
+      description = "You do not currently have any active quests.",
+        action = function()
+          selectedMission = "No Quests Active"
+          harmony.menu.close_widget()
+          journalLoader()
+          --periodic = set_timer(0.1, "journalLoader", "")                
+        end,
+        active = true,
+        resolved = false,
+        event = 0,
     }
-    local actionsArray = {                        
-        function()                         
-            set_global("journal_short1", 1)
-            harmony.menu.close_widget()
-            periodic = set_timer(2, "journalLoader", "")   
-        end,
-        function() 
-            set_global("journal_short1", 2)
-            harmony.menu.close_widget()
-            periodic = set_timer(2, "journalLoader", "") 
-        end,
-        function()
-            set_global("journal_short1", 3)
-            harmony.menu.close_widget()
-            periodic = set_timer(2, "journalLoader", "") 
-        end,
-        function()
-            set_global("journal_short1", 4)
-            harmony.menu.close_widget()
-            periodic = set_timer(2, "journalLoader", "") 
-        end,
-        function()
-            set_global("journal_short1", 1)
-            harmony.menu.close_widget()
-            periodic = set_timer(2, "journalLoader", "") 
-        end,
-    }
-    local journalOut = {}
-    if screenInstance == 1 then
-        journalOut.questText = questBody[1]        -- BODY TEXT
-        journalOut.questTitles = {questNames[1]}
-        journalOut.playerActions = {actionsArray[1],} 
-    elseif screenInstance == 2 then
-        journalOut.questText = questBody[1]        -- BODY TEXT
-        journalOut.questTitles = {questNames[1], questNames[2], }
-        journalOut.playerActions = {actionsArray[1], actionsArray[2], } 
+    table.insert(activeMission, 1, empty)
+    --console_out("inserted " .. name .. " into " .. k)
+  end
+  local journalOut = {}
+  journalOut.questText = ""      
+  journalOut.questTitles = {}      
+  journalOut.playerAction = {}
+  for i = 1, #activeMission do
+    table.insert(journalOut.questTitles, activeMission[i].name)
+    table.insert(journalOut.playerAction, activeMission[i].action)
+    if screenInstance == activeMission[i].name then
+      journalOut.questText = activeMission[i].description
     end
-    return {
+  end
+  return {
     questBody = {journalOut.questText},
     questTitle = {
         journalOut.questTitles[1],
@@ -70,11 +48,10 @@ function journalScreen(screenInstance)
     },
     -- Used to store functions
     actions = {
-        journalOut.playerActions[1],
-        journalOut.playerActions[2],
-        journalOut.playerActions[3],
-        journalOut.playerActions[4],
+        journalOut.playerAction[1],
+        journalOut.playerAction[2],
+        journalOut.playerAction[3],
+        journalOut.playerAction[4],
     }
-}
-
+  }
 end

@@ -35,9 +35,9 @@ function dialog.open(convTable, resetState)
 ------------------------------------------------------------------------------
 --- References
 ------------------------------------------------------------------------------
-    local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)            -- Creates a reference to the global menu for Dynamic Conversations
-    local playerDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)       -- Creates a reference to strings used for Character Dialog
-    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)             -- Creates a reference to strings used for NPCs
+    local dialogTag = blam.getTag([[ui\conversation\dynamic_conversation\dynamic_conversation_menu]], tagClasses.uiWidgetDefinition)
+    local playerDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\dynamic_strings]], tagClasses.unicodeStringList)       
+    local characterDialog = blam.getTag([[ui\conversation\dynamic_conversation\strings\npc_strings]], tagClasses.unicodeStringList)  
 ------------------------------------------------------------------------------
 --- Read the current tags
 ------------------------------------------------------------------------------
@@ -116,15 +116,15 @@ function dialog.journal(journalInstance, resetState)
         local titles = blam.uiWidgetDefinition(widget.childWidgetsList[1])
         local activeQuest = blam.unicodeStringList(questTitle.id)
         local questStrings = blam.unicodeStringList(questBody.id)
-        -- For PLAYER DIALOG
-        local newTitles = activeQuest.stringList                                                              
-        titles.childWidgetsCount = (#journalInstance.questTitle)                                                   
+        -------------------------
+        local newTitles = {activeQuest.stringList}                                                             
+        titles.childWidgetsCount = (#journalInstance.questTitle)
         for titleIndex, titleText in ipairs(journalInstance.questTitle) do
             newTitles[titleIndex] = titleText
+            --console_out(newTitles[titleIndex])
         end
-        
-        -- For NPC DIALOG
-       local newBody = questStrings.stringList                                                
+
+       local newBody = {questStrings.stringList}                                                
         for questStringsIndex, questStringsText in ipairs(journalInstance.questBody) do                                    
             newBody[questStringsIndex] = questStringsText
         end
@@ -136,6 +136,7 @@ function dialog.journal(journalInstance, resetState)
         -- Update the old strings with our new updated copy
         activeQuest.stringList = newTitles
         questStrings.stringList = newBody
+        local tableSize = (#journalInstance.questTitle)
         local success = load_ui_widget(masterJournal.path)  
         if (not success) then
             console_out("A problem occurred at loading the dialog widget!")
@@ -147,6 +148,16 @@ end
 ------------------------------------------------------------------------------
 --- End of function
 ------------------------------------------------------------------------------
+
+function dialog.saving(saveScreen, resetState)
+  if (resetState) then
+    dialogState = {
+      currentDialog = nil,
+      history = {}
+    }
+  end
+
+end
 
 function dialog.back()
     if (#dialogState.history > 1) then

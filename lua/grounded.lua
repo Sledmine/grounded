@@ -18,23 +18,7 @@ local core = require "lua_modules.core"
 local interface = require "lua_modules.interface"
 local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
-
---chimera.fontOverride()
-----------------------
---- Harmony Functions
-----------------------
---[[function createSound(string)
-    local directory_source = harmony.optic.create_sound(string)
-    return directory_source
-end
-
-function createAudioEngine()
-    local instance = harmony.optic.create_audio_engine()
-    return instance
-end]]
-
---local cursor = harmony.menu.set_cursor_scale(0.65)
--- Array for fast travel devices
+local optic = harmony.optic
 local device_positions = {
     {
         type = 2,
@@ -65,26 +49,18 @@ landingCleanup = 0
 local menuOpened = 1
 newGame = blam.getTag([[ui\grounded\new_campaign]], tagClasses.uiWidgetDefinition)
 continue = blam.getTag("ui\\grounded\\continue", tagClasses.uiWidgetDefinition)
-decision1 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_1]], tagClasses.uiWidgetDefinition)
-decision2 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_2]], tagClasses.uiWidgetDefinition)
-decision3 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_3]], tagClasses.uiWidgetDefinition)
-decision4 = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_4]], tagClasses.uiWidgetDefinition)
-saveMaster = blam.getTag([[ui\checkpoints\savegames]], tagClasses.uiWidgetDefinition)
+saveMaster = blam.getTag([[ui\checkpoints\savegames]], tagClasses.uiWidgetDefinition) -- This is the button, not the master screen
 loadMaster = blam.getTag([[ui\checkpoints\checkpoint_loadgames]], tagClasses.uiWidgetDefinition)
-save1 = blam.getTag("ui\\checkpoints\\save1", tagClasses.uiWidgetDefinition)
-save2 = blam.getTag("ui\\checkpoints\\save2", tagClasses.uiWidgetDefinition)
-save3 = blam.getTag("ui\\checkpoints\\save3", tagClasses.uiWidgetDefinition)
-save4 = blam.getTag("ui\\checkpoints\\save4", tagClasses.uiWidgetDefinition)
-save5 = blam.getTag("ui\\checkpoints\\save5", tagClasses.uiWidgetDefinition)
-load1 = blam.getTag("ui\\checkpoints\\load1", tagClasses.uiWidgetDefinition)
-load2 = blam.getTag("ui\\checkpoints\\load2", tagClasses.uiWidgetDefinition)
-load3 = blam.getTag("ui\\checkpoints\\load3", tagClasses.uiWidgetDefinition)
-load4 = blam.getTag("ui\\checkpoints\\load4", tagClasses.uiWidgetDefinition)
-load5 = blam.getTag("ui\\checkpoints\\load5", tagClasses.uiWidgetDefinition)
-
+profileEdit = blam.getTag([[ui\shell\main_menu\settings_select\player_setup\player_profile_edit\name_profile_item]], tagClasses.uiWidgetDefinition)
+journalTag = blam.getTag([[ui\journal\btn_journal_pausescreen]], tagClasses.uiWidgetDefinition)
+save1 = blam.getTag([[ui\checkpoints\save1]], tagClasses.uiWidgetDefinition)
+save2 = blam.getTag([[ui\checkpoints\save2]], tagClasses.uiWidgetDefinition)
+save3 = blam.getTag([[ui\checkpoints\save3]], tagClasses.uiWidgetDefinition)
+save4 = blam.getTag([[ui\checkpoints\save4]], tagClasses.uiWidgetDefinition)
+save5 = blam.getTag([[ui\checkpoints\save5]], tagClasses.uiWidgetDefinition)
 engineersSaved = 0
 landed = 0
-forbesStatus = 0
+conversation = false
 
 ------------------------------------------------------------------------------
 --- Conversations
@@ -101,8 +77,7 @@ require "lua_modules.dialogs.young"
 
 function journalOption(selection)
     local instance = {}
-    instance.decisionID = (blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition))
-        .id
+    instance.decisionID = (blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)).id
     return instance
 end
 
@@ -138,6 +113,7 @@ function modularPromptHog()
     end
 end
 
+
 --harmony.menu.set_cursor_scale(0.65)
 --harmony.menu.set_aspect_ratio(16, 9)
 
@@ -163,17 +139,35 @@ function letterbox(boolean)
     hsc.cinematicLetterbox(0)
 end
 
+function missionSelector(mission)
+  for i = 1, #activeMission do
+    if activeMission[i].name == mission then
+      table.remove(activeMission[i], i)
+    end
+  end
+end
+
 local aiStuff = true
+selectedMission = ""
 
 factions = {
     unsc = {
         relationship = 1,
         mission = {
             clearOut = {
+                name = "Clear Out",
+                description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
+                action = function()
+                  selectedMission = "Clear Out"
+                  missionSelector(selectedMission)
+                  harmony.menu.close_widget()
+                  journalLoader()
+                  --periodic = set_timer(0.1, "journalLoader", "")                
+                end,
                 active = false,
                 resolved = false,
                 event = 0,
-            }
+            },
         },
         members = {
             forbes = {
@@ -189,6 +183,15 @@ factions = {
         relationship = 1,
         mission = {
             medicalSupplies = {
+                name = "Supply Run",
+                description = "Secretary General Wright has asked you to source some medical supplies.",
+                action = function()
+                  selectedMission = "Supply Run"
+                  missionSelector(selectedMission)
+                  harmony.menu.close_widget()   
+                  journalLoader() 
+                  --periodic = set_timer(0.1, "journalLoader", "")             
+                end,
                 active = false,
                 resolved = false,
                 event = 0,
@@ -208,6 +211,13 @@ factions = {
         relationship = 1,
         mission = {
             honestwork = {
+                name = "Honest Work",
+                description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
+                action = function()
+                  selectedMission = "Honest Work"
+                  harmony.menu.close_widget()     
+                  periodic = set_timer(2, "journalLoader", "")                
+                end,
                 active = false,
                 resolved = false,
                 event = 0,
@@ -243,16 +253,34 @@ members = {
   covenant = factions.covenant.members,
 }
 
-activeConversation = false
+activeMission = {
+  {
+    name = "It Reaches Out",
+    description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+    action = function()
+      selectedMission = "It Reaches Out"
+      harmony.menu.close_widget()
+      journalLoader()
+      --periodic = set_timer(0.1, "journalLoader", "")                
+    end,
+    active = true,
+    resolved = false,
+    event = 0,
+  },
+}
 
+activeConversation = false
 
 function medicalSupplies()
     local unsc = factions.unsc
     local republic = factions.republic
     local covenant = factions.covenant
-    local ai = { hsc.aiLivingCount("g_enc_bsp1raiderCave"), hsc.aiLivingCount("g_enc_bsp2raiderCave") }
+    local ai = {
+      bsp1 = hsc.aiLivingCount("g_enc_bsp1raiderCave"),
+      bsp2 = hsc.aiLivingCount("g_enc_bsp2raiderCave"),
+    }
     if (unsc.mission.clearOut.active) then
-        if ((ai[1] == 0) and (ai[2] == 0) and (unsc.mission.clearOut.event == 0)) then
+        if ((ai.bsp1 == 0) and (ai.bsp2 == 0) and (unsc.mission.clearOut.event == 0)) then
             unsc.mission.clearOut.resolved = true
             unsc.mission.clearOut.event = 1
             missions.republic.medicalSupplies.event = -1
@@ -262,12 +290,25 @@ function medicalSupplies()
     end
 end
 
+function forbesHealth()
+  local scenario = blam.scenario()
+  local forbesHealth = hsc.unitGetHealth("forbes")
+  for _, objectIndex in ipairs(blam.getObjects()) do
+    local object = blam.getObject(objectIndex)
+    local objectName = scenario.objectNames[objectIndex + 1]
+  end
+  if forbesHealth < 1 then
+    --console_out("forbes health is less than 1")
+  end
+end
+
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
     ------------------------------------------------------------------------------
     --- On Tick Globals
     ------------------------------------------------------------------------------
     finalReactorPos = reactor1pos + reactor2pos + reactor3pos
+    --forbesHealth()
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
     --local hogRepair = (scenario.tagNames[27])
@@ -387,12 +428,15 @@ function OnTick()
             unitName = "forbes",
             promptMessage = "Press \"E\" to talk to Sergeant Forbes",
             action = function()
-              dialog.open(forbesSideScreen1(convShort), true)
+              medicalSupplies()
+              if (members.unsc.forbes.met == false) or (missions.unsc.clearOut.active == true) then
+                dialog.open(forbesSideScreen1(convShort), true)
+              end
               if (missions.unsc.clearOut.resolved == true) or (missions.republic.medicalSupplies.resolved == true) then
                 dialog.open(forbesSideScreen2(convShort), true)
               end
             end
-        }, -- forbes
+        },
         {  -- Elite Captain
             unitName = "guard1",
             promptMessage = "Press \"E\" to talk to Elite Captain",
@@ -415,19 +459,20 @@ function OnTick()
             unitName = "wright",
             promptMessage = "Press \"E\" to talk to Judith Wright",
             action = function()
-                local republic = factions.republic
-                local unsc = factions.unsc
-                local wrightMet = factions.republic.members.wright.met
-                activeConversation = true
-                if (not (wrightMet)) and (republic.relationship == 1) then
-                    dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
-                    factions.republic.members.wright.met = true
-                elseif (republic.relationship < 1) then
-                    dialog.open(wrightAntagConv(get_global("conv_short1")), true)
-                elseif (republic.mission.medicalSupplies.active) then
-                    dialog.open(wrightConv2Screen(get_global("conv_short1")))
-                    --console_out(republic.mission.medicalSupplies.active)
-                end
+              medicalSupplies()
+              local republic = factions.republic
+              local unsc = factions.unsc
+              local wrightMet = factions.republic.members.wright.met
+              activeConversation = true
+              if (not (wrightMet)) and (republic.relationship == 1) then
+                dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
+                factions.republic.members.wright.met = true
+              elseif (republic.relationship < 1) then
+                dialog.open(wrightAntagConv(get_global("conv_short1")), true)
+              elseif (republic.mission.medicalSupplies.active) then
+                dialog.open(wrightConv2Screen(get_global("conv_short1")))
+                --console_out(republic.mission.medicalSupplies.active)
+              end
             end
         },
         { -- Cave Raider
@@ -446,7 +491,7 @@ function OnTick()
         },
         { -- Doctor Young
             unitName = "young",
-            promptMessage = "Press\"E\" to talk to Doctor Sinclair",
+            promptMessage = "Press\"E\" to talk to Doctor Young",
             action = function()
                 dialog.open(youngConv1(get_global("conv_short1")))
             end
@@ -455,12 +500,45 @@ function OnTick()
     ------------------------------------------------------------------------------
     --- Journal
     ------------------------------------------------------------------------------
+
+    if (playerBiped) then
+      for faction, _ in pairs(missions) do
+        for _, v in pairs(missions[faction]) do
+          local name = v.name
+          local active = v.active
+          if (active) then
+            local check = false
+            for _, missionName in pairs(activeMission) do
+              for _, line in pairs(missionName) do
+                if line == name then
+                  check = true
+                end
+              end
+            end
+            if not (check) then
+              if (activeMission[1].active) then
+                activeMission[1].active = false
+              end
+              table.insert(activeMission, 1, v)
+              selectedMission = v.name
+              --console_out("inserted " .. name)
+            end
+          end
+        end
+      end
+      if #activeMission > 0 then
+        for k, v in pairs(activeMission) do
+          if v.active == false then
+            table.remove(activeMission, k)
+            --console_out("removed " .. v.name)
+          end
+        end
+      end
+    end
     ------------------------------------------------------------------------------
     --- Missions
     ------------------------------------------------------------------------------
-    if (unscMission.clearOut.active and (not unscMission.clearOut.resolved)) or (repMission.medicalSupplies.active and (not repMission.medicalSupplies.resolved)) then
-        medicalSupplies()
-    end
+  
     ------------------------------------------------------------------------------
     --- Interaction System
     ------------------------------------------------------------------------------
@@ -486,35 +564,37 @@ function OnTick()
             end
         end
         if (not (activeConversation)) then
-            if (object and object.type == objectClasses.control or object.type == objectClasses.biped) then
-                if (not blam.isNull(object.nameIndex)) then
-                    local objectName = scenario.objectNames[object.nameIndex + 1]
-                    --console_out(objectName)
-                    for _, conversation in pairs(conversations) do
-                        --if (tag and tag.path:find(conversation.unitName)) then
-                        if (objectName == conversation.unitName) then
-                            if (core.playerIsNearTo(object, 0.7)) then
-                              if (object.type == objectClasses.biped) then
-                                if (hsc.unitGetHealth(objectName) > 0) then
-                                  interface.promptHud(conversation.promptMessage)
-                                elseif (hsc.unitGetHealth(objectName) == 0) then
-                                  interface.promptHud("")
-                                end
-                              elseif (object.type == objectClasses.control) then
-                              interface.promptHud(conversation.promptMessage)
-                                if (playerBiped.actionKey) then
-                                    conversation.action()
-                                end
-                              end
-                            elseif (core.playerIsNearTo(object, 0.8)) then
-                                interface.promptHud("")
-                            end
-
+          if (object and object.type == objectClasses.control or object.type == objectClasses.biped) then
+            if (not blam.isNull(object.nameIndex)) then
+              local objectName = scenario.objectNames[object.nameIndex + 1]
+              --console_out(objectName)
+              for _, conversation in pairs(conversations) do
+                --if (tag and tag.path:find(conversation.unitName)) then
+                if (objectName == conversation.unitName) then
+                  if (core.playerIsNearTo(object, 0.7)) then
+                    if (object.type == objectClasses.biped) then
+                      if (hsc.unitGetHealth(objectName) > 0) then
+                        interface.promptHud(conversation.promptMessage)
+                        if (playerBiped.actionKey) then
+                          conversation.action()
                         end
+                      elseif (hsc.unitGetHealth(objectName) == 0) then
+                        interface.promptHud("")
+                      end
+                    elseif (object.type == objectClasses.control) then
+                    interface.promptHud(conversation.promptMessage)
+                      if (playerBiped.actionKey) then
+                          conversation.action()
+                      end
                     end
+                  elseif (core.playerIsNearTo(object, 0.8)) then
+                      interface.promptHud("")
+                  end
                 end
+              end
             end
-          else 
+          end
+        else 
             conversations.promptMessage = ""
         end
     end
@@ -564,6 +644,7 @@ function OnTick()
     if not (get_global("openingmenu")) then
         if (menuOpened == 1) then
             campaignWidgetLoaded = load_ui_widget("ui\\grounded\\main_menu")
+            hsc.objectCreate("motor")
             menuOpened = 0
         end
     end
@@ -850,8 +931,10 @@ function journalSelect(selection)
         local action = currentDialog.actions[selection]
         if (action) then
             if (type(action) == "table") then
-                dialog.open(action)
+              --console_out("opening as table")
+                dialog.journal(action)
             elseif (type(action) == "function") then
+                --console_out("opening as function")
                 action()
             end
         end
@@ -881,51 +964,56 @@ function on_widget_accept(widget_handle)
     --console_out(newGame.id)
 
     -- Conversation Widgets
-    if (widgetTagId == decision1.id) then
-        optionSelect(1)
-    elseif (widgetTagId == decision2.id) then
-        optionSelect(2)
-    elseif (widgetTagId == decision3.id) then
-        optionSelect(3)
-    elseif (widgetTagId == decision4.id) then
-        optionSelect(4)
+    for i = 1, 4 do
+      local decision = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_]] .. i, tagClasses.uiWidgetDefinition)
+      if decision then
+        if widgetTagId == decision.id then
+          optionSelect(i)
+        end        
+      end
     end
-
     -- Journal Widgets
-    if (widgetTagId == journalOption(1).decisionID) then
-        journalSelect(1)
-    elseif (widgetTagId == journalOption(2).decisionID) then
-        journalSelect(2)
-    elseif (widgetTagId == journalOption(3).decisionID) then
-        journalSelect(3)
-        --console_out(widgetTagId)
-    elseif (widgetTagId == journalOption(4).decisionID) then
-        journalSelect(4)
-        --console_out(widgetTagId)
+    for i = 1, 12 do
+      local decision = blam.getTag("ui\\journal\\options\\decision_" .. i, tagClasses.uiWidgetDefinition)
+      if decision then
+        if widgetTagId == decision.id then
+          journalSelect(i)
+        end
+      end
     end
-    --[[
+    if (widgetTagId == journalTag.id) then
+      dialog.journal(journalScreen(selectedMission), true)
+    end
     -- Saving/Loading
-    if (widgetTagId == saveMaster.id) then
-        saveWidget = load_ui_widget("ui\\checkpoints\\checkpoint_master_save")
-        console_out(widgetTagId)
+    if (widgetTagId == saveMaster.id) then        
+      harmony.menu.close_widget()
+      saveScreen = load_ui_widget("ui\\checkpoints\\checkpoint_master_save")
+      --console_out(widgetTagId)
+    end
+    if (widgetTagId) then
+      --console_out(widgetTagId)
     end
     if (widgetTagId == save1.id) then
         set_global("save", 1)
-        console_out(widgetTagId)
+        harmony.menu.close_widget()
+        --console_out(widgetTagId)
     elseif (widgetTagId == save2.id) then
         set_global("save", 2)
-        console_out(widgetTagId)
+        harmony.menu.close_widget()
+        --console_out(widgetTagId)
     elseif (widgetTagId == save3.id) then
         set_global("save", 3)
-        console_out(widgetTagId)
+        harmony.menu.close_widget()
+        --console_out(widgetTagId)
     elseif (widgetTagId == save4.id) then
         set_global("save", 4)
-        console_out(widgetTagId)
+        harmony.menu.close_widget()
+        --console_out(widgetTagId)
     elseif (widgetTagId == save5.id) then
         set_global("save", 5)
-        console_out(widgetTagId)
+        harmony.menu.close_widget()
+        --console_out(widgetTagId)
     end
-    console_out(widgetTagId)]]
     --console_out(widgetTagId)
     --console_out(save(1).slotID)
     return true -- must keep "return true" or else you will disable the menu buttons all throughout the game
@@ -949,21 +1037,34 @@ function on_key_press(modifiers, character, keycode)
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
-        dialog.open(youngConv1(get_global("conv_short1")), true)
-        return false
+        dialog.journal(journalScreen(selectedMission), true)
     end
+
+    if (character == "p") then
+      activeMission.starter.active = false
+    end
+    if (character == "o") then
+      missions.republic.medicalSupplies.active = true
+    end
+
     if (character == "k") then
-        -- Cancel event
-        missions.unsc.clearOut.active = false
-        return false
+      local exists = file_exists([[saves\player.json]])
+      local playerName = blam.player(get_dynamic_player()).name
+      if exists then
+        local written = write_file([[saves\player.json]], "{hello world}")
+        local content = read_file([[saves\player.json]])
+        console_out(content)
+        --load_ui_widget([[ui\shell\main_menu\settings_select\player_setup\player_profile_edit\profile_label]])
+      else
+        console_out("didn't work")
+      end
     end
+
     if (character == "+") then
         harmony.menu.close_widget()
         hsc.showHud(1)
     end
-    if (character == "p") then
-        missions.unsc.clearOut.resolved = true
-    end
+
     if (keycode == 5) then -- F5
         execute_script("core_save")
         hud_message("     Quicksaving...")
@@ -986,6 +1087,7 @@ function on_key_press(modifiers, character, keycode)
     end
     if keycode == 66 then
         harmony.menu.close_widget()
+        console_out(keycode)
     end
     --console_out(keycode)  -- DEBUG for trying to find key codes
     return true

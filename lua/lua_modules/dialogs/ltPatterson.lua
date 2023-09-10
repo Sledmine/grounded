@@ -63,7 +63,6 @@ function patScreen(screenInstance)
         end,
         function ()                         -- 5 GOOD ENDING
             set_global("conv_short1", 1)
-            set_global("patterson", 1)
             hsc.activateNav(2, "(player0)", "repair_hog", 1)
             hsc.activateNav(2, "(player0)", "motor", 1)
             harmony.menu.close_widget()

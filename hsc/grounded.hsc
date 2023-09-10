@@ -34,6 +34,7 @@
 (global short republic_status 0)
 ; And now, for something completely different.
 
+
 (script continuous starting_loop
 	(if (= openingmenu false)
 		(begin

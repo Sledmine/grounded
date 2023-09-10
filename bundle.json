@@ -13,6 +13,7 @@
       "lua_modules.hsc",
       "lua_modules.ini",
       "lua_modules.interface",
+      "lua_modules.JSON",
       "lua_modules.dialogs.conv_blank",
       "lua_modules.dialogs.example",
       "lua_modules.dialogs.forbes",
