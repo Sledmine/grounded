@@ -606,7 +606,11 @@ function forbesSideScreen1(screenInstance)
 
   return {
       objectName = "forbes",
-      npcSpeech = hsc.soundImpulseStart(scream.activeTrack, "forbes", 0.7),
+      npcSpeech = function ()
+        if not (scream.activeTrack == nil) then
+          hsc.soundImpulseStart(scream.activeTrack, "forbes", 0.7)
+        end
+      end,
       npcDialog = { scream.npcText },
       options = {
           scream.playerResponses[1],

@@ -104,7 +104,7 @@ function youngConv1(screenInstance)
         function () 
             set_global("conv_short1", 1)  -- young_con1_forkWright_Accept END
             harmony.menu.close_widget()
-            table.insert(factions, factions.unsc.mission.flowerPicking)
+            factions.unsc.mission.doctorsOrders.active = true
             activeConversation = false
             execute_script("show_hud 1")
         end,

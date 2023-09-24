@@ -20,6 +20,8 @@
       "lua_modules.dialogs.ltPatterson",
       "lua_modules.dialogs.test",
       "lua_modules.dialogs.test_noComments",
+      "lua_modules.dialogs.palal",
+      "lua_modules.dialogs.btas",
       "lua_modules.dialogs.wright",
       "lua_modules.dialogs.young",
       "lua_modules.journal.journal",

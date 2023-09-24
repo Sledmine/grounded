@@ -8,8 +8,7 @@ local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
 
 function exampleConvReload()   -- IMPORTANT - give this function a new name for every conversation. In VSCode, highlight the name and press CTRL+F2 to rename all. If you don't, the conversations will interfere with each other and load conversations from other modules
-    dialog.open(fakeConversationScreen(get_global("conv_short1")), true)            -- Reopens the conversation based on the global defined. You can change this.
-    stop_timer(periodic)                                                                        -- stop timer defined in actions array as "periodic"
+    dialog.open(exampleConvScreen(get_global("conv_short1")), true)            -- Reopens the conversation based on the global defined. You can change this.
 end
 
 function exampleConvScreen(screenInstance)
@@ -44,22 +43,22 @@ function exampleConvScreen(screenInstance)
         function ()                         
             set_global("conv_short1", 2)                            -- Update global  
             harmony.menu.close_widget()                             -- Close Widget
-            periodic = set_timer(2, "exampleConvReload", "")           -- 2ms timer defined as "periodic" that runs a function to re-open widget.
+            exampleConvReload()
         end,
         function () 
             set_global("conv_short1", 3)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "exampleConvReload", "") 
+            exampleConvReload()
         end,
         function ()
             set_global("conv_short1", 4)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "exampleConvReload", "") 
+            exampleConvReload()
         end,
         function ()
             set_global("conv_short1", 5)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "exampleConvReload", "") 
+            exampleConvReload()
         end,
         function ()
             set_global("conv_short1", 1)
@@ -78,34 +77,45 @@ function exampleConvScreen(screenInstance)
     ]]
     local scream = {}
     ------------------------------------------------------------------------------
-    if screenInstance == 1 then
-        scream.npcText = npcWords[1]                                        -- if screenInstance = 1 then return object [1] from npcWords table
-        scream.playerResponses = {response[1], response[2],}                -- if screenInstance = 2 then return objects [1] and [2] from response table
-        scream.playerActions = {actionsArray[1], actionsArray[2]}           -- if screenInstance = 3 then return objects [1] and [2] from actionsArray table
-    ------------------------------------------------------------------------------     
-    elseif screenInstance == 2 then
-        scream.npcText = npcWords[2]
-        scream.playerResponses = {response[2], response[1],} 
-        scream.playerActions = {actionsArray[2], actionsArray[3]}
-    ------------------------------------------------------------------------------ 
-    elseif screenInstance == 3 then
-        scream.npcText = "I'm writing this as a manual string"
-        scream.playerResponses = {
-            "You can also manually write dialogue", 
-            "And change the format to a column"} 
-        scream.playerActions = {actionsArray[3], actionsArray[2]}
-    ------------------------------------------------------------------------------
-    elseif screenInstance == 4 then
-        scream.npcText = "npcWords[4]"
-        scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[4], actionsArray[5], actionsArray[3]}
-    ------------------------------------------------------------------------------ 
-    elseif screenInstance == 5 then
-        scream.npcText = npcWords[4]
-        scream.playerResponses = {response[1], response[2], response[3]}
-        scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[5]}
-    ------------------------------------------------------------------------------ 
-    end
+  local function con1_fork1()                                                   -- Build each conversation screen as a local function. 
+    scream.npcText = npcWords[1]
+    scream.playerResponses = {response[1], response[2],}
+    scream.playerActions = {actionsArray[2], actionsArray[3]} 
+  end   
+  local function con1_fork2()
+    scream.npcText = npcWords[2]
+    scream.playerResponses = {response[2], response[1],} 
+    scream.playerActions = {actionsArray[2], actionsArray[3]} 
+  end   
+  local function con1_fork3()
+    scream.npcText = "I'm writing this as a manual string"
+    scream.playerResponses = {  
+        "You can also manually write dialogue", 
+        "And change the format to a column"} 
+    scream.playerActions = {actionsArray[3], actionsArray[2]}
+  end   
+  local function con1_fork4()
+    scream.npcText = "npcWords[4]"
+    scream.playerResponses = {response[1], response[2], response[3]}
+    scream.playerActions = {actionsArray[4], actionsArray[1], actionsArray[3]} 
+  end   
+  local function con1_fork5()
+    scream.npcText = npcWords[4]
+    scream.playerResponses = {response[1], response[2], response[3]}
+    scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[1]} 
+  end   
+
+  if screenInstance == 1 then           -- Use if statements to prepare to assign data to the updated widgets
+      con1_fork1()
+  elseif screenInstance == 2 then
+      con1_fork2()
+  elseif screenInstance == 3 then
+      con1_fork3()
+  elseif screenInstance == 4 then
+      con1_fork4()
+  elseif screenInstance == 5 then
+      con1_fork5()        
+  end
     ------------------------------------------------------------------------------
     --- Dynamic Conversation Generator
     ------------------------------------------------------------------------------
@@ -115,22 +125,27 @@ function exampleConvScreen(screenInstance)
         Nothing. The options aren't generated and the integrity of your script remains in-tact.
     ]]
 
-    return {
+  return {
     objectName = "",
+    npcSpeech = function ()
+      if not (scream.activeTrack == nil) then
+        hsc.soundImpulseStart(scream.activeTrack, "", 0.7)
+      end
+    end,
     npcDialog = { scream.npcText },
     options = {
-        scream.playerResponses[1],
-        scream.playerResponses[2],
-        scream.playerResponses[3],
-        scream.playerResponses[4],
+      scream.playerResponses[1],
+      scream.playerResponses[2],
+      scream.playerResponses[3],
+      scream.playerResponses[4],
     },
     -- Used to store functions
     actions = {
-        scream.playerActions[1],
-        scream.playerActions[2],
-        scream.playerActions[3],
-        scream.playerActions[4],
+      scream.playerActions[1],
+      scream.playerActions[2],
+      scream.playerActions[3],
+      scream.playerActions[4],
     }
-}
+  }
 
 end

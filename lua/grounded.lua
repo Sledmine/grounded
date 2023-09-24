@@ -53,6 +53,10 @@ saveMaster = blam.getTag([[ui\checkpoints\savegames]], tagClasses.uiWidgetDefini
 loadMaster = blam.getTag([[ui\checkpoints\checkpoint_loadgames]], tagClasses.uiWidgetDefinition)
 profileEdit = blam.getTag([[ui\shell\main_menu\settings_select\player_setup\player_profile_edit\name_profile_item]], tagClasses.uiWidgetDefinition)
 journalTag = blam.getTag([[ui\journal\btn_journal_pausescreen]], tagClasses.uiWidgetDefinition)
+journalActions = {[[ui\journal\options\static_activate_quest]], [[ui\journal\options\static_activate_marker]], [[ui\journal\options\static_close_journal]]}
+journalClose = blam.getTag(journalActions[3], tagClasses.uiWidgetDefinition)
+journalActivate = blam.getTag(journalActions[1], tagClasses.uiWidgetDefinition)
+journalMarker = blam.getTag(journalActions[2], tagClasses.uiWidgetDefinition)
 save1 = blam.getTag([[ui\checkpoints\save1]], tagClasses.uiWidgetDefinition)
 save2 = blam.getTag([[ui\checkpoints\save2]], tagClasses.uiWidgetDefinition)
 save3 = blam.getTag([[ui\checkpoints\save3]], tagClasses.uiWidgetDefinition)
@@ -74,6 +78,7 @@ require "lua_modules.journal.journal"
 require "lua_modules.dialogs.single_event.engineerHayden"
 require "lua_modules.dialogs.raiders.raiderCave_betasidemission"
 require "lua_modules.dialogs.young"
+require "lua_modules.dialogs.test"
 
 function journalOption(selection)
     local instance = {}
@@ -142,9 +147,23 @@ end
 function missionSelector(mission)
   for i = 1, #activeMission do
     if activeMission[i].name == mission then
-      table.remove(activeMission[i], i)
+      table.remove(activeMission, i)
+      for _, index in pairs(missions) do
+        for _, row in pairs(index) do
+          --console_out(row.name)
+          if row.name == mission then
+            table.insert(activeMission, 1, row)
+          end
+        end
+      end
     end
   end
+end
+
+function startup()  
+  execute_script("object_destroy_containing cine")
+  hsc.aiAttach("palal", "enc_covenant/sqd_palal")
+  hsc.aiAttach("btas", "enc_covenant/sqd_btas")
 end
 
 local aiStuff = true
@@ -168,14 +187,36 @@ factions = {
                 resolved = false,
                 event = 0,
             },
+            doctorsOrders = {
+              name = "Doctor's Note",
+                description = "Dr. Young needs a resupply for her lab. Find a way to bring her the ingredients she needs.",
+                action = function()
+                  selectedMission = "Doctor's Note"
+                  missionSelector(selectedMission)
+                  harmony.menu.close_widget()
+                  journalLoader()
+                  --periodic = set_timer(0.1, "journalLoader", "")                
+                end,
+                active = false,
+                resolved = false,
+                event = 0,
+            },
         },
         members = {
             forbes = {
-                met = false,
-                heard = false,
-                relationship = 0,
-                alive = true,
-            }
+              name = "forbes",
+              met = false,
+              heard = false,
+              relationship = 0,
+              alive = true,
+            },
+            young = {
+              name = "young",
+              met = false,
+              heard = false,
+              relationship = 0,
+              alive = true,
+            },
         },
         team = "human",
     },
@@ -215,6 +256,7 @@ factions = {
                 description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
                 action = function()
                   selectedMission = "Honest Work"
+                  missionSelector(selectedMission)
                   harmony.menu.close_widget()     
                   periodic = set_timer(2, "journalLoader", "")                
                 end,
@@ -245,6 +287,22 @@ missions = {
   unsc = factions.unsc.mission,
   republic = factions.republic.mission,
   covenant = factions.covenant.mission,
+  starter = {    
+    firstEntry = {
+      name = "It Reaches Out",
+      description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+      action = function()
+        selectedMission = "It Reaches Out"
+        missionSelector(selectedMission)
+        harmony.menu.close_widget()
+        journalLoader()
+        --periodic = set_timer(0.1, "journalLoader", "")                
+      end,
+      active = true,
+      resolved = false,
+      event = 0,
+    },
+  }
 }
 
 members = {
@@ -253,21 +311,7 @@ members = {
   covenant = factions.covenant.members,
 }
 
-activeMission = {
-  {
-    name = "It Reaches Out",
-    description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
-    action = function()
-      selectedMission = "It Reaches Out"
-      harmony.menu.close_widget()
-      journalLoader()
-      --periodic = set_timer(0.1, "journalLoader", "")                
-    end,
-    active = true,
-    resolved = false,
-    event = 0,
-  },
-}
+activeMission = {}
 
 activeConversation = false
 
@@ -357,6 +401,22 @@ function OnTick()
             action = function()
                 reactor3pos = 1
                 execute_script("object_destroy reactor3")
+            end,
+        },
+        {
+            unitName = "herb1",
+            promptMessage = "Press \"E\" to pick up herb",
+            action = function()
+              table.insert(playerInventory, "herb")
+              execute_script("object_destroy herb1")
+            end,
+        },
+        {
+            unitName = "herb2",
+            promptMessage = "Press \"E\" to pick up herb",
+            action = function()
+              table.insert(playerInventory, "herb")
+              execute_script("object_destroy herb2")
             end,
         },
     }
@@ -516,9 +576,9 @@ function OnTick()
               end
             end
             if not (check) then
-              if (activeMission[1].active) then
+              --[[if (activeMission[1].active) then
                 activeMission[1].active = false
-              end
+              end]]
               table.insert(activeMission, 1, v)
               selectedMission = v.name
               --console_out("inserted " .. name)
@@ -909,38 +969,6 @@ function OnTick()
     end
 end
 
-function optionSelect(selection)
-    blam.getTag("ui\\conversation\\dynamic_conversation\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)
-    local currentDialog = dialog.getState().currentDialog
-    if (currentDialog and currentDialog.actions) then
-        local action = currentDialog.actions[selection]
-        if (action) then
-            if (type(action) == "table") then
-                dialog.open(action)
-            elseif (type(action) == "function") then
-                action()
-            end
-        end
-    end
-end
-
-function journalSelect(selection)
-    blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)
-    local currentDialog = dialog.getState().currentDialog
-    if (currentDialog and currentDialog.actions) then
-        local action = currentDialog.actions[selection]
-        if (action) then
-            if (type(action) == "table") then
-              --console_out("opening as table")
-                dialog.journal(action)
-            elseif (type(action) == "function") then
-                --console_out("opening as function")
-                action()
-            end
-        end
-    end
-end
-
 --[[
 function saveSelect(selection)
     local saveState = {}
@@ -955,11 +983,12 @@ function on_widget_accept(widget_handle)
         -- Cancel event
         set_global("clua_short3", 1)
         harmony.menu.close_widget()
-        execute_script("object_destroy_containing cine")
+        startup()
     end
     if (widgetTagId == continue.id) then
         set_global("reload_now", true)
         harmony.menu.close_widget()
+        startup()
     end
     --console_out(newGame.id)
 
@@ -968,7 +997,9 @@ function on_widget_accept(widget_handle)
       local decision = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_]] .. i, tagClasses.uiWidgetDefinition)
       if decision then
         if widgetTagId == decision.id then
-          optionSelect(i)
+          local currentDialog = dialog.getState().currentDialog
+          local action = currentDialog.actions[i]
+          action()
         end        
       end
     end
@@ -977,9 +1008,14 @@ function on_widget_accept(widget_handle)
       local decision = blam.getTag("ui\\journal\\options\\decision_" .. i, tagClasses.uiWidgetDefinition)
       if decision then
         if widgetTagId == decision.id then
-          journalSelect(i)
+          local currentDialog = dialog.getState().currentDialog
+          local action = currentDialog.actions[i]
+          action()
         end
       end
+    end
+    if (widgetTagId == journalClose.id) then
+      harmony.menu.close_widget()
     end
     if (widgetTagId == journalTag.id) then
       dialog.journal(journalScreen(selectedMission), true)
@@ -1037,14 +1073,17 @@ function on_key_press(modifiers, character, keycode)
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
-        dialog.journal(journalScreen(selectedMission), true)
+        dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
     end
 
     if (character == "p") then
-      activeMission.starter.active = false
+      --activeMission.starter.active = false
     end
     if (character == "o") then
-      missions.republic.medicalSupplies.active = true
+      --missions.republic.medicalSupplies.active = true
+    end
+    if (character == "i") then
+      --missions.unsc.doctorsOrders.active = true
     end
 
     if (character == "k") then
@@ -1053,10 +1092,10 @@ function on_key_press(modifiers, character, keycode)
       if exists then
         local written = write_file([[saves\player.json]], "{hello world}")
         local content = read_file([[saves\player.json]])
-        console_out(content)
+        --console_out(content)
         --load_ui_widget([[ui\shell\main_menu\settings_select\player_setup\player_profile_edit\profile_label]])
       else
-        console_out("didn't work")
+        --console_out("didn't work")
       end
     end
 

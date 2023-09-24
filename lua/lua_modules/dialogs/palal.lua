@@ -71,7 +71,6 @@ function fakeConversationScreen(screenInstance)
         scream.playerActions = {actionsArray[1], actionsArray[2], actionsArray[1]} 
     end   
 
-
     if screenInstance == 1 then
         con1_fork1()
     elseif screenInstance == 2 then
@@ -84,26 +83,21 @@ function fakeConversationScreen(screenInstance)
         con1_fork5()        
     end
     return {
-      objectName = "",
-      npcSpeech = function ()
-        if not (scream.activeTrack == nil) then
-          hsc.soundImpulseStart(scream.activeTrack, "", 0.7)
-        end
-      end,
-      npcDialog = { scream.npcText },
-      options = {
-          scream.playerResponses[1],
-          scream.playerResponses[2],
-          scream.playerResponses[3],
-          scream.playerResponses[4],
-      },
-      -- Used to store functions
-      actions = {
-          scream.playerActions[1],
-          scream.playerActions[2],
-          scream.playerActions[3],
-          scream.playerActions[4],
-      }
-  }
+        objectName = "",
+        npcDialog = { scream.npcText },
+        options = {
+            scream.playerResponses[1],
+            scream.playerResponses[2],
+            scream.playerResponses[3],
+            scream.playerResponses[4],
+        },
+        -- Used to store functions
+        actions = {
+            scream.playerActions[1],
+            scream.playerActions[2],
+            scream.playerActions[3],
+            scream.playerActions[4],
+        }
+    }
 
 end

@@ -121,6 +121,12 @@ function hsc.aiAction(type, encounterName)
     local returnType = {"berserk", "follow_target_players", "attack", "defend"}
     execute_script("ai_" .. returnType[type] .. " " .. encounterName)
 end
+
+---@param biped string Declare a biped
+---@param ai string Declare an ai squad formartted encounter/sqd
+function hsc.aiAttach(biped, ai)
+  execute_script("ai_attach " .. biped .. " " .. ai)
+end
 ------------------------------------------------------------------------------
 --- Unit Functions
 ------------------------------------------------------------------------------
