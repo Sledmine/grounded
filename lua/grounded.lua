@@ -1098,7 +1098,7 @@ function on_key_press(modifiers, character, keycode)
   if (keycode) then
     --console_out(keycode)
   end
-  --local direc = {    77, 78, 79, 80, 72, 111}  
+  --[[
   local camera = core.objectSearch("camera_test")
   local camObj = camera.type
   local direc = {
@@ -1148,7 +1148,7 @@ function on_key_press(modifiers, character, keycode)
     elseif (keycode == change.codeNeg) then      
       camObj[index] = camObj[index] - 0.05
     end
-  end
+  end]]
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
