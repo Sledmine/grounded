@@ -71,6 +71,35 @@ function core.playerIsNearTo(target, sensitivity)
     return false
 end
 
+function core.objectSearch(name)
+  local scenario = blam.scenario()
+  if (name) then
+    for _, objectIndex in pairs(blam.getObjects()) do
+      local object = blam.object(get_object(objectIndex))
+      if (object) then
+        if (not blam.isNull(object.nameIndex)) then
+          local objectName = scenario.objectNames[object.nameIndex + 1]
+          if (objectName == name) then
+            return {type = object, name = objectName}
+          end
+        end
+      end
+    end
+  end
+end
+
+function core.playerDistance(target)
+  local player = blam.object(get_dynamic_player())
+  local scenario = blam.scenario()
+  if (target and player) then
+    local obj = core.objectSearch(target)
+    if (obj.name == target) then
+      local distance = math.sqrt((obj.type.x - player.x) ^ 2 + (obj.type.y - player.y) ^ 2 + (obj.type.z - player.z) ^ 2)  
+      return distance
+    end
+  end
+end
+
 function core.getStringFromWidget(widgetId)
     local widget = blam.uiWidgetDefinition(widgetId)
     local virtualValue = VirtualInputValue[widget.name]
@@ -90,7 +119,10 @@ function core.setStringToWidget(str, widgetId)
     blam.unicodeStringList(widget.unicodeStringListTag).stringList = {str}
 end
 
-
+function core.camera(object, x, y, z)
+  local scenario = blam.scenario()
+  
+end
 
 
 return core

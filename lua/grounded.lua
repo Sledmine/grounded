@@ -55,8 +55,6 @@ profileEdit = blam.getTag([[ui\shell\main_menu\settings_select\player_setup\play
 journalTag = blam.getTag([[ui\journal\btn_journal_pausescreen]], tagClasses.uiWidgetDefinition)
 journalActions = {[[ui\journal\options\static_activate_quest]], [[ui\journal\options\static_activate_marker]], [[ui\journal\options\static_close_journal]]}
 journalClose = blam.getTag(journalActions[3], tagClasses.uiWidgetDefinition)
-journalActivate = blam.getTag(journalActions[1], tagClasses.uiWidgetDefinition)
-journalMarker = blam.getTag(journalActions[2], tagClasses.uiWidgetDefinition)
 save1 = blam.getTag([[ui\checkpoints\save1]], tagClasses.uiWidgetDefinition)
 save2 = blam.getTag([[ui\checkpoints\save2]], tagClasses.uiWidgetDefinition)
 save3 = blam.getTag([[ui\checkpoints\save3]], tagClasses.uiWidgetDefinition)
@@ -183,7 +181,16 @@ factions = {
                   journalLoader()
                   --periodic = set_timer(0.1, "journalLoader", "")                
                 end,
+                points = {
+                  cave = {
+                    type = 2,
+                    unit = "(player0)",
+                    source = "raider_cave",
+                    vertOff = 2
+                  },
+                },
                 active = false,
+                primary = false,
                 resolved = false,
                 event = 0,
             },
@@ -234,6 +241,8 @@ factions = {
                   --periodic = set_timer(0.1, "journalLoader", "")             
                 end,
                 active = false,
+                points = {},
+                primary = false,
                 resolved = false,
                 event = 0,
             }
@@ -261,6 +270,7 @@ factions = {
                   periodic = set_timer(2, "journalLoader", "")                
                 end,
                 active = false,
+                primary = false,
                 resolved = false,
                 event = 0,
             }
@@ -299,6 +309,15 @@ missions = {
         --periodic = set_timer(0.1, "journalLoader", "")                
       end,
       active = true,
+      points = {
+        unsc = {
+          type = 2,
+          unit = "(player0)",
+          source = "forbes",
+          vertOff = 2,
+        },
+      },
+      primary = false,
       resolved = false,
       event = 0,
     },
@@ -357,7 +376,50 @@ function OnTick()
     local convShort = get_global("conv_short1")
     --local hogRepair = (scenario.tagNames[27])
     --console_out(newGameWidget)
-    local objectivePrompts = {
+   
+    local intro = landed
+    local playerBiped = blam.biped(get_dynamic_player())
+    local bspIndex = hsc.bspIndex()
+    local unscMission = factions.unsc.mission
+    local repMission = factions.republic.mission
+    local covMission = factions.covenant.mission
+    if (hsc.isPlayerInsideVolume("door_open")) then
+        --console_out("lmao")                                   -- So the story behind this joke is I forgot to put "" around door_open and wondered why it didn't work lmao
+        hsc.deviceSet(2, "door1", 1)
+    end
+    ------------------------------------------------------------------------------
+    --- Async & Game Save System
+    ------------------------------------------------------------------------------
+    -- Async event dispatcher
+    for eventIndex, event in pairs(asyncEventsQueue) do
+        event.func(table.unpack(event.args))
+        asyncEventsQueue[eventIndex] = nil
+    end
+    -- Save and load slots functions
+    local saveGameSlot = get_global("save")
+    local loadGameSlot = get_global("load")
+    if (saveGameSlot ~= 0) then
+        core.saveSlot(saveGameSlot)
+    end
+    if (loadGameSlot ~= 0) then
+        core.loadSlot(loadGameSlot)
+    end
+    -- Respawn script that skips the hardcoded game_revert on player death. Will load the MOST RECENTLY SAVED Core file.
+    if get_global("reload_now") then
+        execute_script("core_load")
+    end
+
+    ------------------------------------------------------------------------------
+    --- Dynamic Prompt Array
+    ------------------------------------------------------------------------------
+    -- List of biped conversation Events
+    -- This works using the scenario object name instead of the name.<tag_class>. You need to manually name the object for this script to work.
+    ---@class conversation
+    ---@field unitName string
+    ---@field promptMessage string
+    ---@field action function
+    local interactions = {
+      objectivePrompts = {
         {
             unitName = "repair_hog", -- "repair hog"
             promptMessage = modularPromptHog(),
@@ -419,148 +481,109 @@ function OnTick()
               execute_script("object_destroy herb2")
             end,
         },
+      },
+    conversations = {
+      {
+          unitName = "merchant_1",
+          promptMessage = "Press \"E\" to talk to Weapon Merchant",
+          action = function()
+              local widgetLoaded = load_ui_widget(
+                  "ui\\conversation\\merchant_conversation\\merchant_weapons_poor")
+              if (not widgetLoaded) then
+                  console_out("An error occurred while loading ui widget!")
+              end
+          end
+      }, -- merchant 1
+      {
+          unitName = "merchant_2",
+          promptMessage = "Press \"E\" to talk to Armour Merchant",
+          action = function()
+              local widgetLoaded = load_ui_widget(
+                  "ui\\conversation\\merchant_conversation\\merchant_armourmods")
+              if (not widgetLoaded) then
+                  console_out("An error occurred while loading ui widget!")
+              end
+          end
+      }, -- merchant 2
+      {  -- Forbes
+          unitName = "forbes",
+          promptMessage = "Press \"E\" to talk to Sergeant Forbes",
+          action = function()
+            medicalSupplies()
+            if (members.unsc.forbes.met == false) or (missions.unsc.clearOut.active == true) then
+              dialog.open(forbesSideScreen1(convShort), true)
+            end
+            if (missions.unsc.clearOut.resolved == true) or (missions.republic.medicalSupplies.resolved == true) then
+              dialog.open(forbesSideScreen2(convShort), true)
+            end
+          end
+      },
+      {  -- Elite Captain
+          unitName = "guard1",
+          promptMessage = "Press \"E\" to talk to Elite Captain",
+          action = function()
+              hsc.soundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
+          end
+      },
+      { -- Lt Patterson
+          unitName = "ltpat",
+          promptMessage = "Press \"E\" to talk to Lt. Patterson",
+          action = function()
+              if (get_global("act1_landed") < 1) then
+                  dialog.open(patScreen(convShort), true)
+              else
+                  hsc.soundImpulseStart()
+              end
+          end
+      },
+      { -- Secretary General Wright
+          unitName = "wright",
+          promptMessage = "Press \"E\" to talk to Judith Wright",
+          action = function()
+            medicalSupplies()
+            local republic = factions.republic
+            local unsc = factions.unsc
+            local wrightMet = factions.republic.members.wright.met
+            activeConversation = true
+            if (not (wrightMet)) and (republic.relationship == 1) then
+              dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
+              factions.republic.members.wright.met = true
+            elseif (republic.relationship < 1) then
+              dialog.open(wrightAntagConv(get_global("conv_short1")), true)
+            elseif (republic.mission.medicalSupplies.active) then
+              dialog.open(wrightConv2Screen(get_global("conv_short1")))
+              --console_out(republic.mission.medicalSupplies.active)
+            end
+          end
+      },
+      { -- Cave Raider
+          unitName = "raider_cave",
+          promptMessage = "Press \"E\" to talk to Raider Leader",
+          action = function()
+              dialog.open(raiderConv1(get_global("conv_short1")), true)
+          end
+      },
+      { -- Engineer Hayden
+          unitName = "eng_hayden",
+          promptMessage = "Press\"E\" to talk to Engineer Hayden",
+          action = function()
+              dialog.open(engHayden(get_global("conv_short1")))
+          end
+      },
+      { -- Doctor Young
+          unitName = "young",
+          promptMessage = "Press\"E\" to talk to Doctor Young",
+          action = function()
+              dialog.open(youngConv1(get_global("conv_short1")))
+          end
+      },
+      }
     }
-    local intro = landed
-    local playerBiped = blam.biped(get_dynamic_player())
-    local bspIndex = hsc.bspIndex()
-    local unscMission = factions.unsc.mission
-    local repMission = factions.republic.mission
-    local covMission = factions.covenant.mission
-    if (hsc.isPlayerInsideVolume("door_open")) then
-        --console_out("lmao")                                   -- So the story behind this joke is I forgot to put "" around door_open and wondered why it didn't work lmao
-        hsc.deviceSet(2, "door1", 1)
-    end
-    ------------------------------------------------------------------------------
-    --- Async & Game Save System
-    ------------------------------------------------------------------------------
-    -- Async event dispatcher
-    for eventIndex, event in pairs(asyncEventsQueue) do
-        event.func(table.unpack(event.args))
-        asyncEventsQueue[eventIndex] = nil
-    end
-    -- Save and load slots functions
-    local saveGameSlot = get_global("save")
-    local loadGameSlot = get_global("load")
-    if (saveGameSlot ~= 0) then
-        core.saveSlot(saveGameSlot)
-    end
-    if (loadGameSlot ~= 0) then
-        core.loadSlot(loadGameSlot)
-    end
-    -- Respawn script that skips the hardcoded game_revert on player death. Will load the MOST RECENTLY SAVED Core file.
-    if get_global("reload_now") then
-        execute_script("core_load")
-    end
-
-    ------------------------------------------------------------------------------
-    --- Dynamic Prompt Array
-    ------------------------------------------------------------------------------
-    -- List of biped conversation Events
-    -- This works using the scenario object name instead of the name.<tag_class>. You need to manually name the object for this script to work.
-    ---@class conversation
-    ---@field unitName string
-    ---@field promptMessage string
-    ---@field action function
-    local conversations = {
-        {
-            unitName = "merchant_1",
-            promptMessage = "Press \"E\" to talk to Weapon Merchant",
-            action = function()
-                local widgetLoaded = load_ui_widget(
-                    "ui\\conversation\\merchant_conversation\\merchant_weapons_poor")
-                if (not widgetLoaded) then
-                    console_out("An error occurred while loading ui widget!")
-                end
-            end
-        }, -- merchant 1
-        {
-            unitName = "merchant_2",
-            promptMessage = "Press \"E\" to talk to Armour Merchant",
-            action = function()
-                local widgetLoaded = load_ui_widget(
-                    "ui\\conversation\\merchant_conversation\\merchant_armourmods")
-                if (not widgetLoaded) then
-                    console_out("An error occurred while loading ui widget!")
-                end
-            end
-        }, -- merchant 2
-        {  -- Forbes
-            unitName = "forbes",
-            promptMessage = "Press \"E\" to talk to Sergeant Forbes",
-            action = function()
-              medicalSupplies()
-              if (members.unsc.forbes.met == false) or (missions.unsc.clearOut.active == true) then
-                dialog.open(forbesSideScreen1(convShort), true)
-              end
-              if (missions.unsc.clearOut.resolved == true) or (missions.republic.medicalSupplies.resolved == true) then
-                dialog.open(forbesSideScreen2(convShort), true)
-              end
-            end
-        },
-        {  -- Elite Captain
-            unitName = "guard1",
-            promptMessage = "Press \"E\" to talk to Elite Captain",
-            action = function()
-                hsc.soundImpulseStart("sound\\dialog\\npc_generic\\generic", "none", "1")
-            end
-        },
-        { -- Lt Patterson
-            unitName = "ltpat",
-            promptMessage = "Press \"E\" to talk to Lt. Patterson",
-            action = function()
-                if (get_global("act1_landed") < 1) then
-                    dialog.open(patScreen(convShort), true)
-                else
-                    hsc.soundImpulseStart()
-                end
-            end
-        },
-        { -- Secretary General Wright
-            unitName = "wright",
-            promptMessage = "Press \"E\" to talk to Judith Wright",
-            action = function()
-              medicalSupplies()
-              local republic = factions.republic
-              local unsc = factions.unsc
-              local wrightMet = factions.republic.members.wright.met
-              activeConversation = true
-              if (not (wrightMet)) and (republic.relationship == 1) then
-                dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
-                factions.republic.members.wright.met = true
-              elseif (republic.relationship < 1) then
-                dialog.open(wrightAntagConv(get_global("conv_short1")), true)
-              elseif (republic.mission.medicalSupplies.active) then
-                dialog.open(wrightConv2Screen(get_global("conv_short1")))
-                --console_out(republic.mission.medicalSupplies.active)
-              end
-            end
-        },
-        { -- Cave Raider
-            unitName = "raider_cave",
-            promptMessage = "Press \"E\" to talk to Raider Leader",
-            action = function()
-                dialog.open(raiderConv1(get_global("conv_short1")), true)
-            end
-        },
-        { -- Engineer Hayden
-            unitName = "eng_hayden",
-            promptMessage = "Press\"E\" to talk to Engineer Hayden",
-            action = function()
-                dialog.open(engHayden(get_global("conv_short1")))
-            end
-        },
-        { -- Doctor Young
-            unitName = "young",
-            promptMessage = "Press\"E\" to talk to Doctor Young",
-            action = function()
-                dialog.open(youngConv1(get_global("conv_short1")))
-            end
-        },
-    }
+    local conversations = interactions.conversations
+    local objectivePrompts = interactions.objectivePrompts
     ------------------------------------------------------------------------------
     --- Journal
     ------------------------------------------------------------------------------
-
     if (playerBiped) then
       for faction, _ in pairs(missions) do
         for _, v in pairs(missions[faction]) do
@@ -594,71 +617,61 @@ function OnTick()
           end
         end
       end
+      for missionIndex, missionName in pairs(activeMission) do
+        if missionIndex == 1 then
+          missionName.primary = true
+        else
+          missionName.primary = false
+        end
+      end
     end
     ------------------------------------------------------------------------------
     --- Missions
     ------------------------------------------------------------------------------
-  
+  local clearOut = factions.unsc.mission.clearOut
+  local cave = clearOut.points.cave
+  --console_out(clearOut.active)
+  if (clearOut.primary) then
+    --console_out(core.playerDistance("raider_cave"))
+    if ((core.playerDistance("raider_cave") < 50) and (core.playerDistance("raider_cave") > 5)) then
+      --console_out("near")
+      hsc.activateNav(cave.type, cave.unit, cave.source, cave.vertOff)
+    else
+      hsc.clearNav(cave.type, cave.unit, cave.source)
+    end
+  else 
+    hsc.clearNav(cave.type, cave.unit, cave.source)
+  end
     ------------------------------------------------------------------------------
     --- Interaction System
     ------------------------------------------------------------------------------
     for _, objectIndex in pairs(blam.getObjects()) do
-        local object = blam.object(get_object(objectIndex))
-        if (object and object.type == objectClasses.scenery or object.type == objectClasses.vehicle) then
-            if (not blam.isNull(object.nameIndex)) then
-                local objectName = scenario.objectNames[object.nameIndex + 1]
-                --console_out(objectName)
-                for _, objectivePrompts in pairs(objectivePrompts) do
-                    --if (tag and tag.path:find(conversation.unitName)) then
-                    if (objectName == objectivePrompts.unitName) then
-                        if (core.playerIsNearTo(object, 1.2)) then
-                            interface.promptHud(objectivePrompts.promptMessage)
-                            if (playerBiped.actionKey) then
-                                objectivePrompts.action()
-                            end
-                        elseif (core.playerIsNearTo(object, 1.3)) then
-                            interface.promptHud("")
-                        end
+      local object = blam.object(get_object(objectIndex))
+      if (object) then
+        if (not blam.isNull(object.nameIndex)) then
+          local objectName = scenario.objectNames[object.nameIndex + 1]
+          if (not (activeConversation)) then  
+            for _, interactionTitle in pairs(interactions) do
+              for _, titleType in pairs(interactionTitle) do
+                if (object and objectName == titleType.unitName) then
+                  if (core.playerIsNearTo(object, 0.9) ) then
+                    interface.promptHud(titleType.promptMessage)       
+                    if (playerBiped.actionKey) then
+                      titleType.action()
                     end
-                end
-            end
-        end
-        if (not (activeConversation)) then
-          if (object and object.type == objectClasses.control or object.type == objectClasses.biped) then
-            if (not blam.isNull(object.nameIndex)) then
-              local objectName = scenario.objectNames[object.nameIndex + 1]
-              --console_out(objectName)
-              for _, conversation in pairs(conversations) do
-                --if (tag and tag.path:find(conversation.unitName)) then
-                if (objectName == conversation.unitName) then
-                  if (core.playerIsNearTo(object, 0.7)) then
-                    if (object.type == objectClasses.biped) then
-                      if (hsc.unitGetHealth(objectName) > 0) then
-                        interface.promptHud(conversation.promptMessage)
-                        if (playerBiped.actionKey) then
-                          conversation.action()
-                        end
-                      elseif (hsc.unitGetHealth(objectName) == 0) then
-                        interface.promptHud("")
-                      end
-                    elseif (object.type == objectClasses.control) then
-                    interface.promptHud(conversation.promptMessage)
-                      if (playerBiped.actionKey) then
-                          conversation.action()
-                      end
-                    end
-                  elseif (core.playerIsNearTo(object, 0.8)) then
-                      interface.promptHud("")
-                  end
+                  elseif (core.playerIsNearTo(object, 1)) then
+                    interface.promptHud("")
+                    --console_out("blahh")
+                  end   
                 end
               end
             end
+          else
+            interface.promptHud("")
           end
-        else 
-            conversations.promptMessage = ""
         end
+      end
     end
-
     -- ALLEGIANCE SYSTEM
     local teams = {
         "player",
@@ -787,6 +800,8 @@ function OnTick()
         "caves_bsp4",              -- 14
         "bsp3_caves",              -- 15
         "caves_bsp3",              -- 16
+        "bsp2_caves",              -- 17
+        "caves_bsp2",              -- 18
     }
     if (playerBiped) then
         if (hsc.isPlayerInsideVolume(bspArray[1])) or (hsc.isPlayerInsideVolume(bspArray[7])) then -- For transitioning between Byellee Structure and Byellee Colony
@@ -801,7 +816,17 @@ function OnTick()
                     bspBenjamin = 1
                 end
             end
-        elseif hsc.isPlayerInsideVolume(bspArray[2]) then -- Any switch between the Snow Valley and Woodtown
+          elseif (hsc.isPlayerInsideVolume(bspArray[17])) then
+            if (bspBenjamin == 0) then
+              if (hsc.bspIndex() == 5) then
+                execute_script("switch_bsp 8")
+                bspBenjamin = 1
+              elseif (hsc.bspIndex() == 8) then
+                execute_script("switch_bsp 5")
+                bspBenjamin = 1
+              end
+          end
+          elseif hsc.isPlayerInsideVolume(bspArray[2]) then -- Any switch between the Snow Valley and Woodtown
             if (bspBenjamin == 0) then
                 if (hsc.bspIndex() == 2) then
                     execute_script("switch_bsp 6")
@@ -1070,6 +1095,60 @@ end
 harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")
 
 function on_key_press(modifiers, character, keycode)
+  if (keycode) then
+    --console_out(keycode)
+  end
+  --local direc = {    77, 78, 79, 80, 72, 111}  
+  local camera = core.objectSearch("camera_test")
+  local camObj = camera.type
+  local direc = {
+    xVel = {
+      codePos = 77,
+      codeNeg = 78,
+    },
+    yVel = {
+      codePos = 79,
+      codeNeg = 80,
+    },
+    zVel = {
+      codePos = 72,
+      codeNeg = 111,
+    },
+  }
+  local rotate = {
+    vX = {
+      codePos = 17,
+      codeNeg = 19,
+    },
+    vY = {
+      codePos = 31,
+      codeNeg = 33,
+    },
+    vZ = {
+      codePos = 58,
+      codeNeg = 60
+    }
+  }
+  --local playerBiped = blam.biped(get_dynamic_player())
+  for index, direction in pairs(direc) do
+    if (keycode == direction.codePos) then
+      --console_out(camObj[index])
+      if (camObj[index] < 1) then
+        camObj[index] = camObj[index] + 0.05
+      end
+    elseif (keycode == direction.codeNeg) then
+      if (camObj[index] > -1) then
+        camObj[index] = camObj[index] - 0.05
+      end
+    end
+  end
+  for index, change in pairs (rotate) do
+    if (keycode == change.codePos) then
+      camObj[index] = camObj[index] + 0.05
+    elseif (keycode == change.codeNeg) then      
+      camObj[index] = camObj[index] - 0.05
+    end
+  end
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
