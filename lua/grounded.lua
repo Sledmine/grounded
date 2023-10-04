@@ -162,6 +162,11 @@ function startup()
   execute_script("object_destroy_containing cine")
   hsc.aiAttach("palal", "enc_covenant/sqd_palal")
   hsc.aiAttach("btas", "enc_covenant/sqd_btas")
+  execute_script("object_create_containing sanchog_")
+  hsc.aiSpawn(1, "enc_checkpoint_bsp0/sqd_patrol")
+  hsc.aiSpawn(1, "enc_powerplant")
+  hsc.aiAttach("ltpat", "enc_unsc/sqd_pat")
+  hsc.aiAttach("scorp_mechanic", "enc_checkpoint_bsp0/sqd_scorp")
 end
 
 local aiStuff = true
@@ -186,7 +191,8 @@ factions = {
                     type = 2,
                     unit = "(player0)",
                     source = "raider_cave",
-                    vertOff = 2
+                    vertOff = 2,
+                    enabled = true
                   },
                 },
                 active = false,
@@ -310,11 +316,26 @@ missions = {
       end,
       active = true,
       points = {
-        unsc = {
+        byellee = {
           type = 2,
           unit = "(player0)",
           source = "forbes",
-          vertOff = 2,
+          vertOff = 1,
+          enabled = true
+        },
+        sanctuary = {
+          type = 2,
+          unit = "(player0)",
+          source = "sci_sinclair",
+          vertOff = 1,   
+          enabled = true       
+        },
+        powerplant = {
+          type = 2,
+          unit = "(player0)",
+          source = "ltpat",
+          vertOff = 1,
+          enabled = true          
         },
       },
       primary = false,
@@ -364,6 +385,87 @@ function forbesHealth()
     --console_out("forbes health is less than 1")
   end
 end
+
+camControl = false
+movingControl = false
+camX = 0
+camY = 0
+camZ = 0
+xAxis = 0
+yAxis = 1
+zAxis = 0
+
+cameraPoints = {
+  sanctuaryOrbit = {
+    "camtrack1",
+    "camtrack2",
+    "camtrack3",
+    "camtrack4",
+    "camtrack5",
+    "camtrack6",
+    "camtrack7",
+    "camtrack8",
+  }
+}
+
+soundEngine = harmony.optic.create_audio_engine()
+soundPlay = false
+location_volume = 100
+
+navmarkers = {
+  powerplant = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      source = "powerplant_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+  checkpoint = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      source = "checkpoint_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+  airpad = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      source = "airpad_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+  oni = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      source = "oni_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+}
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
@@ -510,11 +612,11 @@ function OnTick()
           promptMessage = "Press \"E\" to talk to Sergeant Forbes",
           action = function()
             medicalSupplies()
-            if (members.unsc.forbes.met == false) or (missions.unsc.clearOut.active == true) then
-              dialog.open(forbesSideScreen1(convShort), true)
-            end
+            missions.starter.firstEntry.points.byellee.enabled = false
             if (missions.unsc.clearOut.resolved == true) or (missions.republic.medicalSupplies.resolved == true) then
               dialog.open(forbesSideScreen2(convShort), true)
+            else
+              dialog.open(forbesSideScreen1(convShort))
             end
           end
       },
@@ -529,6 +631,7 @@ function OnTick()
           unitName = "ltpat",
           promptMessage = "Press \"E\" to talk to Lt. Patterson",
           action = function()
+            missions.starter.firstEntry.points.powerplant.enabled = false
               if (get_global("act1_landed") < 1) then
                   dialog.open(patScreen(convShort), true)
               else
@@ -563,11 +666,18 @@ function OnTick()
               dialog.open(raiderConv1(get_global("conv_short1")), true)
           end
       },
-      { -- Engineer Hayden
-          unitName = "eng_hayden",
-          promptMessage = "Press\"E\" to talk to Engineer Hayden",
+      { -- Scientist Sinclair
+          unitName = "raider_cave",
+          promptMessage = "Press \"E\" to talk to Raider Leader",
           action = function()
-              dialog.open(engHayden(get_global("conv_short1")))
+              dialog.open(raiderConv1(get_global("conv_short1")), true)
+          end
+      },
+      { -- Engineer Hayden
+          unitName = "sci_sinclair",
+          promptMessage = "Press\"E\" to talk to Scientist Sinclair",
+          action = function()              
+            missions.starter.firstEntry.points.sanctuary.enabled = false
           end
       },
       { -- Doctor Young
@@ -589,6 +699,7 @@ function OnTick()
         for _, v in pairs(missions[faction]) do
           local name = v.name
           local active = v.active
+          local primary = v.primary
           if (active) then
             local check = false
             for _, missionName in pairs(activeMission) do
@@ -605,6 +716,26 @@ function OnTick()
               table.insert(activeMission, 1, v)
               selectedMission = v.name
               --console_out("inserted " .. name)
+            end
+          end
+          --[[AUTOMATE JOURNAL UPDATES FOR PRIMARY MISSION]]
+          if not (primary) then                                                 -- If the mission is NOT primary, iterate over the table and clear any points.
+            if (v.points) then
+              for _, point in pairs(v.points) do
+                hsc.clearNav(point.type, point.unit, point.source)
+              end
+            end
+          elseif (primary) then                                                 -- If the mission IS primary, assign points world and remove them based on distance
+            for _, point in pairs(v.points) do
+              if point.enabled then
+                if ((core.playerDistance(point.source)) < 55) and ((core.playerDistance(point.source)) > 4) then
+                  hsc.activateNav(point.type, point.unit, point.source, point.vertOff)
+                else
+                  hsc.clearNav(point.type, point.unit, point.source)
+                end
+              else
+                hsc.clearNav(point.type, point.unit, point.source)
+              end
             end
           end
         end
@@ -626,22 +757,35 @@ function OnTick()
       end
     end
     ------------------------------------------------------------------------------
+    --- Worldbuilding
+    ------------------------------------------------------------------------------
+    -- BASE MUSIC --
+    for _, navpoint in pairs (navmarkers) do
+      local distance = core.playerDistance(navpoint.audio.source)
+      local active = navpoint.audio.active
+      local sound = navpoint.audio.sound
+      local fade = navpoint.audio.radius.fade
+      local max = navpoint.audio.radius.max
+      local finish = navpoint.audio.radius.finish
+      if not (active) then
+        if (distance) then
+          if (distance < finish) then    
+            navpoint.audio.active = true
+          end
+        elseif (active) then
+          harmony.optic.play_sound(sound, soundEngine, false)
+          harmony.optic.set_audio_engine_gain(soundEngine, math.floor(3*(fade - distance)))
+          if (distance > finish) then
+            harmony.optic.clear_audio_engine(soundEngine)
+          end
+        end
+      end
+      --console_out(distance)
+    end
+    ------------------------------------------------------------------------------
     --- Missions
     ------------------------------------------------------------------------------
-  local clearOut = factions.unsc.mission.clearOut
-  local cave = clearOut.points.cave
-  --console_out(clearOut.active)
-  if (clearOut.primary) then
-    --console_out(core.playerDistance("raider_cave"))
-    if ((core.playerDistance("raider_cave") < 50) and (core.playerDistance("raider_cave") > 5)) then
-      --console_out("near")
-      hsc.activateNav(cave.type, cave.unit, cave.source, cave.vertOff)
-    else
-      hsc.clearNav(cave.type, cave.unit, cave.source)
-    end
-  else 
-    hsc.clearNav(cave.type, cave.unit, cave.source)
-  end
+  
     ------------------------------------------------------------------------------
     --- Interaction System
     ------------------------------------------------------------------------------
@@ -695,6 +839,14 @@ function OnTick()
     for row in pairs(playerInventory) do                    -- For every row in "playerInventory" table, add 1 to playerInventory.length
         playerInventory.length = playerInventory.length +
         1                                                   -- This allows the player inventory to dynamically scale and it isn't limited to an arbitrary value like 64
+    end    
+    ------------------------------------------------------------------------------
+    --- Camera System
+    ------------------------------------------------------------------------------
+    if (playerBiped) then      
+      if (camControl) then
+        orbitTest = set_timer(1000, cam)
+      end
     end
     ------------------------------------------------------------------------------
     --- Fast Travel System
@@ -721,8 +873,6 @@ function OnTick()
             menuOpened = 0
         end
     end
-
-
     ------------------------------------------------------------------------------
     --- Lift Stuff
     ------------------------------------------------------------------------------
@@ -809,10 +959,12 @@ function OnTick()
                 if (hsc.bspIndex() == 0) then
                     execute_script("switch_bsp 5")
                     hsc.aiMigrate("g_enc_bsp1raiderCave", "g_enc_bsp2raiderCave")
+                    hsc.aiMigrate("enc_checkpoint_bsp0", "enc_checkpoint_bsp1")
                     bspBenjamin = 1
                 elseif (hsc.bspIndex() == 5) then
                     execute_script("switch_bsp 0")
                     hsc.aiMigrate("g_enc_bsp2raiderCave", "g_enc_bsp1raiderCave")
+                    hsc.aiMigrate("enc_checkpoint_bsp1", "enc_checkpoint_bsp0")
                     bspBenjamin = 1
                 end
             end
@@ -1094,61 +1246,38 @@ end
 
 harmony.set_callback("widget mouse button press", "on_widget_mouse_button_press")
 
+function OnPreCamera(x, y, z, fov, vX, vY, vZ, v2X, v2Y, v2Z, xVel, yVel, zVel)
+  --console_out(vX .. " " .. vY .. " " .. vZ)
+  local player = blam.biped(get_dynamic_player())  
+  if (camControl) then
+    return camX, camY, camZ, camFov, xAxis, yAxis, zAxis, v2X, v2Y, v2Z
+  end
+end
+
+function cameraTrack(track, time, steps)
+  
+end
+
 function on_key_press(modifiers, character, keycode)
   if (keycode) then
     --console_out(keycode)
   end
-  --[[
-  local camera = core.objectSearch("camera_test")
-  local camObj = camera.type
-  local direc = {
-    xVel = {
-      codePos = 77,
-      codeNeg = 78,
-    },
-    yVel = {
-      codePos = 79,
-      codeNeg = 80,
-    },
-    zVel = {
-      codePos = 72,
-      codeNeg = 111,
-    },
-  }
-  local rotate = {
-    vX = {
-      codePos = 17,
-      codeNeg = 19,
-    },
-    vY = {
-      codePos = 31,
-      codeNeg = 33,
-    },
-    vZ = {
-      codePos = 58,
-      codeNeg = 60
-    }
-  }
-  --local playerBiped = blam.biped(get_dynamic_player())
-  for index, direction in pairs(direc) do
-    if (keycode == direction.codePos) then
-      --console_out(camObj[index])
-      if (camObj[index] < 1) then
-        camObj[index] = camObj[index] + 0.05
-      end
-    elseif (keycode == direction.codeNeg) then
-      if (camObj[index] > -1) then
-        camObj[index] = camObj[index] - 0.05
-      end
+
+  if (keycode == 27) then
+  end
+  if (keycode == 77) then
+  elseif (keycode == 78) then
+    camY = -40
+    stop_timer(smooth)
+  end
+  if (keycode == 67) then
+    if (movingControl) then
+      movingControl = false
+    else 
+      movingControl = true
     end
   end
-  for index, change in pairs (rotate) do
-    if (keycode == change.codePos) then
-      camObj[index] = camObj[index] + 0.05
-    elseif (keycode == change.codeNeg) then      
-      camObj[index] = camObj[index] - 0.05
-    end
-  end]]
+
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
@@ -1214,3 +1343,4 @@ end
 harmony.set_callback("key press", "on_key_press")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
+set_callback("precamera", "OnPreCamera")

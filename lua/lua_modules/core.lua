@@ -80,7 +80,7 @@ function core.objectSearch(name)
         if (not blam.isNull(object.nameIndex)) then
           local objectName = scenario.objectNames[object.nameIndex + 1]
           if (objectName == name) then
-            return {type = object, name = objectName}
+            return {id = object, name = objectName}
           end
         end
       end
@@ -90,12 +90,13 @@ end
 
 function core.playerDistance(target)
   local player = blam.object(get_dynamic_player())
-  local scenario = blam.scenario()
   if (target and player) then
     local obj = core.objectSearch(target)
-    if (obj.name == target) then
-      local distance = math.sqrt((obj.type.x - player.x) ^ 2 + (obj.type.y - player.y) ^ 2 + (obj.type.z - player.z) ^ 2)  
-      return distance
+    if (obj) then
+      if (obj.name == target) then
+        local distance = math.sqrt((obj.id.x - player.x) ^ 2 + (obj.id.y - player.y) ^ 2 + (obj.id.z - player.z) ^ 2)  
+        return distance
+      end      
     end
   end
 end

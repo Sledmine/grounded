@@ -32,7 +32,7 @@ function patScreen(screenInstance)
         "Who are you?", --1
         "Navy? I think you should report to my CO. Major Forbes", -- 2
         "He's stationed aboard the Colony Ship. Fix up the warthog outside if you wanna get there \nfaster.", -- 3
-        "If you go down to the garage we have a crate with spares. Check out the warthog first so you \nknow what you need.", -- 4
+        "If you go down to the garage we have a crate with spares. You should check out the warthog first so you \nknow what you need.", -- 4
         "Don't take too long. We're in an active military conflict, so be prepared for combat at any notice.", -- 5
         "Okay smartass. Report to CO Major Forbes.", -- 6
         "Are you UNSC?", -- 7
@@ -85,7 +85,6 @@ function patScreen(screenInstance)
         end,
         function ()                         -- 9 bad ending
             set_global("conv_short1", 1)
-            set_global("patterson", 1)
             harmony.menu.close_widget()
             hsc.showHud(1)
         end,

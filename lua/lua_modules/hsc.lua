@@ -58,7 +58,7 @@ end
 --- Attempt to get the counter of an AI encounter
 ---@param encounterName string Name of the encounter in Sapien
 function hsc.aiLivingCount(encounterName)
-    local getAiLivingCountScript = [[(begin (set clua_short1 (ai_living_count "%s")))]]
+    local getAiLivingCountScript = [[(begin (set clua_short1 (living_count "%s")))]]
     execute_script(getAiLivingCountScript:format(encounterName))
     return get_global("clua_short1")
 end
@@ -73,8 +73,8 @@ function hsc.aiSpawn(type, encounterName)
 end
 
 --- AI Migration
---- @param1 fromEncounter
---- @param2 toEncounter
+--- @param from string blahhh
+--- @param string 
 function hsc.aiMigrate(from, to)
     execute_script("ai_migrate ".. from .. " " .. to)
 end
