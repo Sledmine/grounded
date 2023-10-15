@@ -94,7 +94,7 @@ end
 ---@param2 team2 string name for Team 2
 function hsc.AllegianceSet(team1, team2)
     execute_script("ai_allegiance " .. team1 .. " " .. team2)
-    console_out("Allegiance made between " .. team1 .. " and " .. team2)
+    --console_out("Allegiance made between " .. team1 .. " and " .. team2)
 end
 
 --- Remove AI Allegiances
@@ -422,9 +422,9 @@ function hsc.setCamera(camera_point, real, sleep)
 end
 
 --- Camera control
----@param1 boolean
-function hsc.cameraControl(boolean)
-    execute_script("camera_control " .. boolean)
+---@param1 num
+function hsc.cameraControl(num)
+    execute_script("camera_control " .. num)
 end
 ------------------------------------------------------------------------------
 --- Device Functions

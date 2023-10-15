@@ -24,6 +24,7 @@
       "lua_modules.dialogs.btas",
       "lua_modules.dialogs.wright",
       "lua_modules.dialogs.young",
+      "lua_modules.dialogs.sinclair",
       "lua_modules.journal.journal",
       "lua_modules.journal.perksTemplate",
       "lua_modules.journal.prompts",

@@ -7,7 +7,6 @@ local harmony = require "mods.harmony"
 ------------------------------------------------------------------------------
 function patOpenAgainPlease()
     dialog.open(patScreen(get_global("conv_short1")), true)
-    stop_timer(periodic)
 end
 ------------------------------------------------------------------------------
 --- Table Definitions
@@ -44,22 +43,22 @@ function patScreen(screenInstance)
         function ()                         -- 1                         
             set_global("conv_short1", 2)   
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "")
+            patOpenAgainPlease()
         end,
         function ()                         -- 2
             set_global("conv_short1", 3)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 3
             set_global("conv_short1", 4)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 4
             set_global("conv_short1", 5)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 5 GOOD ENDING
             set_global("conv_short1", 1)
@@ -71,17 +70,17 @@ function patScreen(screenInstance)
         function ()                         -- 6
             set_global("conv_short1", 6)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 7
             set_global("conv_short1", 7)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 8
             set_global("conv_short1", 8)
             harmony.menu.close_widget()
-            periodic = set_timer(2, "patOpenAgainPlease", "") 
+            patOpenAgainPlease()
         end,
         function ()                         -- 9 bad ending
             set_global("conv_short1", 1)

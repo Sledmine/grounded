@@ -18,7 +18,7 @@ local core = require "lua_modules.core"
 local interface = require "lua_modules.interface"
 local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
-local optic = harmony.optic
+local _, balltze = pcall(require, "mods.balltze")
 local device_positions = {
     {
         type = 2,
@@ -77,12 +77,14 @@ require "lua_modules.dialogs.single_event.engineerHayden"
 require "lua_modules.dialogs.raiders.raiderCave_betasidemission"
 require "lua_modules.dialogs.young"
 require "lua_modules.dialogs.test"
+require "lua_modules.dialogs.sinclair"
 
 function journalOption(selection)
     local instance = {}
     instance.decisionID = (blam.getTag("ui\\journal\\options\\decision_" .. selection, tagClasses.uiWidgetDefinition)).id
     return instance
 end
+
 
 ------------------------------------------------------------------------------
 
@@ -159,14 +161,109 @@ function missionSelector(mission)
 end
 
 function startup()  
+  local ai = {
+    generic = {
+      "enc_checkpoint_bsp0/sqd_patrol",
+      "enc_powerplant",
+      "enc_hall",
+    },
+    special = {
+      palal = {
+        name = "palal",
+        enc = "enc_covenant/sqd_palal",
+      },
+      palal = {
+        name = "btas",
+        enc = "enc_covenant/sqd_btas",
+      },
+      scorpionTech = {
+        name = "scorp_mechanic",
+        enc = "enc_checkpoint_bsp0/sqd_scorp",
+      },
+      ltpat = {
+        name = "ltpat",
+        enc = "enc_unsc/sqd_pat",
+      },
+    }
+  }
+  for _, encounter in pairs(ai.generic) do
+    hsc.aiSpawn(1, encounter)
+  end
+  for _, unit in pairs (ai.special) do
+    hsc.aiAttach(unit.name, unit.enc)
+  end
   execute_script("object_destroy_containing cine")
-  hsc.aiAttach("palal", "enc_covenant/sqd_palal")
-  hsc.aiAttach("btas", "enc_covenant/sqd_btas")
   execute_script("object_create_containing sanchog_")
-  hsc.aiSpawn(1, "enc_checkpoint_bsp0/sqd_patrol")
-  hsc.aiSpawn(1, "enc_powerplant")
-  hsc.aiAttach("ltpat", "enc_unsc/sqd_pat")
-  hsc.aiAttach("scorp_mechanic", "enc_checkpoint_bsp0/sqd_scorp")
+end
+
+function trailerCamera()
+  hsc.cameraControl(1)
+  hsc.setCamera("trailer6", 0, 0)
+  hsc.setCamera("trailer7", 800, 400)
+end
+
+currentBSP = 0
+
+
+function bspEvents()
+  local localBSP = hsc.bspIndex()
+  local bspEvents = {
+    bsp1 = {
+      index = 0,
+      ai = {
+        migrate = {
+          cavePeople = {
+            from = "g_enc_bsp2raiderCave",
+            to = "g_enc_bsp1raiderCave",
+          },
+          checkPoint = {
+            from = "enc_checkpoint_bsp1",
+            to = "enc_checkpoint_bsp0",
+          }
+        }
+     }
+    },
+    bsp2 = {
+      index = 5,
+      ai = {
+        migrate = {
+          cavePeople = {
+            from = "g_enc_bsp1raiderCave",
+            to = "g_enc_bsp2raiderCave",
+          },
+          checkPoint = {
+            from = "enc_checkpoint_bsp0",
+            to = "enc_checkpoint_bsp1",
+          }
+        }
+     }
+    },
+    bsp3 = {
+      index = 2,
+      ai = {
+        migrate = {
+          btas = {
+            from = "enc_covenant/sqd_btas",
+            to = "enc_covenant_bsp3/sqd_btas"
+          },
+        }
+     }
+    },
+  }
+  if not (localBSP == currentBSP) then
+    --console_out(bsp)
+    for _, bsp in pairs(bspEvents) do
+      if bsp.index == localBSP then
+        --console_out(bsp.index)
+        for _, encounter in pairs(bsp.ai.migrate) do
+          hsc.aiMigrate(encounter.from, encounter.to)
+          --console_out("migrated " .. encounter.from .. " to " .. encounter.to)
+        end
+      end
+    end
+    currentBSP = localBSP
+  end
+
 end
 
 local aiStuff = true
@@ -465,13 +562,58 @@ navmarkers = {
       active = false
     }
   },
+  hall = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop1.mp3"),
+      source = "hall_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+  shack = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop1.mp3"),
+      source = "shack_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
+  woodtown = {
+    unitName = "nav_powerplant",
+    audio = {      
+      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop2.mp3"),
+      source = "woodtown_theme",
+      radius = {
+        fade = 40,
+        max = 20,
+        finish = 50
+      },
+      active = false
+    }
+  },
 }
+
+
+teams = {"player", "human", "covenant", "flood", "sentinel"}
+
+forgiveTimer = false
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
     ------------------------------------------------------------------------------
     --- On Tick Globals
     ------------------------------------------------------------------------------
+    --console_out("tick")
     finalReactorPos = reactor1pos + reactor2pos + reactor3pos
     --forbesHealth()
     local scenario = blam.scenario()
@@ -489,6 +631,7 @@ function OnTick()
         --console_out("lmao")                                   -- So the story behind this joke is I forgot to put "" around door_open and wondered why it didn't work lmao
         hsc.deviceSet(2, "door1", 1)
     end
+    bspEvents()
     ------------------------------------------------------------------------------
     --- Async & Game Save System
     ------------------------------------------------------------------------------
@@ -666,18 +809,19 @@ function OnTick()
               dialog.open(raiderConv1(get_global("conv_short1")), true)
           end
       },
-      { -- Scientist Sinclair
-          unitName = "raider_cave",
-          promptMessage = "Press \"E\" to talk to Raider Leader",
+      { -- engineer hayden
+          unitName = "eng_hayden",
+          promptMessage = "Press \"E\" to talk to Engineer Hayden",
           action = function()
               dialog.open(raiderConv1(get_global("conv_short1")), true)
           end
       },
-      { -- Engineer Hayden
+      { -- Sinclair
           unitName = "sci_sinclair",
           promptMessage = "Press\"E\" to talk to Scientist Sinclair",
           action = function()              
             missions.starter.firstEntry.points.sanctuary.enabled = false
+            dialog.open(sinclair_con1(get_global("conv_short1")), true)
           end
       },
       { -- Doctor Young
@@ -689,8 +833,6 @@ function OnTick()
       },
       }
     }
-    local conversations = interactions.conversations
-    local objectivePrompts = interactions.objectivePrompts
     ------------------------------------------------------------------------------
     --- Journal
     ------------------------------------------------------------------------------
@@ -728,7 +870,7 @@ function OnTick()
           elseif (primary) then                                                 -- If the mission IS primary, assign points world and remove them based on distance
             for _, point in pairs(v.points) do
               if point.enabled then
-                if ((core.playerDistance(point.source)) < 55) and ((core.playerDistance(point.source)) > 4) then
+                if ((core.playerDistance(point.source)) < 49.2) and ((core.playerDistance(point.source)) > 4) then
                   hsc.activateNav(point.type, point.unit, point.source, point.vertOff)
                 else
                   hsc.clearNav(point.type, point.unit, point.source)
@@ -760,7 +902,7 @@ function OnTick()
     --- Worldbuilding
     ------------------------------------------------------------------------------
     -- BASE MUSIC --
-    for _, navpoint in pairs (navmarkers) do
+    --[[for _, navpoint in pairs (navmarkers) do
       local distance = core.playerDistance(navpoint.audio.source)
       local active = navpoint.audio.active
       local sound = navpoint.audio.sound
@@ -769,19 +911,25 @@ function OnTick()
       local finish = navpoint.audio.radius.finish
       if not (active) then
         if (distance) then
+          --console_out(distance)
           if (distance < finish) then    
             navpoint.audio.active = true
+            console_out("nearby")
           end
-        elseif (active) then
+        end
+      elseif (active) then
+        if (distance < finish) then
           harmony.optic.play_sound(sound, soundEngine, false)
           harmony.optic.set_audio_engine_gain(soundEngine, math.floor(3*(fade - distance)))
-          if (distance > finish) then
-            harmony.optic.clear_audio_engine(soundEngine)
-          end
+        end
+        if (distance > finish) then
+          harmony.optic.clear_audio_engine(soundEngine)
+          console_out("ending playback")
+          navpoint.audio.active = false
         end
       end
       --console_out(distance)
-    end
+    end]]
     ------------------------------------------------------------------------------
     --- Missions
     ------------------------------------------------------------------------------
@@ -799,6 +947,7 @@ function OnTick()
               for _, titleType in pairs(interactionTitle) do
                 if (object and objectName == titleType.unitName) then
                   if (core.playerIsNearTo(object, 0.9) ) then
+                    --console_out("near " .. titleType.unitName)
                     interface.promptHud(titleType.promptMessage)       
                     if (playerBiped.actionKey) then
                       titleType.action()
@@ -814,22 +963,20 @@ function OnTick()
             interface.promptHud("")
           end
         end
-      end
-    end
-    -- ALLEGIANCE SYSTEM
-    local teams = {
-        "player",
-        factions.unsc.team,
-        factions.covenant.team,
-        factions.republic.team,
-    }
-    if (playerBiped) then
-        for i, index in ipairs(relationships) do
-            if index < 0 then
-                hsc.AllegianceRemove("player", teams[i + 1])
-                --console_out("Allegiance removed from team " .. teams[i + 1])
+        -- Allegiance system
+        if (object.type == blam.objectClasses.biped) then
+          local biped = blam.biped(object.address)
+          local player = blam.player(get_dynamic_player())
+          --console_out(player.objectId)
+          local injury = biped.mostRecentDamagerPlayer
+          if (injury) then
+            if not(injury == 4294967295) then
+              local team = biped.team
+              hsc.AllegianceRemove("player", teams[team])
             end
-        end
+          end       
+        end        
+      end
     end
     ------------------------------------------------------------------------------
     --- Testing
@@ -958,13 +1105,9 @@ function OnTick()
             if (bspBenjamin == 0) then
                 if (hsc.bspIndex() == 0) then
                     execute_script("switch_bsp 5")
-                    hsc.aiMigrate("g_enc_bsp1raiderCave", "g_enc_bsp2raiderCave")
-                    hsc.aiMigrate("enc_checkpoint_bsp0", "enc_checkpoint_bsp1")
                     bspBenjamin = 1
                 elseif (hsc.bspIndex() == 5) then
                     execute_script("switch_bsp 0")
-                    hsc.aiMigrate("g_enc_bsp2raiderCave", "g_enc_bsp1raiderCave")
-                    hsc.aiMigrate("enc_checkpoint_bsp1", "enc_checkpoint_bsp0")
                     bspBenjamin = 1
                 end
             end
@@ -1137,13 +1280,12 @@ function OnTick()
 
     if (playerBiped) then
         if (playerBiped and playerBiped.actionKeyHold) then
-            local pr = blam.getTag("weapons\\plasma rifle\\plasma rifle", tagClasses.weapon)
-            local prBolt = blam.getTag("weapons\\plasma rifle\\bolt", tagClasses.projectile)
+            
             --local globals = blam.globalsTag()
             --spawn_object(prBolt.id, (playerBiped.x + 0.1), (playerBiped.y - .01), (playerBiped.z + .5))
             --console_out(globals.firstPersonInterface.type)
         end
-    end
+      end
 end
 
 --[[
@@ -1258,40 +1400,45 @@ function cameraTrack(track, time, steps)
   
 end
 
+function importData()
+end
+
+
+
+function OnMapFileLoad()
+  if balltze then
+    local vehicles = {
+      "vehicles\\banshee\\banshee",
+      "vehicles\\ghost\\ghost",
+      "vehicles\\wraith\\wraith",
+      "vehicles\\c_dropship\\c_dropship"
+    }
+    for _, vehicle in pairs(vehicles) do
+      balltze.import_tag_data("grounded_shared", vehicle, "vehicle")
+      console_out("spawning " .. vehicle)
+    end
+    balltze.import_tag_data("grounded_shared", "vehicles\\banshee\\banshee", "vehicle")
+    balltze.import_tag_data("grounded_shared", "sound\\music\\grounded\\unsc\\fob\\loops", "sound")
+  end
+end
+
 function on_key_press(modifiers, character, keycode)
   if (keycode) then
     --console_out(keycode)
   end
-
-  if (keycode == 27) then
-  end
-  if (keycode == 77) then
-  elseif (keycode == 78) then
-    camY = -40
-    stop_timer(smooth)
-  end
-  if (keycode == 67) then
-    if (movingControl) then
-      movingControl = false
-    else 
-      movingControl = true
-    end
-  end
-
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
         -- Cancel event
-        dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
+        --dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
     end
 
+    names = {}
+
     if (character == "p") then
-      --activeMission.starter.active = false
+      --local sound = balltze.Engine.tag.getTag("sound\\music\\grounded\\unsc\\fob\\loops", "sound")
+      balltze.Engine.userInterface.playSound()
     end
     if (character == "o") then
-      --missions.republic.medicalSupplies.active = true
-    end
-    if (character == "i") then
-      --missions.unsc.doctorsOrders.active = true
     end
 
     if (character == "k") then
@@ -1344,3 +1491,7 @@ harmony.set_callback("key press", "on_key_press")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
 set_callback("precamera", "OnPreCamera")
+if balltze then
+  balltze.set_callback("map file load", "OnMapFileLoad")
+  --balltze.set_callback("game input", "OnGameInput")
+end

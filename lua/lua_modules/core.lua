@@ -89,14 +89,27 @@ function core.objectSearch(name)
 end
 
 function core.playerDistance(target)
-  local player = blam.object(get_dynamic_player())
+  local player = blam.biped(get_dynamic_player())
+  local vehicle = player.vehicleObjectId
+  local seat = player.vehicleSeatIndex
   if (target and player) then
-    local obj = core.objectSearch(target)
-    if (obj) then
-      if (obj.name == target) then
-        local distance = math.sqrt((obj.id.x - player.x) ^ 2 + (obj.id.y - player.y) ^ 2 + (obj.id.z - player.z) ^ 2)  
-        return distance
-      end      
+    if (seat < 64) then
+      local obj = core.objectSearch(target)
+      local newDistance = blam.getObject(vehicle)
+      if (obj) then
+        if (obj.name == target) then
+          local distance = math.sqrt((obj.id.x - newDistance.x) ^ 2 + (obj.id.y - newDistance.y) ^ 2 + (obj.id.z - newDistance.z) ^ 2)  
+          return distance
+        end      
+      end
+    else
+      local obj = core.objectSearch(target)
+        if (obj) then
+          if (obj.name == target) then
+            local distance = math.sqrt((obj.id.x - player.x) ^ 2 + (obj.id.y - player.y) ^ 2 + (obj.id.z - player.z) ^ 2)  
+            return distance
+          end      
+        end
     end
   end
 end
