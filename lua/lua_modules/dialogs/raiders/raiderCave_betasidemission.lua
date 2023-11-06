@@ -59,14 +59,14 @@ function raiderConv1(screenInstance)
         "You should probably leave. We're expecting trouble any minute and I don't want you to have to \npick a side.", -- 14
         "Go to the UNSC and find a guy called Forbes. He's in charge. Tell him that we're not moving \nand that you'll be standing with us if he makes a move.", -- 15
         "We're expecting trouble soon. If you're not interested in working with the devil you know, we could use another set of hands.", -- 16
-        "From the UNSC? Resigned, kept the gear. They charged it against my salary so I figured those cheap bastards already earned their money back.", -- 17
+        "From the UNSC? Resigned, kept the gear. They charged it against my salary so I figured those \ncheap bastards already earned their money back.", -- 17
         "We aren't the only ones who resigned. Both sides are getting tired of the stalemate and just want to make peace. That's all I'm going to say on the matter.", -- 18
         "Our volunteers resigned.", -- 19
         "We resigned too.", -- 20
         "Nah.", -- 21
         "Yea.", -- 22
         "You're just a boot. Forbes know the price for our withdrawal. He can pay it, or we handle things \ndifferently.", -- 23
-        "Go to the UNSC and find a guy called Forbes. He's in charge. Tell him that we're not moving and that you'll be standing with us if he makes a move.", -- 24
+        "Go to the UNSC and find a guy called Forbes. He's in charge. Tell him that we're not moving \nand that you'll be standing with us if he makes a move.", -- 24
         "We're expecting trouble soon. If you're not interested in working with the devil you know, we could use another set of hands.", -- 25
         "Yes, I thought so too. Don't bother trying again, you'll get a worse answer.", -- 26
     }

@@ -15,10 +15,13 @@ tagClasses = blam.tagClasses
 objectClasses = blam.objectClasses
 local hsc = require "lua_modules.hsc"
 local core = require "lua_modules.core"
+local glue = require "glue"
 local interface = require "lua_modules.interface"
 local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
+local json = require "lua_modules.json"
 local _, balltze = pcall(require, "mods.balltze")
+local fmt = string.format
 local device_positions = {
     {
         type = 2,
@@ -160,12 +163,53 @@ function missionSelector(mission)
   end
 end
 
+
+function medicalSupplies()
+  local unsc = factions.unsc
+  local republic = factions.republic
+  local covenant = factions.covenant
+  local ai = {
+    bsp1 = hsc.aiLivingCount("g_enc_bsp1raiderCave"),
+    bsp2 = hsc.aiLivingCount("g_enc_bsp2raiderCave"),
+  }
+  if (unsc.mission.clearOut.active) then
+    if (currentBSP == 0) or (currentBSP == 5) then
+      if ((ai.bsp1 == 0) and (ai.bsp2 == 0) and (unsc.mission.clearOut.event == 0)) then
+          unsc.mission.clearOut.resolved = true
+          unsc.mission.clearOut.event = 1
+          missions.republic.medicalSupplies.event = -1
+          factions.republic.relationship = republic.relationship - 1
+          console_out("You killed them all!")
+      end
+    end
+  end
+end
+
+function forbesHealth()
+  local scenario = blam.scenario()
+  local forbesHealth = hsc.unitGetHealth("forbes")
+  for _, objectIndex in ipairs(blam.getObjects()) do
+    local object = blam.getObject(objectIndex)
+    local objectName = scenario.objectNames[objectIndex + 1]
+  end
+  if forbesHealth < 1 then
+    --console_out("forbes health is less than 1")
+  end
+end
+
+function updateEverySecond()
+  medicalSupplies()
+  forbesHealth()
+end
+
 function startup()  
   local ai = {
     generic = {
       "enc_checkpoint_bsp0/sqd_patrol",
       "enc_powerplant",
       "enc_hall",
+      "enc_bsp3_covpiece",
+      "enc_bsp3_reppiece"
     },
     special = {
       palal = {
@@ -194,6 +238,8 @@ function startup()
   end
   execute_script("object_destroy_containing cine")
   execute_script("object_create_containing sanchog_")
+  local updateTimer = set_timer(1000, "updateEverySecond")
+  loadFile()
 end
 
 function trailerCamera()
@@ -288,9 +334,16 @@ factions = {
                     type = 2,
                     unit = "(player0)",
                     source = "raider_cave",
-                    vertOff = 2,
+                    vertOff = 1,
                     enabled = true
                   },
+                  republic = {
+                    type = 1,
+                    unit = "(player0)",
+                    source = "wright",
+                    vertOff = 1,
+                    enabled = true
+                  }
                 },
                 active = false,
                 primary = false,
@@ -310,22 +363,6 @@ factions = {
                 active = false,
                 resolved = false,
                 event = 0,
-            },
-        },
-        members = {
-            forbes = {
-              name = "forbes",
-              met = false,
-              heard = false,
-              relationship = 0,
-              alive = true,
-            },
-            young = {
-              name = "young",
-              met = false,
-              heard = false,
-              relationship = 0,
-              alive = true,
             },
         },
         team = "human",
@@ -350,43 +387,28 @@ factions = {
                 event = 0,
             }
         },
-        members = {
-            wright = {
-                met = false,
-                heard = false,
-                relationship = 0,
-                alive = true,
-            }
-        },
+        
         team = "covenant",
     },
     covenant = {
-        relationship = 1,
-        mission = {
-            honestwork = {
-                name = "Honest Work",
-                description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
-                action = function()
-                  selectedMission = "Honest Work"
-                  missionSelector(selectedMission)
-                  harmony.menu.close_widget()     
-                  periodic = set_timer(2, "journalLoader", "")                
-                end,
-                active = false,
-                primary = false,
-                resolved = false,
-                event = 0,
-            }
-        },
-        members = {
-            palal = {
-                met = false,
-                heard = false,
-                relationship = 0,
-                alive = true,
-            }
-        },
-        team = "sentinel",
+      relationship = 1,
+      mission = {
+        honestwork = {
+          name = "Honest Work",
+          description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
+          action = function()
+            selectedMission = "Honest Work"
+            missionSelector(selectedMission)
+            harmony.menu.close_widget()     
+            periodic = set_timer(2, "journalLoader", "")                
+          end,
+          active = false,
+          primary = false,
+          resolved = false,
+          event = 0,
+        }
+      },
+      team = "sentinel",
     },
 }
 
@@ -396,22 +418,154 @@ relationships = {
     covenant = factions.covenant.relationship,
 }
 
+progress = {
+  missions = {
+    unsc = {
+      clearOut = {
+        name = "Clear Out",
+        description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
+        active = false,
+        primary = false,
+        resolved = false,
+        event = 0,  
+      },
+      doctorsOrders = {
+        name = "Doctor's Note",
+        description = "Dr. Young needs a resupply for her lab. Find a way to bring her the ingredients she needs.",
+        active = false,
+        resolved = false,
+        event = 0,
+      },
+    },    
+    republic = {
+      medicalSupplies = {
+      name = "Supply Run",
+      description = "Secretary General Wright has asked you to source some medical supplies.",
+      active = false,
+      primary = false,
+      resolved = false,
+      event = 0,
+     }
+    },
+    starter = {    
+      firstEntry = {
+        name = "It Reaches Out",
+        description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+        active = true,
+        primary = false,
+        resolved = false,
+        event = 0,    
+      },
+    },
+  },
+  members = {
+    unsc = {
+      forbes = {
+        name = "forbes",
+        met = false,
+        heard = false,
+        relationship = false,
+        alive = true,
+      },
+      young = {
+        name = "young",
+        met = false,
+        heard = false,
+        relationship = false,
+        alive = true,
+      },
+    },
+    republic = {
+      wright = {
+        name = "wright",
+        met = false,
+        heard = false,
+        relationship = false,
+        alive = true,
+      },
+    },
+    covenant = {
+      palal = {
+        name = "palal",
+        met = false,
+        heard = false,
+        relationship = false,
+        alive = true,
+      },
+    },
+  }
+}
+
 missions = {
-  unsc = factions.unsc.mission,
-  republic = factions.republic.mission,
-  covenant = factions.covenant.mission,
-  starter = {    
-    firstEntry = {
-      name = "It Reaches Out",
-      description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+  unsc = {
+    clearOut = {
+        name = progress.missions.unsc.clearOut.name,
+        description = progress.missions.unsc.clearOut.description,
+        points = {
+          cave = {
+            type = 2,
+            unit = "(player0)",
+            source = "raider_cave",
+            vertOff = 1,
+            enabled = true
+          },
+          republic = {
+            type = 1,
+            unit = "(player0)",
+            source = "wright",
+            vertOff = 1,
+            enabled = true
+          }
+        },
+        active = progress.missions.unsc.clearOut.active,
+        primary = progress.missions.unsc.clearOut.primary,
+        resolved = progress.missions.unsc.clearOut.resolved,
+        event = progress.missions.unsc.clearOut.event,        
+        action = function()
+          selectedMission = "Clear Out"
+          missionSelector(selectedMission)
+          harmony.menu.close_widget()
+          journalLoader()           
+        end,
+    },
+    doctorsOrders = {
+      name = progress.missions.unsc.doctorsOrders.name,
+      description = progress.missions.unsc.doctorsOrders.description,
+      active = progress.missions.unsc.doctorsOrders.active,
+      resolved = progress.missions.unsc.doctorsOrders.resolved,
+      event = progress.missions.unsc.doctorsOrders.event,
       action = function()
-        selectedMission = "It Reaches Out"
+        selectedMission = "Doctor's Note"
         missionSelector(selectedMission)
         harmony.menu.close_widget()
-        journalLoader()
-        --periodic = set_timer(0.1, "journalLoader", "")                
+        journalLoader()    
       end,
-      active = true,
+    },
+  },
+  republic = {
+    medicalSupplies = {
+    name = progress.missions.republic.medicalSupplies.name,
+    description = progress.missions.republic.medicalSupplies.description,
+    action = function()
+      selectedMission = "Supply Run"
+      missionSelector(selectedMission)
+      harmony.menu.close_widget()   
+      journalLoader() 
+      --periodic = set_timer(0.1, "journalLoader", "")             
+    end,
+    active = progress.missions.republic.medicalSupplies.active,
+    points = {},
+    primary = progress.missions.republic.medicalSupplies.primary,
+    resolved = progress.missions.republic.medicalSupplies.resolved,
+    event = progress.missions.republic.medicalSupplies.event,
+   }
+  },
+  --covenant = factions.covenant.mission,
+  starter = {    
+    firstEntry = {
+      name = progress.missions.starter.firstEntry.name,
+      description = progress.missions.starter.firstEntry.description,
+      active = progress.missions.starter.firstEntry.active,
       points = {
         byellee = {
           type = 2,
@@ -424,7 +578,7 @@ missions = {
           type = 2,
           unit = "(player0)",
           source = "sci_sinclair",
-          vertOff = 1,   
+          vertOff = 0.5,   
           enabled = true       
         },
         powerplant = {
@@ -435,53 +589,24 @@ missions = {
           enabled = true          
         },
       },
-      primary = false,
-      resolved = false,
-      event = 0,
+      primary = progress.missions.starter.firstEntry.primary,
+      resolved = progress.missions.starter.firstEntry.resolved,
+      event = 0,    
+      action = function()
+        selectedMission = "It Reaches Out"
+        missionSelector(selectedMission)
+        harmony.menu.close_widget()
+        journalLoader()
+        --periodic = set_timer(0.1, "journalLoader", "")                
+      end,
     },
   }
 }
 
-members = {
-  unsc = factions.unsc.members,
-  republic = factions.republic.members,
-  covenant = factions.covenant.members,
-}
 
 activeMission = {}
 
 activeConversation = false
-
-function medicalSupplies()
-    local unsc = factions.unsc
-    local republic = factions.republic
-    local covenant = factions.covenant
-    local ai = {
-      bsp1 = hsc.aiLivingCount("g_enc_bsp1raiderCave"),
-      bsp2 = hsc.aiLivingCount("g_enc_bsp2raiderCave"),
-    }
-    if (unsc.mission.clearOut.active) then
-        if ((ai.bsp1 == 0) and (ai.bsp2 == 0) and (unsc.mission.clearOut.event == 0)) then
-            unsc.mission.clearOut.resolved = true
-            unsc.mission.clearOut.event = 1
-            missions.republic.medicalSupplies.event = -1
-            factions.republic.relationship = republic.relationship - 1
-            --console_out("You killed them all!")
-        end
-    end
-end
-
-function forbesHealth()
-  local scenario = blam.scenario()
-  local forbesHealth = hsc.unitGetHealth("forbes")
-  for _, objectIndex in ipairs(blam.getObjects()) do
-    local object = blam.getObject(objectIndex)
-    local objectName = scenario.objectNames[objectIndex + 1]
-  end
-  if forbesHealth < 1 then
-    --console_out("forbes health is less than 1")
-  end
-end
 
 camControl = false
 movingControl = false
@@ -608,6 +733,7 @@ teams = {"player", "human", "covenant", "flood", "sentinel"}
 
 forgiveTimer = false
 
+
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
     ------------------------------------------------------------------------------
@@ -615,7 +741,6 @@ function OnTick()
     ------------------------------------------------------------------------------
     --console_out("tick")
     finalReactorPos = reactor1pos + reactor2pos + reactor3pos
-    --forbesHealth()
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
     --local hogRepair = (scenario.tagNames[27])
@@ -624,9 +749,6 @@ function OnTick()
     local intro = landed
     local playerBiped = blam.biped(get_dynamic_player())
     local bspIndex = hsc.bspIndex()
-    local unscMission = factions.unsc.mission
-    local repMission = factions.republic.mission
-    local covMission = factions.covenant.mission
     if (hsc.isPlayerInsideVolume("door_open")) then
         --console_out("lmao")                                   -- So the story behind this joke is I forgot to put "" around door_open and wondered why it didn't work lmao
         hsc.deviceSet(2, "door1", 1)
@@ -663,7 +785,7 @@ function OnTick()
     ---@field unitName string
     ---@field promptMessage string
     ---@field action function
-    local interactions = {
+  local interactions = {
       objectivePrompts = {
         {
             unitName = "repair_hog", -- "repair hog"
@@ -832,7 +954,7 @@ function OnTick()
           end
       },
       }
-    }
+  }
     ------------------------------------------------------------------------------
     --- Journal
     ------------------------------------------------------------------------------
@@ -970,7 +1092,7 @@ function OnTick()
           --console_out(player.objectId)
           local injury = biped.mostRecentDamagerPlayer
           if (injury) then
-            if not(injury == 4294967295) then
+            if not(injury == 4294967295) and (biped.health < 0.1) and ((playerBiped.shooting) ) then
               local team = biped.team
               hsc.AllegianceRemove("player", teams[team])
             end
@@ -1400,7 +1522,25 @@ function cameraTrack(track, time, steps)
   
 end
 
-function importData()
+function saveFile()
+  local progressFile = json.encode(progress)
+  write_file([[saves\progress.json]], progressFile)
+end
+
+function recursive(table)
+  for _, v in pairs(table) do
+    return v
+  end
+end
+
+function loadFile()
+  local path = [[saves\progress.json]]
+  local exists = file_exists(path)
+  if exists then
+    local content = read_file(path)
+    local unpack = json.decode(content)
+    progress = unpack
+  end
 end
 
 
@@ -1420,6 +1560,7 @@ function OnMapFileLoad()
     balltze.import_tag_data("grounded_shared", "vehicles\\banshee\\banshee", "vehicle")
     balltze.import_tag_data("grounded_shared", "sound\\music\\grounded\\unsc\\fob\\loops", "sound")
   end
+  loadFile()
 end
 
 function on_key_press(modifiers, character, keycode)
@@ -1435,23 +1576,23 @@ function on_key_press(modifiers, character, keycode)
     names = {}
 
     if (character == "p") then
-      --local sound = balltze.Engine.tag.getTag("sound\\music\\grounded\\unsc\\fob\\loops", "sound")
-      balltze.Engine.userInterface.playSound()
+      console_out(progress.members.unsc.forbes.met)
+    end
+    if (character == "y") then
+      --console_out(type(missions.unsc.clearOut.action))
     end
     if (character == "o") then
+      --progress.members.unsc.forbes.met = true
+      --console_out("changed relationship")
     end
 
     if (character == "k") then
-      local exists = file_exists([[saves\player.json]])
-      local playerName = blam.player(get_dynamic_player()).name
-      if exists then
-        local written = write_file([[saves\player.json]], "{hello world}")
-        local content = read_file([[saves\player.json]])
-        --console_out(content)
-        --load_ui_widget([[ui\shell\main_menu\settings_select\player_setup\player_profile_edit\profile_label]])
-      else
-        --console_out("didn't work")
-      end
+      --saveFile()
+      --console_out("saving")
+    end
+    if (character == "i") then
+      --loadFile()
+      --console_out("loaded")
     end
 
     if (character == "+") then
@@ -1460,11 +1601,14 @@ function on_key_press(modifiers, character, keycode)
     end
 
     if (keycode == 5) then -- F5
-        execute_script("core_save")
+        core.saveSlot(99)
         hud_message("     Quicksaving...")
+        saveFile()
     end
     if (keycode == 6) then -- F6
+        core.loadSlot(99)
         execute_script("core_load")
+        loadFile()
     end
     if (keycode == 12) then -- F12
         execute_script("chimera_lua_reload_scripts")
@@ -1478,10 +1622,6 @@ function on_key_press(modifiers, character, keycode)
     end
     if (keycode == 12) then
         execute_script("chimera_lua_reload_scripts")
-    end
-    if keycode == 66 then
-        harmony.menu.close_widget()
-        console_out(keycode)
     end
     --console_out(keycode)  -- DEBUG for trying to find key codes
     return true
