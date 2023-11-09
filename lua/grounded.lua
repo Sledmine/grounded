@@ -767,9 +767,11 @@ function OnTick()
     local loadGameSlot = get_global("load")
     if (saveGameSlot ~= 0) then
         core.saveSlot(saveGameSlot)
+        saveFile(saveGameSlot)
     end
     if (loadGameSlot ~= 0) then
         core.loadSlot(loadGameSlot)
+        loadFile(loadGameSlot)
     end
     -- Respawn script that skips the hardcoded game_revert on player death. Will load the MOST RECENTLY SAVED Core file.
     if get_global("reload_now") then
@@ -1522,19 +1524,16 @@ function cameraTrack(track, time, steps)
   
 end
 
-function saveFile()
+function saveFile(saveSlot)
   local progressFile = json.encode(progress)
-  write_file([[saves\progress.json]], progressFile)
+  write_file([[saves\progress_]] .. saveSlot .. [[.json]], progressFile)
 end
 
-function recursive(table)
-  for _, v in pairs(table) do
-    return v
+function loadFile(saveSlot)
+  if not (saveSlot) then
+    saveSlot = 99
   end
-end
-
-function loadFile()
-  local path = [[saves\progress.json]]
+  local path = "saves\\progress_" .. saveSlot .. ".json"
   local exists = file_exists(path)
   if exists then
     local content = read_file(path)
@@ -1560,7 +1559,6 @@ function OnMapFileLoad()
     balltze.import_tag_data("grounded_shared", "vehicles\\banshee\\banshee", "vehicle")
     balltze.import_tag_data("grounded_shared", "sound\\music\\grounded\\unsc\\fob\\loops", "sound")
   end
-  loadFile()
 end
 
 function on_key_press(modifiers, character, keycode)
@@ -1582,13 +1580,12 @@ function on_key_press(modifiers, character, keycode)
       --console_out(type(missions.unsc.clearOut.action))
     end
     if (character == "o") then
-      --progress.members.unsc.forbes.met = true
-      --console_out("changed relationship")
+      progress.members.unsc.forbes.met = true
+      console_out("changed relationship")
     end
 
     if (character == "k") then
-      --saveFile()
-      --console_out("saving")
+      progress.members.unsc.forbes.met = false
     end
     if (character == "i") then
       --loadFile()
@@ -1603,12 +1600,11 @@ function on_key_press(modifiers, character, keycode)
     if (keycode == 5) then -- F5
         core.saveSlot(99)
         hud_message("     Quicksaving...")
-        saveFile()
+        saveFile(99)
     end
     if (keycode == 6) then -- F6
         core.loadSlot(99)
-        execute_script("core_load")
-        loadFile()
+        loadFile(99)
     end
     if (keycode == 12) then -- F12
         execute_script("chimera_lua_reload_scripts")
