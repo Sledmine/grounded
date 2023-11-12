@@ -202,6 +202,12 @@ function updateEverySecond()
   forbesHealth()
 end
 
+function autosave()
+  if hsc.gamesafe() then
+    core.saveSlot(0)
+  end
+end
+
 function startup()  
   local ai = {
     generic = {
@@ -239,7 +245,7 @@ function startup()
   execute_script("object_destroy_containing cine")
   execute_script("object_create_containing sanchog_")
   local updateTimer = set_timer(1000, "updateEverySecond")
-  loadFile()
+  local autoSaveTimer = set_timer(300000, "autosave")
 end
 
 function trailerCamera()
@@ -348,7 +354,7 @@ factions = {
                 active = false,
                 primary = false,
                 resolved = false,
-                event = 0,
+                event = 1,
             },
             doctorsOrders = {
               name = "Doctor's Note",
@@ -362,7 +368,7 @@ factions = {
                 end,
                 active = false,
                 resolved = false,
-                event = 0,
+                event = 1,
             },
         },
         team = "human",
@@ -384,7 +390,7 @@ factions = {
                 points = {},
                 primary = false,
                 resolved = false,
-                event = 0,
+                event = 1,
             }
         },
         
@@ -405,7 +411,7 @@ factions = {
           active = false,
           primary = false,
           resolved = false,
-          event = 0,
+          event = 1,
         }
       },
       team = "sentinel",
@@ -423,38 +429,42 @@ progress = {
     unsc = {
       clearOut = {
         name = "Clear Out",
-        description = "Major Forbes has asked you to remove the raiders from the cave. Find a way to do this.",
+        description = {"Major Forbes has asked you to remove the raiders from the cave. Find a way to do this."},
         active = false,
         primary = false,
         resolved = false,
-        event = 0,  
+        event = 1,  
       },
       doctorsOrders = {
         name = "Doctor's Note",
-        description = "Dr. Young needs a resupply for her lab. Find a way to bring her the ingredients she needs.",
+        description = {"Dr. Young needs a resupply for her lab. Find a way to bring her the ingredients she needs."},
         active = false,
         resolved = false,
-        event = 0,
+        event = 1,
       },
     },    
     republic = {
       medicalSupplies = {
       name = "Supply Run",
-      description = "Secretary General Wright has asked you to source some medical supplies.",
+      description = {"Secretary General Wright has asked you to source some medical supplies."},
       active = false,
       primary = false,
       resolved = false,
-      event = 0,
+      event = 1,
      }
     },
     starter = {    
       firstEntry = {
         name = "It Reaches Out",
-        description = "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+        description = {
+          "You find yourself crash-landed on Byellee. Look for someone to find out what happened to your \nship.",
+          "You have spoken to Dr. Sinclair. He told you to head south, then west.",
+          "Lt. Patterson wants you to talk to his Commanding Officer.",
+        },
         active = true,
         primary = false,
         resolved = false,
-        event = 0,    
+        event = 1,    
       },
     },
   },
@@ -464,14 +474,14 @@ progress = {
         name = "forbes",
         met = false,
         heard = false,
-        relationship = false,
+        relationship = 0,
         alive = true,
       },
       young = {
         name = "young",
         met = false,
         heard = false,
-        relationship = false,
+        relationship = 0,
         alive = true,
       },
     },
@@ -480,7 +490,7 @@ progress = {
         name = "wright",
         met = false,
         heard = false,
-        relationship = false,
+        relationship = 0,
         alive = true,
       },
     },
@@ -489,11 +499,11 @@ progress = {
         name = "palal",
         met = false,
         heard = false,
-        relationship = false,
+        relationship = 0,
         alive = true,
       },
     },
-  }
+  },
 }
 
 missions = {
@@ -591,7 +601,7 @@ missions = {
       },
       primary = progress.missions.starter.firstEntry.primary,
       resolved = progress.missions.starter.firstEntry.resolved,
-      event = 0,    
+      event = 1,    
       action = function()
         selectedMission = "It Reaches Out"
         missionSelector(selectedMission)
@@ -602,12 +612,9 @@ missions = {
     },
   }
 }
-
-
+mostRecentSave = get_global("most_recent_save")
 activeMission = {}
-
 activeConversation = false
-
 camControl = false
 movingControl = false
 camX = 0
@@ -616,7 +623,6 @@ camZ = 0
 xAxis = 0
 yAxis = 1
 zAxis = 0
-
 cameraPoints = {
   sanctuaryOrbit = {
     "camtrack1",
@@ -629,10 +635,6 @@ cameraPoints = {
     "camtrack8",
   }
 }
-
-soundEngine = harmony.optic.create_audio_engine()
-soundPlay = false
-location_volume = 100
 
 navmarkers = {
   powerplant = {
@@ -727,7 +729,6 @@ navmarkers = {
     }
   },
 }
-
 
 teams = {"player", "human", "covenant", "flood", "sentinel"}
 
@@ -901,8 +902,8 @@ function OnTick()
             missions.starter.firstEntry.points.powerplant.enabled = false
               if (get_global("act1_landed") < 1) then
                   dialog.open(patScreen(convShort), true)
-              else
-                  hsc.soundImpulseStart()
+              --else
+                  --hsc.soundImpulseStart()
               end
           end
       },
@@ -955,7 +956,21 @@ function OnTick()
               dialog.open(youngConv1(get_global("conv_short1")))
           end
       },
-      }
+    },
+    dumbNPC = {
+      marine = {
+        unitName = "marine",
+        promptMessage = "Press\"E\" to talk to Marine",
+        action = function()
+        end
+      },
+      odst = {
+        unitName = "odst",
+        promptMessage = "Press\"E\" to talk to ODST",
+        action = function()
+        end
+      },
+    }
   }
     ------------------------------------------------------------------------------
     --- Journal
@@ -976,9 +991,6 @@ function OnTick()
               end
             end
             if not (check) then
-              --[[if (activeMission[1].active) then
-                activeMission[1].active = false
-              end]]
               table.insert(activeMission, 1, v)
               selectedMission = v.name
               --console_out("inserted " .. name)
@@ -1020,40 +1032,19 @@ function OnTick()
         else
           missionName.primary = false
         end
+        local name = missionName.name
+        for _, faction in pairs(progress.missions) do
+          for _, mission in pairs(faction) do
+            if mission.name == name then
+              missionName = mission
+            end
+          end
+        end
       end
     end
     ------------------------------------------------------------------------------
     --- Worldbuilding
     ------------------------------------------------------------------------------
-    -- BASE MUSIC --
-    --[[for _, navpoint in pairs (navmarkers) do
-      local distance = core.playerDistance(navpoint.audio.source)
-      local active = navpoint.audio.active
-      local sound = navpoint.audio.sound
-      local fade = navpoint.audio.radius.fade
-      local max = navpoint.audio.radius.max
-      local finish = navpoint.audio.radius.finish
-      if not (active) then
-        if (distance) then
-          --console_out(distance)
-          if (distance < finish) then    
-            navpoint.audio.active = true
-            console_out("nearby")
-          end
-        end
-      elseif (active) then
-        if (distance < finish) then
-          harmony.optic.play_sound(sound, soundEngine, false)
-          harmony.optic.set_audio_engine_gain(soundEngine, math.floor(3*(fade - distance)))
-        end
-        if (distance > finish) then
-          harmony.optic.clear_audio_engine(soundEngine)
-          console_out("ending playback")
-          navpoint.audio.active = false
-        end
-      end
-      --console_out(distance)
-    end]]
     ------------------------------------------------------------------------------
     --- Missions
     ------------------------------------------------------------------------------
@@ -1086,12 +1077,23 @@ function OnTick()
           else
             interface.promptHud("")
           end
+        elseif (object.type == blam.objectClasses.biped) then
+          if not (playerBiped.address == object.address) then
+            if (core.playerIsNearTo(object, 0.9)) then
+              local tagPath = blam.getTag(object.tagId).path
+              for _, type in pairs(interactions.dumbNPC) do
+                if tagPath:find(type.unitName) then
+                  interface.promptHud(type.promptMessage)
+                end
+              end
+            elseif (core.playerIsNearTo(object, 1)) then
+              interface.promptHud("")
+            end
+          end
         end
         -- Allegiance system
         if (object.type == blam.objectClasses.biped) then
           local biped = blam.biped(object.address)
-          local player = blam.player(get_dynamic_player())
-          --console_out(player.objectId)
           local injury = biped.mostRecentDamagerPlayer
           if (injury) then
             if not(injury == 4294967295) and (biped.health < 0.1) and ((playerBiped.shooting) ) then
@@ -1106,11 +1108,7 @@ function OnTick()
     --- Testing
     ------------------------------------------------------------------------------
     -- Tracking the size of the player inventory
-    playerInventory.length = 0
-    for row in pairs(playerInventory) do                    -- For every row in "playerInventory" table, add 1 to playerInventory.length
-        playerInventory.length = playerInventory.length +
-        1                                                   -- This allows the player inventory to dynamically scale and it isn't limited to an arbitrary value like 64
-    end    
+    
     ------------------------------------------------------------------------------
     --- Camera System
     ------------------------------------------------------------------------------
@@ -1412,14 +1410,6 @@ function OnTick()
       end
 end
 
---[[
-function saveSelect(selection)
-    local saveState = {}
-    saveState.saveID = blam.getTag("ui\\checkpoints\\save" .. selection, tagClasses.uiWidgetDefinition).id
-end]]
-
-
-
 function on_widget_accept(widget_handle)
     local widgetTagId = harmony.menu.get_widget_values(widget_handle).tag_id
     if (widgetTagId == newGame.id) then
@@ -1432,8 +1422,8 @@ function on_widget_accept(widget_handle)
         set_global("reload_now", true)
         harmony.menu.close_widget()
         startup()
+        loadFile()
     end
-    --console_out(newGame.id)
 
     -- Conversation Widgets
     for i = 1, 4 do
@@ -1531,7 +1521,7 @@ end
 
 function loadFile(saveSlot)
   if not (saveSlot) then
-    saveSlot = 99
+    saveSlot = 0
   end
   local path = "saves\\progress_" .. saveSlot .. ".json"
   local exists = file_exists(path)
@@ -1554,10 +1544,8 @@ function OnMapFileLoad()
     }
     for _, vehicle in pairs(vehicles) do
       balltze.import_tag_data("grounded_shared", vehicle, "vehicle")
-      console_out("spawning " .. vehicle)
+      --console_out("spawning " .. vehicle)
     end
-    balltze.import_tag_data("grounded_shared", "vehicles\\banshee\\banshee", "vehicle")
-    balltze.import_tag_data("grounded_shared", "sound\\music\\grounded\\unsc\\fob\\loops", "sound")
   end
 end
 
@@ -1574,18 +1562,27 @@ function on_key_press(modifiers, character, keycode)
     names = {}
 
     if (character == "p") then
-      console_out(progress.members.unsc.forbes.met)
+      local paths = {
+        "grunt",
+        "marine"
+      }
+      for _, path in pairs(paths) do
+        local tagPath = blam.findTagsList(path, "actv")
+        for _, name in pairs(tagPath) do
+          console_out(name.path)
+        end
+      end
     end
     if (character == "y") then
       --console_out(type(missions.unsc.clearOut.action))
     end
     if (character == "o") then
-      progress.members.unsc.forbes.met = true
-      console_out("changed relationship")
+      --progress.members.unsc.forbes.met = true
+      --console_out("changed relationship")
     end
 
     if (character == "k") then
-      progress.members.unsc.forbes.met = false
+      --progress.members.unsc.forbes.met = false
     end
     if (character == "i") then
       --loadFile()
@@ -1599,7 +1596,7 @@ function on_key_press(modifiers, character, keycode)
 
     if (keycode == 5) then -- F5
         core.saveSlot(99)
-        hud_message("     Quicksaving...")
+        --hud_message("     Quicksaving...")
         saveFile(99)
     end
     if (keycode == 6) then -- F6

@@ -35,8 +35,17 @@ function journalScreen(screenInstance)
     for i = 1, #activeMission do
       table.insert(journalOut.questTitles, activeMission[i].name)
       table.insert(journalOut.playerAction, activeMission[i].action)
-      if screenInstance == activeMission[i].name then
-        journalOut.questText = activeMission[i].description
+      if screenInstance == activeMission[i].name then        
+        local event = 1
+        for _, faction in pairs(progress.missions) do
+          for _, mission in pairs(faction) do
+            if mission.name == activeMission[i].name then
+              event = mission.event
+            end
+          end
+        end
+        console_out(event)
+        journalOut.questText = activeMission[i].description[event]
       end
     end
     return {

@@ -52,6 +52,17 @@ function hsc.bspIndex()
     return get_global("clua_short2")
 end
 
+function hsc.gamesafe()
+  local gameSafe = [[
+    (begin (if (game_safe_to_save) (set clua_boolean1 true) (set clua_boolean1 false)))]]
+  execute_script(gameSafe)
+  if (get_global("clua_boolean1")) then
+    return true
+  else
+    return false
+  end
+end
+
 ------------------------------------------------------------------------------
 --- AI Functions
 ------------------------------------------------------------------------------

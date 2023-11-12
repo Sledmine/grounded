@@ -74,6 +74,7 @@ function patScreen(screenInstance)
         end,
         function ()                         -- 7
             set_global("conv_short1", 7)
+            --progress.missions.starter.firstEntry.event = 3
             harmony.menu.close_widget()
             patOpenAgainPlease()
         end,
@@ -91,6 +92,7 @@ function patScreen(screenInstance)
     ------------------------------------------------------------------------------
     local scream = {}
     if screenInstance == 1 then
+        progress.missions.starter.firstEntry.event = 3
         scream.npcText = patNpcArray[1]
         scream.playerResponses = {patResponseArray[1], patResponseArray[2], patResponseArray[3]}
         scream.playerActions = {patActionsArray[1], patActionsArray[2], patActionsArray[3]}  

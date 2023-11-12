@@ -19,15 +19,28 @@ local function createFoldersStructure()
 end
 
 local function saveFile(saveFileIndex)
-    createFoldersStructure()
-    -- Get the content of the current core save file
-    local saveFile = glue.readfile(saveCoreFilePath)
-    if (saveFile) then
-        -- TODO Check if the file was successfully saved
-        glue.writefile(savesPath .. "\\slot_" .. saveFileIndex .. ".bin", saveFile)
-        hud_message("")
-        hud_message("Saved slot: " .. saveFileIndex)
+  createFoldersStructure()
+  -- Get the content of the current core save file
+  local saveFile = glue.readfile(saveCoreFilePath)
+  if (saveFile) then
+    -- TODO Check if the file was successfully saved
+    glue.writefile(savesPath .. "\\slot_" .. saveFileIndex .. ".bin", saveFile)
+    hud_message("")
+    if saveFileIndex == 99 then
+      hud_message("Quicksaving")
+    elseif saveFileIndex == 0 then
+      hud_message("Autosaving")
+    else
+      hud_message("Saved slot: " .. saveFileIndex)
     end
+  end
+end
+
+function core.questPrompt(titleText)
+  hud_message(titleText)
+  hud_message("")
+  hud_message("")
+  hud_message("")
 end
 
 --- Save save file into given slot index
