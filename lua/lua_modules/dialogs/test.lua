@@ -6,6 +6,8 @@
 local dialog = require "lua_modules.dialog"
 local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
+local scream = {}
+scream.activeTrack = ""
 
 function exampleConvReload()   -- IMPORTANT - give this function a new name for every conversation. In VSCode, highlight the name and press CTRL+F2 to rename all. If you don't, the conversations will interfere with each other and load conversations from other modules
     dialog.open(exampleConvScreen(get_global("conv_short1")), true)            -- Reopens the conversation based on the global defined. You can change this.
@@ -75,7 +77,6 @@ function exampleConvScreen(screenInstance)
         Every conversation will have a discreet number of states/branches it can exist in. This allows us to effectively pre-generate every possible branch using
         if-then-else statements. At the moment, this doesn't include a function to generate sounds on-command, however that is a fairly easy implementation if you choose to modify this before I get around to it.
     ]]
-    local scream = {}
     ------------------------------------------------------------------------------
   local function con1_fork1()                                                   -- Build each conversation screen as a local function. 
     scream.npcText = npcWords[1]
@@ -127,11 +128,7 @@ function exampleConvScreen(screenInstance)
 
   return {
     objectName = "",
-    npcSpeech = function ()
-      if not (scream.activeTrack == nil) then
-        hsc.soundImpulseStart(scream.activeTrack, "", 0.7)
-      end
-    end,
+    npcSpeech = scream.activeTrack,
     npcDialog = { scream.npcText },
     options = {
       scream.playerResponses[1],
@@ -146,6 +143,5 @@ function exampleConvScreen(screenInstance)
       scream.playerActions[3],
       scream.playerActions[4],
     }
-  }
-
+  } 
 end

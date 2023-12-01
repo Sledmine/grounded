@@ -20,7 +20,8 @@ local interface = require "lua_modules.interface"
 local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
 local json = require "lua_modules.json"
-local _, balltze = pcall(require, "mods.balltze")
+--local _, balltze = pcall(require, "mods.balltze")
+local hudSkew = require "lua_modules.hud_skew"
 local fmt = string.format
 local device_positions = {
     {
@@ -58,11 +59,6 @@ profileEdit = blam.getTag([[ui\shell\main_menu\settings_select\player_setup\play
 journalTag = blam.getTag([[ui\journal\btn_journal_pausescreen]], tagClasses.uiWidgetDefinition)
 journalActions = {[[ui\journal\options\static_activate_quest]], [[ui\journal\options\static_activate_marker]], [[ui\journal\options\static_close_journal]]}
 journalClose = blam.getTag(journalActions[3], tagClasses.uiWidgetDefinition)
-save1 = blam.getTag([[ui\checkpoints\save1]], tagClasses.uiWidgetDefinition)
-save2 = blam.getTag([[ui\checkpoints\save2]], tagClasses.uiWidgetDefinition)
-save3 = blam.getTag([[ui\checkpoints\save3]], tagClasses.uiWidgetDefinition)
-save4 = blam.getTag([[ui\checkpoints\save4]], tagClasses.uiWidgetDefinition)
-save5 = blam.getTag([[ui\checkpoints\save5]], tagClasses.uiWidgetDefinition)
 engineersSaved = 0
 landed = 0
 conversation = false
@@ -186,12 +182,7 @@ function medicalSupplies()
 end
 
 function forbesHealth()
-  local scenario = blam.scenario()
   local forbesHealth = hsc.unitGetHealth("forbes")
-  for _, objectIndex in ipairs(blam.getObjects()) do
-    local object = blam.getObject(objectIndex)
-    local objectName = scenario.objectNames[objectIndex + 1]
-  end
   if forbesHealth < 1 then
     --console_out("forbes health is less than 1")
   end
@@ -221,18 +212,22 @@ function startup()
       palal = {
         name = "palal",
         enc = "enc_covenant/sqd_palal",
+        list = "look_at_player"
       },
       palal = {
         name = "btas",
         enc = "enc_covenant/sqd_btas",
+        list = "look_at_player"
       },
       scorpionTech = {
         name = "scorp_mechanic",
         enc = "enc_checkpoint_bsp0/sqd_scorp",
+        list = "look_at_player"
       },
       ltpat = {
         name = "ltpat",
         enc = "enc_unsc/sqd_pat",
+        list = "look_at_player"
       },
     }
   }
@@ -241,11 +236,12 @@ function startup()
   end
   for _, unit in pairs (ai.special) do
     hsc.aiAttach(unit.name, unit.enc)
+    hsc.aiCommandList(unit.enc, unit.list)
   end
   execute_script("object_destroy_containing cine")
   execute_script("object_create_containing sanchog_")
   local updateTimer = set_timer(1000, "updateEverySecond")
-  local autoSaveTimer = set_timer(300000, "autosave")
+  local autoSaveTimer = set_timer(5*60*1000, "autosave")
 end
 
 function trailerCamera()
@@ -506,6 +502,8 @@ progress = {
   },
 }
 
+members = progress.members
+
 missions = {
   unsc = {
     clearOut = {
@@ -730,10 +728,9 @@ navmarkers = {
   },
 }
 
-teams = {"player", "human", "covenant", "flood", "sentinel"}
+teams = {"player", "human", "covenant", "flood", "sentinel", "unused6"}
 
 forgiveTimer = false
-
 
 -- You can only have one OnTick and OnMapLoad function per script (as far as I know)
 function OnTick()
@@ -744,6 +741,7 @@ function OnTick()
     finalReactorPos = reactor1pos + reactor2pos + reactor3pos
     local scenario = blam.scenario()
     local convShort = get_global("conv_short1")
+    playerName = core.gameProfileName()
     --local hogRepair = (scenario.tagNames[27])
     --console_out(newGameWidget)
    
@@ -768,7 +766,7 @@ function OnTick()
     local loadGameSlot = get_global("load")
     if (saveGameSlot ~= 0) then
         core.saveSlot(saveGameSlot)
-        saveFile(saveGameSlot)
+        saveProgress(saveGameSlot)
     end
     if (loadGameSlot ~= 0) then
         core.loadSlot(loadGameSlot)
@@ -914,11 +912,10 @@ function OnTick()
             medicalSupplies()
             local republic = factions.republic
             local unsc = factions.unsc
-            local wrightMet = factions.republic.members.wright.met
-            activeConversation = true
+            local wrightMet = progress.members.republic.wright.met
             if (not (wrightMet)) and (republic.relationship == 1) then
               dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
-              factions.republic.members.wright.met = true
+              progress.members.republic.wright.met = true
             elseif (republic.relationship < 1) then
               dialog.open(wrightAntagConv(get_global("conv_short1")), true)
             elseif (republic.mission.medicalSupplies.active) then
@@ -1078,6 +1075,7 @@ function OnTick()
             interface.promptHud("")
           end
         elseif (object.type == blam.objectClasses.biped) then
+          
           if not (playerBiped.address == object.address) then
             if (core.playerIsNearTo(object, 0.9)) then
               local tagPath = blam.getTag(object.tagId).path
@@ -1096,8 +1094,11 @@ function OnTick()
           local biped = blam.biped(object.address)
           local injury = biped.mostRecentDamagerPlayer
           if (injury) then
-            if not(injury == 4294967295) and (biped.health < 0.1) and ((playerBiped.shooting) ) then
+            if not(injury == 4294967295) and (biped.health < 0.1) then
+             -- console_out(injury)
+              console_out(object.address)
               local team = biped.team
+              console_out(team)
               hsc.AllegianceRemove("player", teams[team])
             end
           end       
@@ -1401,14 +1402,28 @@ function OnTick()
     ------------------------------------------------------------------------------
 
     if (playerBiped) then
-        if (playerBiped and playerBiped.actionKeyHold) then
-            
-            --local globals = blam.globalsTag()
-            --spawn_object(prBolt.id, (playerBiped.x + 0.1), (playerBiped.y - .01), (playerBiped.z + .5))
-            --console_out(globals.firstPersonInterface.type)
-        end
+      if (playerBiped and playerBiped.actionKeyHold) then
+          
+          --local globals = blam.globalsTag()
+          --spawn_object(prBolt.id, (playerBiped.x + 0.1), (playerBiped.y - .01), (playerBiped.z + .5))
+          --console_out(globals.firstPersonInterface.type)
       end
+    end
 end
+
+function loadSlot(widgetID)  
+  for _, widget in pairs(saveList.childWidgetsList) do
+    local loadTag = blam.getTag(widget, tagClasses.uiWidgetDefinition)
+    local loadWidget = blam.uiWidgetDefinition(loadTag.id)
+    if widgetTagId == loadTag.id then
+      --local string = stringList.stringList
+      --if string then
+        console_out("string")
+      --end
+    end
+  end
+end
+savedSlots = {}
 
 function on_widget_accept(widget_handle)
     local widgetTagId = harmony.menu.get_widget_values(widget_handle).tag_id
@@ -1430,6 +1445,7 @@ function on_widget_accept(widget_handle)
       local decision = blam.getTag([[ui\conversation\dynamic_conversation\options\decision_]] .. i, tagClasses.uiWidgetDefinition)
       if decision then
         if widgetTagId == decision.id then
+          activeConversation = false
           local currentDialog = dialog.getState().currentDialog
           local action = currentDialog.actions[i]
           action()
@@ -1456,33 +1472,105 @@ function on_widget_accept(widget_handle)
     -- Saving/Loading
     if (widgetTagId == saveMaster.id) then        
       harmony.menu.close_widget()
-      saveScreen = load_ui_widget("ui\\checkpoints\\checkpoint_master_save")
+      core.saveSlot()
       --console_out(widgetTagId)
     end
-    if (widgetTagId) then
-      --console_out(widgetTagId)
+    local loadPath = [[ui\checkpoints\checkpoint_master_load]]
+    local savePath = [[ui\checkpoints\checkpoint_master_save]]
+    local stringsPath = [[ui\checkpoints\checkpoint_titles]]
+    local directoryPath = [[saves]]
+    local directory = {}
+    local exists = directory_exists(directoryPath)
+    if (exists) then
+      directory = list_directory(directoryPath)
+      table.sort(directory, function(a,b) 
+        return a:lower() > b:lower() 
+      end)
     end
-    if (widgetTagId == save1.id) then
-        set_global("save", 1)
-        harmony.menu.close_widget()
-        --console_out(widgetTagId)
-    elseif (widgetTagId == save2.id) then
-        set_global("save", 2)
-        harmony.menu.close_widget()
-        --console_out(widgetTagId)
-    elseif (widgetTagId == save3.id) then
-        set_global("save", 3)
-        harmony.menu.close_widget()
-        --console_out(widgetTagId)
-    elseif (widgetTagId == save4.id) then
-        set_global("save", 4)
-        harmony.menu.close_widget()
-        --console_out(widgetTagId)
-    elseif (widgetTagId == save5.id) then
-        set_global("save", 5)
-        harmony.menu.close_widget()
+    local saveAddress = blam.getTag(loadPath, tagClasses.uiWidgetDefinition)
+    local stringAddress = blam.getTag(stringsPath, tagClasses.unicodeStringList)
+    local loadWidget = blam.uiWidgetDefinition(saveAddress.id)
+    local saveList = blam.uiWidgetDefinition(loadWidget.childWidgetsList[2])
+    local spinner = blam.uiWidgetDefinition(loadWidget.childWidgetsList[3])
+    local stringList = blam.unicodeStringList(stringAddress.id)
+    if (widgetTagId == loadMaster.id) then
+      --console_out(widgetTagId)        
+      harmony.menu.close_widget()      
+      for _, element in pairs(directory) do
+        local str = "slot_"
+        if (string.find(element, str)) then
+          --console_out(element)
+          table.insert(savedSlots, #savedSlots + 1, element)
+        end
+      end
+      if #savedSlots < 5 then 
+        saveList.childWidgetsCount = #savedSlots 
+      else
+        saveList.childWidgetsCount = 5
+      end
+      local newStrings = {stringList.stringList}
+      stringList.count = #savedSlots
+      for saveIndex, saveSlot in ipairs(savedSlots) do
+        newStrings[saveIndex] = string.sub(saveSlot, 6, #saveSlot - 4)
+        console_out(newStrings[saveIndex])
+      end
+      stringList.stringList = newStrings
+      loadScreen = load_ui_widget(loadPath)
+      if not loadScreen then
+        console_out("Could not load ui")
+      end
         --console_out(widgetTagId)
     end
+    for index, widget in pairs(saveList.childWidgetsList) do
+      if widgetTagId == widget then
+        harmony.menu.close_widget()
+        local loadWidget = blam.uiWidgetDefinition(widget)
+        local strings = stringList.stringList[index]
+        core.loadSlot(strings)
+      end
+    end
+    for _, widget in pairs(spinner.childWidgetsList) do
+      if widgetTagId == widget then
+        console_out(widget)
+        local action = blam.uiWidgetDefinition(widget)
+        local up = string.find(action.name, "up")
+        local down = string.find(action.name, "down")
+        local widget1 = blam.uiWidgetDefinition(saveList.childWidgetsList[1])
+        local widget5 = blam.uiWidgetDefinition(saveList.childWidgetsList[5])
+        --if #savedSlots >= 5 then
+        if (up) then
+          for index, newWidget in pairs(saveList.childWidgetsList) do
+            local updateWidget = blam.uiWidgetDefinition(newWidget)
+            if newWidget == saveList.childWidgetsList[1] then
+              if widget1.stringListIndex > 0 then
+                updateWidget.stringListIndex = updateWidget.stringListIndex - 1
+              end
+            else
+              updateWidget.stringListIndex = widget1.stringListIndex + index - 1
+            end            
+          end
+        elseif (down) then
+          console_out(widget5.stringListIndex)
+          console_out(#savedSlots)
+          if widget5.stringListIndex < #savedSlots then
+            for index, newWidget in pairs(saveList.childWidgetsList) do
+              local updateWidget = blam.uiWidgetDefinition(newWidget)
+              if newWidget == saveList.childWidgetsList[1] then
+                if widget5.stringListIndex < 512 then
+                  updateWidget.stringListIndex = updateWidget.stringListIndex + 1
+                end
+              else
+                updateWidget.stringListIndex = widget1.stringListIndex + index - 1
+              end                 
+            end
+          end
+        end
+      end
+    end
+    --if (widgetTagId == load1.id) then
+      --console_out("yay")
+    --end
+    
     --console_out(widgetTagId)
     --console_out(save(1).slotID)
     return true -- must keep "return true" or else you will disable the menu buttons all throughout the game
@@ -1514,7 +1602,7 @@ function cameraTrack(track, time, steps)
   
 end
 
-function saveFile(saveSlot)
+function saveProgress(saveSlot)
   local progressFile = json.encode(progress)
   write_file([[saves\progress_]] .. saveSlot .. [[.json]], progressFile)
 end
@@ -1532,22 +1620,7 @@ function loadFile(saveSlot)
   end
 end
 
-
-
-function OnMapFileLoad()
-  if balltze then
-    local vehicles = {
-      "vehicles\\banshee\\banshee",
-      "vehicles\\ghost\\ghost",
-      "vehicles\\wraith\\wraith",
-      "vehicles\\c_dropship\\c_dropship"
-    }
-    for _, vehicle in pairs(vehicles) do
-      balltze.import_tag_data("grounded_shared", vehicle, "vehicle")
-      --console_out("spawning " .. vehicle)
-    end
-  end
-end
+michael = false
 
 function on_key_press(modifiers, character, keycode)
   if (keycode) then
@@ -1555,30 +1628,18 @@ function on_key_press(modifiers, character, keycode)
   end
     local playerBiped = blam.biped(get_dynamic_player())
     if (character == "j") then
-        -- Cancel event
-        --dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
+        local exists = directory_exists("")
     end
 
     names = {}
 
     if (character == "p") then
-      local paths = {
-        "grunt",
-        "marine"
-      }
-      for _, path in pairs(paths) do
-        local tagPath = blam.findTagsList(path, "actv")
-        for _, name in pairs(tagPath) do
-          console_out(name.path)
-        end
-      end
     end
     if (character == "y") then
       --console_out(type(missions.unsc.clearOut.action))
     end
     if (character == "o") then
-      --progress.members.unsc.forbes.met = true
-      --console_out("changed relationship")
+      michael = true
     end
 
     if (character == "k") then
@@ -1597,23 +1658,13 @@ function on_key_press(modifiers, character, keycode)
     if (keycode == 5) then -- F5
         core.saveSlot(99)
         --hud_message("     Quicksaving...")
-        saveFile(99)
+        saveProgress(99)
     end
     if (keycode == 6) then -- F6
         core.loadSlot(99)
         loadFile(99)
     end
     if (keycode == 12) then -- F12
-        execute_script("chimera_lua_reload_scripts")
-    end
-    if (keycode == 81) then -- INS key
-        console_out(playerBiped.x)
-        console_out(playerBiped.y)
-        console_out(playerBiped.z)
-    end
-    if (keycode == 67) then
-    end
-    if (keycode == 12) then
         execute_script("chimera_lua_reload_scripts")
     end
     --console_out(keycode)  -- DEBUG for trying to find key codes
@@ -1624,7 +1675,3 @@ harmony.set_callback("key press", "on_key_press")
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
 set_callback("precamera", "OnPreCamera")
-if balltze then
-  balltze.set_callback("map file load", "OnMapFileLoad")
-  --balltze.set_callback("game input", "OnGameInput")
-end

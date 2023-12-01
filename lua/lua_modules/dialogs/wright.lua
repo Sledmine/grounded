@@ -1,6 +1,8 @@
 local dialog = require "lua_modules.dialog"
 local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
+local scream = {}
+scream.activeTrack = ""
 
 function wrightConv1Reload()
     dialog.open(wrightConv1Screen(get_global("conv_short1")), true)
@@ -278,7 +280,6 @@ function wrightConv1Screen(screenInstance)
         end,
     }
 
-    local scream = {}
 
     local function wright_supplyConIntro1_alt1()
         scream.npcText = npcWords[1]
@@ -528,8 +529,9 @@ function wrightConv1Screen(screenInstance)
     end
 
     return {
-        objectName = "",
-        npcDialog = { scream.npcText },
+      objectName = "wright",
+      npcDialog = { scream.npcText },
+      npcSpeech = scream.activeTrack,
         options = {
             scream.playerResponses[1],
             scream.playerResponses[2],
@@ -591,8 +593,9 @@ function wrightConv2Screen(screenInstance)
     end
 
     return {
-        objectName = "",
+        objectName = "wright",
         npcDialog = { scream.npcText },
+        npcSpeech = scream.activeTrack,
         options = {
             scream.playerResponses[1],
             scream.playerResponses[2],

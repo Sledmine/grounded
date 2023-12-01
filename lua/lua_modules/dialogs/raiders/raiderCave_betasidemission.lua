@@ -12,6 +12,7 @@ end
 
 local scream = {}
 function raiderConv1(screenInstance)
+  scream.activeTrack = ""
     local response = {
         "I'm a Spartan. Who are you?", -- 1
         "Forbes sent me. You're to leave the caves immediately.", -- 2
@@ -67,7 +68,7 @@ function raiderConv1(screenInstance)
         "Yea.", -- 22
         "You're just a boot. Forbes know the price for our withdrawal. He can pay it, or we handle things \ndifferently.", -- 23
         "Go to the UNSC and find a guy called Forbes. He's in charge. Tell him that we're not moving \nand that you'll be standing with us if he makes a move.", -- 24
-        "We're expecting trouble soon. If you're not interested in working with the devil you know, we could use another set of hands.", -- 25
+        "We're expecting trouble soon. If you're not interested in working with the devil you know, we \ncould use another set of hands.", -- 25
         "Yes, I thought so too. Don't bother trying again, you'll get a worse answer.", -- 26
     }
     local actionsArray = {                        
@@ -295,7 +296,7 @@ function raiderConv1(screenInstance)
     local function raiderCon1_forkInv2()  
         scream.npcText = npcWords[17]
         scream.playerResponses = {response[24], response[13], response[15], response[16],}
-        scream.playerActions = {actionsArray[1], actionsArray[14], actionsArray[16], actionsArray[13],} 
+        scream.playerActions = {actionsArray[22], actionsArray[14], actionsArray[16], actionsArray[13],} 
     end   
 
     local function raiderCon1_forkInv2_1()  
@@ -455,8 +456,9 @@ function raiderConv1(screenInstance)
     ---------------------------------------------------------------------------------
     end
     return {
-        objectName = "",
+        objectName = "raider_cave",
         npcDialog = { scream.npcText },
+        npcSpeech = scream.activeTrack,
         options = {
             scream.playerResponses[1],
             scream.playerResponses[2],

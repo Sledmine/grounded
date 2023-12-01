@@ -1,6 +1,8 @@
 local dialog = require "lua_modules.dialog"
 local hsc = require "lua_modules.hsc"
 local harmony = require "mods.harmony"
+local scream = {}
+scream.activeTrack = ""
 
 function navPointArray()
     hsc.activateNav(2, "(player0)", "reactor1", "0.2")
@@ -133,8 +135,9 @@ function engHayden(screenInstance)
         ------------------------------------------------------------------------------ 
     end
     return {
-    objectName = "",
+    objectName = "eng_hayden",
     npcDialog = { scream.npcText },
+    npcSpeech = scream.activeTrack,
     options = {
         scream.playerResponses[1],
         scream.playerResponses[2],

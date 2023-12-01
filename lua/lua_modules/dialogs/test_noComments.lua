@@ -88,8 +88,10 @@ function fakeConversationScreen(screenInstance)
       npcSpeech = function ()
         if not (scream.activeTrack == nil) then
           hsc.soundImpulseStart(scream.activeTrack, "", 0.7)
+          scream.soundLength = hsc.soundImpulseTime(scream.activeTrack)
         end
       end,
+      soundLength = scream.soundLength,
       npcDialog = { scream.npcText },
       options = {
           scream.playerResponses[1],

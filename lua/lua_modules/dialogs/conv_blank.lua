@@ -60,3 +60,49 @@ function exampleConv1(screenInstance)
   }
 
 end
+
+function dialog_redux()
+  local response = {
+  }
+  local npcWords = {
+  }
+  local actionsArray = {                        
+    function ()                         
+      set_global("conv_short1", 1)   
+      harmony.menu.close_widget()
+    end,
+    function ()                        
+      set_global("conv_short1", 2)
+      harmony.menu.close_widget()
+      convReload(0)
+    end,
+  }
+
+  local function con1_fork1()
+    scream.npcText = npcWords[1]
+    scream.playerResponses = {response[1], response[2],}
+    scream.playerActions = {actionsArray[2], actionsArray[3]} 
+  end  
+
+  if screenInstance == 1 then
+    con1_fork1()
+  end
+  return {
+    objectName = "",
+    npcDialog = { scream.npcText },
+    options = {
+      scream.playerResponses[1],
+      scream.playerResponses[2],
+      scream.playerResponses[3],
+      scream.playerResponses[4],
+    },
+    -- Used to store functions
+    actions = {
+      scream.playerActions[1],
+      scream.playerActions[2],
+      scream.playerActions[3],
+      scream.playerActions[4],
+    }
+  }
+
+end

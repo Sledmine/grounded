@@ -90,6 +90,10 @@ function hsc.aiMigrate(from, to)
     execute_script("ai_migrate ".. from .. " " .. to)
 end
 
+function hsc.aiCommandList(ai, list)
+  execute_script("ai_command_list " .. ai .. " " .. list)
+end
+
 --- Magic Sight
 ---@param1 type of Sight (1 - 3)
 ---@param2 encounterName string name of the encounter in Sapien 
@@ -110,7 +114,9 @@ end
 
 --- Remove AI Allegiances
 function hsc.AllegianceRemove(team1, team2)
+  if (team1) and (team2) then
     execute_script("ai_allegiance_remove " .. team1 .. " " .. team2)
+  end
 end
 
 --- Check AI Allegiances
@@ -233,7 +239,7 @@ end
 --- Impulse Functions
 
 --- Sound Impulse Player 
----@param1 source of the sound file. Always include double-slashes with lua on windows.
+---@param1 source of the sound file.
 ---@param2 object you want to play the sound from
 ---@param3 gain between 0 and 1 of how loud the sound is
 function hsc.soundImpulseStart(source, object, gain)
@@ -246,14 +252,14 @@ function hsc.soundImpulseStop(source)
     execute_script("sound_impulse_stop " .. source)
 end
 
-
---- Sound Impulse Time
----@param1 Source
-function hsc.soundImpulseTime(source)
-    local impulseTime = [[(set clua_short1 (sound_impulse_time "%s")]]
-    execute_script(impulseTime:format(source))
-    return (get_global("clua_short1"))
+---@param Source - Sound file to be referenced
+function hsc.soundImpulseTime(source, global)
+  execute_script("set " .. global .. " (begin (sound_impulse_time " .. source .."))")
+  local data = get_global(global)
+  --console_out(data)
+  return data
 end
+
 
 --- Looping Functions
 

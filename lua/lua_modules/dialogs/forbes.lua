@@ -7,7 +7,7 @@ local forbesSpeech = optic.create_audio_engine()
 
 
 local scream = {}
-
+scream.activeTrack = ""
 ------------------------------------------------------------------------------
 --- Reload Function
 ------------------------------------------------------------------------------
@@ -24,10 +24,10 @@ end
 --- Table Definitions
 ------------------------------------------------------------------------------
 function forbesSideScreen1(screenInstance)
-  local forbesMet = factions.unsc.members.forbes.met
-  local relationship = factions.unsc.members.forbes.relationship
-  local clearOutActive = missions.unsc.clearOut.active
-  local republicMission = missions.republic.medicalSupplies.active
+  local forbesMet = members.unsc.forbes.met
+  local relationship = members.unsc.forbes.relationship
+  local clearOutActive = members.unsc.forbes.active
+  local republicMission = members.unsc.forbes.active
   ------------------------------------------------------------------------------
   local forbesCon1_playerArray = {
       "Sure can.",                                                            -- 1                        forbesCon1_fork1 -> forbesCon1_fork2
@@ -532,7 +532,7 @@ function forbesSideScreen1(screenInstance)
   else]]
   if screenInstance == 1 then
       forbesCon1_fork1()
-      factions.unsc.members.forbes.met = true
+      members.unsc.forbes.met = true
       ------------------------------------------------------------------------------
   elseif screenInstance == 2 then     -- forbesCon1_fork2 AKA ACCEPT ENDING
       forbesCon1_fork2()
@@ -606,11 +606,7 @@ function forbesSideScreen1(screenInstance)
 
   return {
       objectName = "forbes",
-      npcSpeech = function ()
-        if not (scream.activeTrack == nil) then
-          hsc.soundImpulseStart(scream.activeTrack, "forbes", 0.7)
-        end
-      end,
+      npcSpeech = scream.activeTrack,
       npcDialog = { scream.npcText },
       options = {
           scream.playerResponses[1],

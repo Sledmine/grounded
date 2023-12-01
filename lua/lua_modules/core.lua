@@ -18,20 +18,22 @@ local function createFoldersStructure()
     end
 end
 
-local function saveFile(saveFileIndex)
+local function saveFile(saveFileName)
   createFoldersStructure()
   -- Get the content of the current core save file
   local saveFile = glue.readfile(saveCoreFilePath)
+  local date = os.date( "%Y%m%d %H%M%S")
   if (saveFile) then
     -- TODO Check if the file was successfully saved
-    glue.writefile(savesPath .. "\\slot_" .. saveFileIndex .. ".bin", saveFile)
+    glue.writefile(savesPath .. "\\slot_" .. (date) .. ".bin", saveFile)
+    console_out(date)
     hud_message("")
-    if saveFileIndex == 99 then
-      hud_message("Quicksaving")
-    elseif saveFileIndex == 0 then
-      hud_message("Autosaving")
+    if saveFileName == 99 then
+      hud_message("Quicksaving...")
+    elseif saveFileName == 0 then
+      hud_message("Autosaving...")
     else
-      hud_message("Saved slot: " .. saveFileIndex)
+      hud_message("Saving...")
     end
   end
 end
@@ -46,23 +48,18 @@ end
 --- Save save file into given slot index
 ---@param saveFileIndex number
 function core.saveSlot(saveFileIndex)
-    -- TODO Remove this requirement and replace it with a trigger from the ui
-    set_global("save", 0)
-    --execute_script("game_save_totally_unsafe")
     execute_script("core_save")
     -- Add this function to the async events queue
     glue.append(asyncEventsQueue, {func = saveFile, args = {saveFileIndex}})
 end
 
 --- Load a save file from a given slot index
----@param saveFileIndex number
-function core.loadSlot(saveFileIndex)
+---@param saveFileName number
+function core.loadSlot(saveFileName)
     -- TODO Remove this requirement and replace it with a trigger from the ui
-    set_global("load", 0)
-    -- Remove the core file before loading, preventing loading left over slots
     os.remove(saveCoreFilePath)
     createFoldersStructure()
-    local saveFile = glue.readfile(savesPath .. "\\slot_" .. saveFileIndex .. ".bin")
+    local saveFile = glue.readfile(savesPath .. "\\slot_" .. saveFileName .. ".bin")
     if (saveFile) then
         glue.writefile(saveCoreFilePath, saveFile)
         execute_script("core_load")
@@ -150,6 +147,22 @@ function core.camera(object, x, y, z)
   local scenario = blam.scenario()
   
 end
+
+local profileNameAddress = 0x6ADE22
+
+function core.gameProfileName(name)
+    local name = name
+    if name then
+        -- Limit name to 11 characters
+        if #name > 11 then
+            name = name:sub(1, 11)
+        end
+        blam.writeUnicodeString(profileNameAddress, name, true)
+    end
+    local profileName = blam.readUnicodeString(profileNameAddress, true)
+    return profileName
+end
+
 
 
 return core

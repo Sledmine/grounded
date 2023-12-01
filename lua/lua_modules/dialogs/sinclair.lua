@@ -16,9 +16,10 @@ local scream = {}
 local variables = {
   forbesDirectionGiven = false
 }
+scream.activeTrack = ""
 function sinclair_con1(screenInstance)
   local response = {
-    "I'm <player> from the Biri. What planet is this?", -- 1
+    "I'm " .. playerName .. " from the Biri. What planet is this?", -- 1
     "I'm looking for the local executive.", -- 2
     "Do you know how I can get off-world?", -- 3
     "Landing is a charitable description.", -- 4
@@ -224,8 +225,9 @@ function sinclair_con1(screenInstance)
   end
 
   return {
-    objectName = "",
+    objectName = "sci_sinclair",
     npcDialog = { scream.npcText },
+    npcSpeech = scream.activeTrack,
     options = {
       scream.playerResponses[1],
       scream.playerResponses[2],
