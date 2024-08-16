@@ -13,11 +13,14 @@ scream.activeTrack = ""
 ------------------------------------------------------------------------------
 function forbesOpenAgainPlease()
   dialog.open(forbesSideScreen1(get_global("conv_short1")), true)
-  hsc.soundImpulseStop(scream.activeTrack)
 end
 
 function forbes_side2Reload()
   dialog.open(forbesSideScreen2(get_global("conv_short1")), true)
+end
+
+function forbesIntroAgain()
+    dialog.open(forbesIntroduction(get_global("conv_short1")), true)
 end
 
 ------------------------------------------------------------------------------
@@ -755,4 +758,110 @@ function forbesSideScreen2(screenInstance)
           scream.playerActions[4],
       }
   }
+end
+
+function forbesIntroduction(screenInstance)  
+    local forbesMet = factions.unsc.members.forbes.met
+    local relationship = factions.unsc.members.forbes.relationship
+  
+    local playerArray = {
+    }
+  
+    local npcArray = {
+    }
+  
+    local actionsArray = {
+        function() -- 1
+            set_global("conv_short1", 1)
+            harmony.menu.close_widget()
+            execute_script("show_hud 1")
+        end,
+        function() -- 2
+            set_global("conv_short1", 2)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "forbes_side2Reload", "")
+            missions.unsc.clearOut.active = false
+        end,
+        function() -- 3
+            set_global("conv_short1", 3)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "forbes_side2Reload", "")
+        missions.unsc.clearOut.active = false
+        end,
+        function() -- 4
+            set_global("conv_short1", 4)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "forbes_side2Reload", "")
+        end,
+        function() -- 5
+            set_global("conv_short1", 5)
+            harmony.menu.close_widget()
+            periodic = set_timer(2, "forbes_side2Reload", "")
+            missions.unsc.clearOut.active = false
+        end,
+    }
+  
+    local function introduction()
+    scream.npcText = ""
+    scream.playerResponses = {playerArray[3], playerArray[4], playerArray[5]}
+    scream.playerActions = {actionsArray[3], actionsArray[4], actionsArray[1]}
+    end
+  
+    local function screen5()
+      scream.npcText = npcArray[5]
+      scream.playerResponses = {playerArray[3], playerArray[4], playerArray[5]}
+      scream.playerActions = {actionsArray[3], actionsArray[4], actionsArray[1]}
+      --console_out("screen5")
+    end
+  
+    local function screen6()
+      scream.npcText = npcArray[6]
+      scream.playerResponses = {playerArray[3], playerArray[4], playerArray[5]}
+      scream.playerActions = {actionsArray[3], actionsArray[4], actionsArray[1]}
+      --console_out("screen3")
+    end
+  
+    local function screen4()
+      scream.npcText = npcArray[4]
+      scream.playerResponses = {playerArray[3], playerArray[5]}
+      scream.playerActions = {actionsArray[3], actionsArray[1]}
+      --console_out("screen4")
+    end
+  
+    local function screen3()
+      scream.npcText = npcArray[3]
+      scream.playerResponses = {playerArray[4], playerArray[5]}
+      scream.playerActions = {actionsArray[4], actionsArray[1]}
+      --console_out("screen2")
+    end
+  
+    if screenInstance == 1 then
+      introduction()
+    elseif screenInstance == 2 then
+      screen6()
+    elseif screenInstance == 3 then
+      screen3()
+    elseif screenInstance == 4 then
+      screen4()
+    elseif screenInstance == 5 then
+      screen5()
+    end
+  
+    return {
+        objectName = "",
+        npcDialog = { scream.npcText },
+        options = {
+            scream.playerResponses[1],
+            scream.playerResponses[2],
+            scream.playerResponses[3],
+            scream.playerResponses[4],
+        },
+        -- Used to store functions
+        actions = {
+            scream.playerActions[1],
+            scream.playerActions[2],
+            scream.playerActions[3],
+            scream.playerActions[4],
+        }
+    }
 end

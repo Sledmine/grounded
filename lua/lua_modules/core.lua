@@ -26,7 +26,7 @@ local function saveFile(saveFileName)
   if (saveFile) then
     -- TODO Check if the file was successfully saved
     glue.writefile(savesPath .. "\\slot_" .. (date) .. ".bin", saveFile)
-    console_out(date)
+    --console_out(date)
     hud_message("")
     if saveFileName == 99 then
       hud_message("Quicksaving...")

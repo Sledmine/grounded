@@ -20,7 +20,7 @@ local interface = require "lua_modules.interface"
 local dialog = require "lua_modules.dialog"
 local harmony = require "mods.harmony"
 local json = require "lua_modules.json"
---local _, balltze = pcall(require, "mods.balltze")
+--local _, balltze = pcall(require, "mods.balltze")\
 local hudSkew = require "lua_modules.hud_skew"
 local fmt = string.format
 local device_positions = {
@@ -610,7 +610,7 @@ missions = {
     },
   }
 }
-mostRecentSave = get_global("most_recent_save")
+--mostRecentSave = get_global("most_recent_save")
 activeMission = {}
 activeConversation = false
 camControl = false
@@ -634,11 +634,15 @@ cameraPoints = {
   }
 }
 
+soundsPaths = {
+  unscfob = "",
+}
+
 navmarkers = {
   powerplant = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      --sound = harmony.optic.create_sound(soundsPaths.unscfob),
       source = "powerplant_theme",
       radius = {
         fade = 40,
@@ -651,7 +655,7 @@ navmarkers = {
   checkpoint = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      --sound = harmony.optic.create_sound(soundsPaths.unscfob),
       source = "checkpoint_theme",
       radius = {
         fade = 40,
@@ -664,7 +668,7 @@ navmarkers = {
   airpad = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      --sound = harmony.optic.create_sound(soundsPaths.unscfob),
       source = "airpad_theme",
       radius = {
         fade = 40,
@@ -677,7 +681,7 @@ navmarkers = {
   oni = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/fob_looping.mp3"),
+      --sound = harmony.optic.create_sound(soundsPaths.unscfob),
       source = "oni_theme",
       radius = {
         fade = 40,
@@ -690,7 +694,7 @@ navmarkers = {
   hall = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop1.mp3"),
+      --sound = harmony.optic.create_sound(soundsPaths.unscfob),
       source = "hall_theme",
       radius = {
         fade = 40,
@@ -703,7 +707,7 @@ navmarkers = {
   shack = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop1.mp3"),
+      --sound = harmony.optic.create_sound("sounds/cov/destroyer_loop1.mp3"),
       source = "shack_theme",
       radius = {
         fade = 40,
@@ -716,7 +720,7 @@ navmarkers = {
   woodtown = {
     unitName = "nav_powerplant",
     audio = {      
-      sound = harmony.optic.create_sound("sounds/cov/destroyer_loop2.mp3"),
+      --sound = harmony.optic.create_sound("sounds/cov/destroyer_loop2.mp3"),
       source = "woodtown_theme",
       radius = {
         fade = 40,
@@ -1402,11 +1406,8 @@ function OnTick()
     ------------------------------------------------------------------------------
 
     if (playerBiped) then
-      if (playerBiped and playerBiped.actionKeyHold) then
-          
-          --local globals = blam.globalsTag()
-          --spawn_object(prBolt.id, (playerBiped.x + 0.1), (playerBiped.y - .01), (playerBiped.z + .5))
-          --console_out(globals.firstPersonInterface.type)
+      if (playerBiped.actionKeyHold) then
+        console_out(hsc.aiLivingCount("enc_powerplant", "clua_short1"))
       end
     end
 end
@@ -1493,6 +1494,7 @@ function on_widget_accept(widget_handle)
     local saveList = blam.uiWidgetDefinition(loadWidget.childWidgetsList[2])
     local spinner = blam.uiWidgetDefinition(loadWidget.childWidgetsList[3])
     local stringList = blam.unicodeStringList(stringAddress.id)
+    --- Save a new file
     if (widgetTagId == loadMaster.id) then
       --console_out(widgetTagId)        
       harmony.menu.close_widget()      
@@ -1508,6 +1510,7 @@ function on_widget_accept(widget_handle)
       else
         saveList.childWidgetsCount = 5
       end
+      -- Generate the "load slot" screen
       local newStrings = {stringList.stringList}
       stringList.count = #savedSlots
       for saveIndex, saveSlot in ipairs(savedSlots) do
@@ -1602,10 +1605,14 @@ function cameraTrack(track, time, steps)
   
 end
 
+-- Function to encode the saveslot with progress
+
 function saveProgress(saveSlot)
   local progressFile = json.encode(progress)
   write_file([[saves\progress_]] .. saveSlot .. [[.json]], progressFile)
 end
+
+-- Function for saving a loadslot
 
 function loadFile(saveSlot)
   if not (saveSlot) then
